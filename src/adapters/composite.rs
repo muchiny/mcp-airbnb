@@ -1,0 +1,263 @@
+use async_trait::async_trait;
+use tracing::warn;
+
+use crate::domain::analytics::{HostProfile, NeighborhoodStats, OccupancyEstimate};
+use crate::domain::calendar::PriceCalendar;
+use crate::domain::listing::{ListingDetail, SearchResult};
+use crate::domain::review::ReviewsPage;
+use crate::domain::search_params::SearchParams;
+use crate::error::Result;
+use crate::ports::airbnb_client::AirbnbClient;
+
+/// A client that tries the GraphQL API first and falls back to HTML scraping.
+pub struct CompositeClient {
+    graphql: Box<dyn AirbnbClient>,
+    scraper: Box<dyn AirbnbClient>,
+}
+
+impl CompositeClient {
+    pub fn new(graphql: Box<dyn AirbnbClient>, scraper: Box<dyn AirbnbClient>) -> Self {
+        Self { graphql, scraper }
+    }
+}
+
+/// Try the primary implementation, fall back to secondary on error.
+macro_rules! with_fallback {
+    ($self:expr, $method:ident $(, $arg:expr)*) => {{
+        match $self.graphql.$method($($arg),*).await {
+            Ok(result) => Ok(result),
+            Err(e) => {
+                warn!(
+                    error = %e,
+                    method = stringify!($method),
+                    "GraphQL failed, falling back to HTML scraper"
+                );
+                $self.scraper.$method($($arg),*).await
+            }
+        }
+    }};
+}
+
+#[async_trait]
+impl AirbnbClient for CompositeClient {
+    async fn search_listings(&self, params: &SearchParams) -> Result<SearchResult> {
+        with_fallback!(self, search_listings, params)
+    }
+
+    async fn get_listing_detail(&self, id: &str) -> Result<ListingDetail> {
+        match self.graphql.get_listing_detail(id).await {
+            Ok(mut gql) => {
+                // If GraphQL result is missing critical fields, try to fill from scraper
+                if (gql.name.is_empty() || gql.location.is_empty() || gql.amenities.is_empty())
+                    && let Ok(scraped) = self.scraper.get_listing_detail(id).await
+                {
+                    if gql.name.is_empty() && !scraped.name.is_empty() {
+                        gql.name = scraped.name;
+                    }
+                    if gql.location.is_empty() && !scraped.location.is_empty() {
+                        gql.location = scraped.location;
+                    }
+                    if gql.description.is_empty() && !scraped.description.is_empty() {
+                        gql.description = scraped.description;
+                    }
+                    if gql.amenities.is_empty() && !scraped.amenities.is_empty() {
+                        gql.amenities = scraped.amenities;
+                    }
+                    if gql.photos.is_empty() && !scraped.photos.is_empty() {
+                        gql.photos = scraped.photos;
+                    }
+                    if gql.host_name.is_none() {
+                        gql.host_name = scraped.host_name;
+                    }
+                }
+                Ok(gql)
+            }
+            Err(e) => {
+                warn!(
+                    error = %e,
+                    method = "get_listing_detail",
+                    "GraphQL failed, falling back to HTML scraper"
+                );
+                self.scraper.get_listing_detail(id).await
+            }
+        }
+    }
+
+    async fn get_reviews(&self, id: &str, cursor: Option<&str>) -> Result<ReviewsPage> {
+        match self.graphql.get_reviews(id, cursor).await {
+            Ok(gql_page) => {
+                // If GraphQL returned summary but no individual reviews, try scraper
+                if gql_page.reviews.is_empty()
+                    && let Ok(scraped) = self.scraper.get_reviews(id, cursor).await
+                {
+                    if !scraped.reviews.is_empty() {
+                        return Ok(scraped);
+                    }
+                    // If scraper also has no reviews but has a better summary, merge
+                    if gql_page.summary.is_none() && scraped.summary.is_some() {
+                        return Ok(scraped);
+                    }
+                }
+                Ok(gql_page)
+            }
+            Err(e) => {
+                warn!(
+                    error = %e,
+                    method = "get_reviews",
+                    "GraphQL failed, falling back to HTML scraper"
+                );
+                self.scraper.get_reviews(id, cursor).await
+            }
+        }
+    }
+
+    async fn get_price_calendar(&self, id: &str, months: u32) -> Result<PriceCalendar> {
+        with_fallback!(self, get_price_calendar, id, months)
+    }
+
+    async fn get_host_profile(&self, listing_id: &str) -> Result<HostProfile> {
+        with_fallback!(self, get_host_profile, listing_id)
+    }
+
+    async fn get_neighborhood_stats(&self, params: &SearchParams) -> Result<NeighborhoodStats> {
+        with_fallback!(self, get_neighborhood_stats, params)
+    }
+
+    async fn get_occupancy_estimate(&self, id: &str, months: u32) -> Result<OccupancyEstimate> {
+        with_fallback!(self, get_occupancy_estimate, id, months)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::error::AirbnbError;
+    use crate::test_helpers::*;
+
+    fn make_composite(graphql: MockAirbnbClient, scraper: MockAirbnbClient) -> CompositeClient {
+        CompositeClient::new(Box::new(graphql), Box::new(scraper))
+    }
+
+    #[tokio::test]
+    async fn graphql_success_no_fallback() {
+        let gql = MockAirbnbClient::new().with_search(|_| {
+            Ok(make_search_result(vec![make_listing("1", "GQL Result", 100.0)]))
+        });
+        // Scraper returns error — should never be called
+        let scraper = MockAirbnbClient::new()
+            .with_search(|_| Err(AirbnbError::Parse { reason: "should not be called".into() }));
+        let composite = make_composite(gql, scraper);
+        let params = SearchParams {
+            location: "Paris".into(),
+            checkin: None, checkout: None, adults: None, children: None,
+            infants: None, pets: None, min_price: None, max_price: None,
+            property_type: None, cursor: None,
+        };
+        let result = composite.search_listings(&params).await.unwrap();
+        assert_eq!(result.listings[0].name, "GQL Result");
+    }
+
+    #[tokio::test]
+    async fn graphql_error_falls_back_to_scraper() {
+        let gql = MockAirbnbClient::new()
+            .with_search(|_| Err(AirbnbError::RateLimited));
+        let scraper = MockAirbnbClient::new().with_search(|_| {
+            Ok(make_search_result(vec![make_listing("2", "Scraper Result", 200.0)]))
+        });
+        let composite = make_composite(gql, scraper);
+        let params = SearchParams {
+            location: "Paris".into(),
+            checkin: None, checkout: None, adults: None, children: None,
+            infants: None, pets: None, min_price: None, max_price: None,
+            property_type: None, cursor: None,
+        };
+        let result = composite.search_listings(&params).await.unwrap();
+        assert_eq!(result.listings[0].name, "Scraper Result");
+    }
+
+    #[tokio::test]
+    async fn both_fail_returns_scraper_error() {
+        let gql = MockAirbnbClient::new()
+            .with_search(|_| Err(AirbnbError::RateLimited));
+        let scraper = MockAirbnbClient::new()
+            .with_search(|_| Err(AirbnbError::Parse { reason: "scraper failed".into() }));
+        let composite = make_composite(gql, scraper);
+        let params = SearchParams {
+            location: "Paris".into(),
+            checkin: None, checkout: None, adults: None, children: None,
+            infants: None, pets: None, min_price: None, max_price: None,
+            property_type: None, cursor: None,
+        };
+        let err = composite.search_listings(&params).await.unwrap_err();
+        assert!(err.to_string().contains("scraper failed"));
+    }
+
+    #[tokio::test]
+    async fn fallback_search() {
+        let gql = MockAirbnbClient::new()
+            .with_search(|_| Err(AirbnbError::RateLimited));
+        let scraper = MockAirbnbClient::new().with_search(|_| {
+            Ok(make_search_result(vec![make_listing("1", "Fallback", 50.0)]))
+        });
+        let composite = make_composite(gql, scraper);
+        let params = SearchParams {
+            location: "Tokyo".into(),
+            checkin: None, checkout: None, adults: None, children: None,
+            infants: None, pets: None, min_price: None, max_price: None,
+            property_type: None, cursor: None,
+        };
+        let result = composite.search_listings(&params).await.unwrap();
+        assert_eq!(result.listings.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn fallback_detail() {
+        let gql = MockAirbnbClient::new()
+            .with_detail(|_| Err(AirbnbError::Parse { reason: "gql fail".into() }));
+        let scraper = MockAirbnbClient::new().with_detail(|id| {
+            let mut d = make_listing_detail(id);
+            d.name = "Scraped Detail".into();
+            Ok(d)
+        });
+        let composite = make_composite(gql, scraper);
+        let detail = composite.get_listing_detail("42").await.unwrap();
+        assert_eq!(detail.name, "Scraped Detail");
+    }
+
+    #[tokio::test]
+    async fn fallback_reviews() {
+        let gql = MockAirbnbClient::new()
+            .with_reviews(|_, _| Err(AirbnbError::RateLimited));
+        let scraper = MockAirbnbClient::new().with_reviews(|id, _| {
+            Ok(make_reviews_page(id, vec![make_review("Alice", "Great!")]))
+        });
+        let composite = make_composite(gql, scraper);
+        let page = composite.get_reviews("42", None).await.unwrap();
+        assert_eq!(page.reviews.len(), 1);
+        assert_eq!(page.reviews[0].author, "Alice");
+    }
+
+    #[tokio::test]
+    async fn fallback_calendar() {
+        let gql = MockAirbnbClient::new()
+            .with_calendar(|_, _| Err(AirbnbError::RateLimited));
+        let scraper = MockAirbnbClient::new().with_calendar(|id, _| {
+            Ok(make_price_calendar(id, vec![make_calendar_day("2025-06-01", Some(100.0), true)]))
+        });
+        let composite = make_composite(gql, scraper);
+        let cal = composite.get_price_calendar("42", 3).await.unwrap();
+        assert_eq!(cal.days.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn fallback_host_profile() {
+        let gql = MockAirbnbClient::new()
+            .with_host_profile(|_| Err(AirbnbError::RateLimited));
+        let scraper = MockAirbnbClient::new().with_host_profile(|_| {
+            Ok(make_host_profile("Scraped Host"))
+        });
+        let composite = make_composite(gql, scraper);
+        let profile = composite.get_host_profile("42").await.unwrap();
+        assert_eq!(profile.name, "Scraped Host");
+    }
+}

@@ -1,0 +1,22 @@
+scraper:
+  user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  rate_limit_per_second: 0.5
+  request_timeout_secs: 30
+  max_retries: 2
+  respect_robots_txt: true
+  base_url: "https://www.airbnb.com"
+  api_key_cache_secs: 86400
+  graphql_enabled: true
+  graphql_hashes:
+    stays_search: "d4d9503616dc72ab220ed8dcf17f166816dccb2593e7b4625c91c3fce3a3b3d6"
+    stays_pdp_sections: "80c7889b4b0027d99ffea830f6c0d4911a6e863a957cbe1044823f0fc746bf1f"
+    stays_pdp_reviews: "dec1c8061483e78373602047450322fd474e79ba9afa8d3dbbc27f504030f91d"
+    pdp_availability_calendar: "8f08e03c7bd16fcad3c92a3592c19a8b559a0d0855a84028d1163d4733ed9ade"
+    get_user_profile: "a56d8909f271740ccfef23dd6c34d098f194f4a6e7157f244814c5610b8ad76a"
+
+cache:
+  max_entries: 500
+  search_ttl_secs: 900
+  detail_ttl_secs: 3600
+  reviews_ttl_secs: 3600
+  calendar_ttl_secs: 1800
