@@ -6,20 +6,20 @@ The source code follows a **hexagonal architecture** (ports & adapters), ensurin
 
 ```mermaid
 graph LR
-    main["main.rs<br/>🚀 Entrypoint"] --> config
+    main["main.rs<br/>🚀 Entrypoint & DI"] --> config
     main --> mcp
     main --> adapters
 
-    mcp["mcp/<br/>📡 Protocol"] --> ports
+    mcp["mcp/<br/>📡 Protocol · 7 tools"] --> ports
     mcp --> domain
 
-    adapters["adapters/<br/>⚡ Implementations"] --> ports
+    adapters["adapters/<br/>⚡ GraphQL + Scraper + Cache"] --> ports
     adapters --> domain
 
     ports["ports/<br/>🔌 Traits"] --> domain
 
     config["config/<br/>⚙️ Configuration"]
-    domain["domain/<br/>💎 Pure Types"]
+    domain["domain/<br/>💎 Pure Types + Analytics"]
     error["error.rs<br/>❌ Errors"]
 
     domain --> error
@@ -33,14 +33,14 @@ graph LR
 
 | Module | Layer | Role | README |
 |--------|-------|------|--------|
-| [`domain/`](domain/) | Core | Pure types — `Listing`, `Review`, `PriceCalendar`, `SearchParams` | [💎 Domain](domain/README.md) |
-| [`ports/`](ports/) | Core | Trait boundaries — `AirbnbClient`, `ListingCache` | [🔌 Ports](ports/README.md) |
-| [`adapters/`](adapters/) | Infrastructure | HTTP scraping + in-memory caching | [⚡ Adapters](adapters/README.md) |
-| [`mcp/`](mcp/) | Interface | MCP protocol server with 4 tools | [📡 MCP](mcp/README.md) |
-| [`config/`](config/) | Infrastructure | YAML configuration loading | [⚙️ Config](config/README.md) |
-| `error.rs` | Core | `AirbnbError` enum via `thiserror` | — |
-| `lib.rs` | Root | Module re-exports | — |
-| `main.rs` | Entrypoint | Tracing setup, config loading, DI wiring, stdio serve | — |
+| [`domain/`](domain/) | 💎 Core | Pure types — `Listing`, `Review`, `PriceCalendar`, `SearchParams`, `HostProfile`, `NeighborhoodStats`, `OccupancyEstimate` | [💎 Domain](domain/README.md) |
+| [`ports/`](ports/) | 🔌 Core | Trait boundaries — `AirbnbClient` (7 methods), `ListingCache` | [🔌 Ports](ports/README.md) |
+| [`adapters/`](adapters/) | ⚡ Infrastructure | GraphQL API, HTML scraping, in-memory caching, composite client | [⚡ Adapters](adapters/README.md) |
+| [`mcp/`](mcp/) | 📡 Interface | MCP protocol server with 7 tools | [📡 MCP](mcp/README.md) |
+| [`config/`](config/) | ⚙️ Infrastructure | YAML configuration loading | [⚙️ Config](config/README.md) |
+| `error.rs` | ❌ Core | `AirbnbError` enum via `thiserror` | — |
+| `lib.rs` | 📦 Root | Module re-exports | — |
+| `main.rs` | 🚀 Entrypoint | Tracing setup, config loading, DI wiring (composite vs scraper-only), stdio serve | — |
 
 ## 🔗 Dependency Rule
 
@@ -48,6 +48,11 @@ graph LR
 main.rs (wires everything)
   ├── config/        → standalone
   ├── adapters/      → ports/ + domain/ + config/
+  │   ├── graphql/   → 🔗 Primary data source
+  │   ├── scraper/   → 🕷️ Fallback data source
+  │   ├── cache/     → 💾 LRU caching
+  │   ├── composite  → 🔀 Auto-fallback orchestration
+  │   └── shared     → 🔑 API key management
   └── mcp/           → ports/ + domain/
         ↓
       ports/         → domain/

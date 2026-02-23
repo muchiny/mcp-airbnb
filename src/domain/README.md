@@ -4,7 +4,7 @@ The **domain layer** contains pure data types with no I/O, no network calls, and
 
 ## 📋 Types
 
-### Listing Types (`listing.rs`)
+### 🏠 Listing Types (`listing.rs`)
 
 | Type | Description |
 |------|-------------|
@@ -12,7 +12,7 @@ The **domain layer** contains pure data types with no I/O, no network calls, and
 | `ListingDetail` | Full listing — extends Listing with description, amenities, house rules, photos, coordinates, capacity |
 | `SearchResult` | Paginated collection of `Listing` with optional total count and next cursor |
 
-### Review Types (`review.rs`)
+### ⭐ Review Types (`review.rs`)
 
 | Type | Description |
 |------|-------------|
@@ -20,22 +20,36 @@ The **domain layer** contains pure data types with no I/O, no network calls, and
 | `ReviewsSummary` | Aggregate ratings — overall, cleanliness, accuracy, communication, location, check-in, value |
 | `ReviewsPage` | Paginated reviews with optional summary and next cursor |
 
-### Calendar Types (`calendar.rs`)
+### 📅 Calendar Types (`calendar.rs`)
 
 | Type | Description |
 |------|-------------|
 | `CalendarDay` | Single day — date, optional price, availability flag, optional min nights |
 | `PriceCalendar` | Full calendar for a listing — listing ID, currency, collection of days |
 
-### Search Parameters (`search_params.rs`)
+### 🔍 Search Parameters (`search_params.rs`)
 
 | Type | Description |
 |------|-------------|
 | `SearchParams` | Validated search input — location, dates, guests, price range, property type, cursor |
 
 `SearchParams` contains the only behavior in the domain layer:
-- `validate()` — ensures location is non-empty, dates are paired, min_price ≤ max_price
-- `to_query_pairs()` — converts parameters to URL query pairs
+- ✅ `validate()` — ensures location is non-empty, dates are paired, min_price ≤ max_price
+- 🔗 `to_query_pairs()` — converts parameters to URL query pairs
+
+### 📊 Analytics Types (`analytics.rs`)
+
+| Type | Description |
+|------|-------------|
+| `HostProfile` | 👤 Host info — name, superhost status, response rate/time, languages, bio, listing count |
+| `NeighborhoodStats` | 📊 Area stats — average/median price, rating, property type distribution, superhost % |
+| `PropertyTypeCount` | Property type with count and percentage |
+| `OccupancyEstimate` | 📈 Occupancy — overall rate, weekday/weekend avg prices, monthly breakdown |
+| `MonthlyOccupancy` | Per-month occupancy rate, days, and average price |
+
+Analytics also provides **compute functions** (pure logic, no I/O):
+- 📊 `compute_neighborhood_stats(listings, location)` → `NeighborhoodStats`
+- 📈 `compute_occupancy_estimate(calendar)` → `OccupancyEstimate`
 
 ## 🗂️ Class Diagram
 
@@ -126,16 +140,48 @@ classDiagram
         +to_query_pairs() Vec
     }
 
+    class HostProfile {
+        +Option~String~ host_id
+        +String name
+        +Option~bool~ is_superhost
+        +Option~String~ response_rate
+        +Option~String~ response_time
+        +Vec~String~ languages
+        +Option~u32~ total_listings
+        +Option~String~ description
+    }
+
+    class NeighborhoodStats {
+        +String location
+        +u32 total_listings
+        +Option~f64~ average_price
+        +Option~f64~ median_price
+        +Option~f64~ average_rating
+        +Vec~PropertyTypeCount~ property_type_distribution
+        +Option~f64~ superhost_percentage
+    }
+
+    class OccupancyEstimate {
+        +String listing_id
+        +f64 overall_occupancy_rate
+        +Option~f64~ average_weekday_price
+        +Option~f64~ average_weekend_price
+        +Vec~MonthlyOccupancy~ monthly_breakdown
+    }
+
     SearchResult *-- Listing : contains
     ReviewsPage *-- Review : contains
     ReviewsPage *-- ReviewsSummary : has optional
     PriceCalendar *-- CalendarDay : contains
+    NeighborhoodStats *-- PropertyTypeCount : contains
+    OccupancyEstimate *-- MonthlyOccupancy : contains
 ```
 
 ## 📏 Design Rules
 
-- All types derive `Debug`, `Clone`, `Serialize`, `Deserialize`
-- `Display` implementations produce human-readable markdown output
-- `SearchParams` is the only type with validation behavior
-- **No `async`**, no I/O, no network calls — guaranteed by design
-- Types are shared across all layers via `crate::domain::*`
+- ✅ All types derive `Debug`, `Clone`, `Serialize`, `Deserialize`
+- 📝 `Display` implementations produce human-readable markdown output
+- 🔍 `SearchParams` is the only type with validation behavior
+- 🧮 `analytics.rs` contains pure compute functions (`compute_neighborhood_stats`, `compute_occupancy_estimate`)
+- 🚫 **No `async`**, no I/O, no network calls — guaranteed by design
+- 🔗 Types are shared across all layers via `crate::domain::*`
