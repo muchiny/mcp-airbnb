@@ -122,8 +122,7 @@ mod tests {
         wiremock::Mock::given(wiremock::matchers::method("GET"))
             .and(wiremock::matchers::path("/"))
             .respond_with(
-                wiremock::ResponseTemplate::new(200)
-                    .set_body_string("<html>No config here</html>"),
+                wiremock::ResponseTemplate::new(200).set_body_string("<html>No config here</html>"),
             )
             .mount(&mock_server)
             .await;
@@ -132,7 +131,12 @@ mod tests {
         let mgr = ApiKeyManager::new(http, mock_server.uri(), 3600);
         let result = mgr.get_api_key().await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("could not extract API key"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("could not extract API key")
+        );
     }
 
     #[test]

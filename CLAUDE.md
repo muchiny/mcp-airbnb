@@ -30,6 +30,8 @@ RUST_LOG=debug cargo run       # With debug logging (to stderr)
 - Configuration via `config.yaml` (serde_yaml)
 
 ## MCP Tools
+
+### Data Tools
 | Tool | Description |
 |------|-------------|
 | `airbnb_search` | Search listings by location, dates, guests |
@@ -39,6 +41,21 @@ RUST_LOG=debug cargo run       # With debug logging (to stderr)
 | `airbnb_host_profile` | Host profile (superhost, response rate, languages, bio) |
 | `airbnb_neighborhood_stats` | Aggregated area stats (avg/median price, ratings, property types) |
 | `airbnb_occupancy_estimate` | Occupancy rate, weekday/weekend prices, monthly breakdown |
+
+### Analytical Tools (compose data tools, no new scraping)
+| Tool | Description |
+|------|-------------|
+| `airbnb_compare_listings` | Compare 2-100+ listings side-by-side (by IDs or location) |
+| `airbnb_price_trends` | Seasonal pricing: peak/off-peak months, weekend premium, volatility |
+| `airbnb_gap_finder` | Detect orphan nights and booking gaps with lost revenue estimate |
+| `airbnb_revenue_estimate` | Project ADR, occupancy rate, monthly/annual revenue |
+| `airbnb_listing_score` | Quality audit 0-100 with category scores and improvement suggestions |
+| `airbnb_amenity_analysis` | Missing popular amenities vs neighborhood competition |
+| `airbnb_market_comparison` | Compare 2-5 neighborhoods side-by-side |
+| `airbnb_host_portfolio` | Analyze a host's full property portfolio |
+
+### MCP Resources
+Data fetched by tools is automatically cached as MCP resources (e.g. `airbnb://listing/{id}`, `airbnb://listing/{id}/calendar`, `airbnb://search/{location}`). Clients can reference previously fetched data without re-scraping.
 
 ## Dependencies
 - `rmcp` 0.16 — Official MCP Rust SDK (schemars 1.0)

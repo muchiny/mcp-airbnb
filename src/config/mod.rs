@@ -81,7 +81,10 @@ mod tests {
         )
         .unwrap();
         let config = load_config(tmp.path()).unwrap();
-        assert_eq!(config.scraper.graphql_hashes.stays_search, "custom_hash_abc");
+        assert_eq!(
+            config.scraper.graphql_hashes.stays_search,
+            "custom_hash_abc"
+        );
         assert!(!config.scraper.graphql_hashes.stays_pdp_sections.is_empty());
     }
 

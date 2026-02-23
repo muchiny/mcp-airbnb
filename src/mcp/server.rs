@@ -1,29 +1,83 @@
+use std::collections::HashMap;
 use std::fmt::Write as _;
 use std::sync::Arc;
+use tokio::sync::RwLock;
 
 use rmcp::{
-    ErrorData as McpError, ServerHandler,
+    ErrorData as McpError, RoleServer, ServerHandler,
     handler::server::{router::tool::ToolRouter, wrapper::Parameters},
     model::{
-        CallToolResult, Content, Implementation, ProtocolVersion, ServerCapabilities, ServerInfo,
+        CallToolResult, Content, Implementation, ListResourceTemplatesResult, ListResourcesResult,
+        PaginatedRequestParams, ProtocolVersion, RawResource, RawResourceTemplate,
+        ReadResourceRequestParams, ReadResourceResult, Resource, ResourceContents,
+        ResourceTemplate, ServerCapabilities, ServerInfo,
     },
-    schemars, tool, tool_handler, tool_router,
+    schemars,
+    service::RequestContext,
+    tool, tool_handler, tool_router,
 };
 
+use crate::domain::analytics;
 use crate::domain::search_params::SearchParams;
 use crate::ports::airbnb_client::AirbnbClient;
+
+// ---------- Resource Store ----------
+
+/// Thread-safe store of fetched Airbnb data exposed as MCP resources.
+/// Keys are URIs like `airbnb://listing/12345`, values are text content.
+#[derive(Clone, Default)]
+pub struct ResourceStore {
+    entries: Arc<RwLock<HashMap<String, ResourceEntry>>>,
+}
+
+#[derive(Clone)]
+struct ResourceEntry {
+    name: String,
+    text: String,
+}
+
+impl ResourceStore {
+    async fn insert(&self, uri: impl Into<String>, name: impl Into<String>, text: String) {
+        self.entries.write().await.insert(
+            uri.into(),
+            ResourceEntry {
+                name: name.into(),
+                text,
+            },
+        );
+    }
+
+    async fn get(&self, uri: &str) -> Option<ResourceEntry> {
+        self.entries.read().await.get(uri).cloned()
+    }
+
+    async fn list(&self) -> Vec<(String, String)> {
+        self.entries
+            .read()
+            .await
+            .iter()
+            .map(|(uri, entry)| (uri.clone(), entry.name.clone()))
+            .collect()
+    }
+}
+
+impl std::fmt::Debug for ResourceStore {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ResourceStore").finish()
+    }
+}
 
 // ---------- Tool parameter types ----------
 
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 pub struct SearchToolParams {
-    /// Location to search (e.g. "Paris, France", "Tokyo", "New York")
+    /// Location to search (e.g. "Paris, France", "Tokyo", "New York", "Porto-Vecchio, Corsica")
     pub location: String,
-    /// Check-in date (YYYY-MM-DD format)
+    /// Check-in date (YYYY-MM-DD format). Must be paired with checkout.
     pub checkin: Option<String>,
-    /// Check-out date (YYYY-MM-DD format)
+    /// Check-out date (YYYY-MM-DD format). Must be paired with checkin.
     pub checkout: Option<String>,
-    /// Number of adult guests
+    /// Number of adult guests (default: 1 if omitted)
     pub adults: Option<u32>,
     /// Number of children
     pub children: Option<u32>,
@@ -31,19 +85,19 @@ pub struct SearchToolParams {
     pub infants: Option<u32>,
     /// Number of pets
     pub pets: Option<u32>,
-    /// Minimum price per night (USD)
+    /// Minimum price per night in the listing's local currency
     pub min_price: Option<u32>,
-    /// Maximum price per night (USD)
+    /// Maximum price per night in the listing's local currency
     pub max_price: Option<u32>,
-    /// Property type filter (e.g. "Entire home", "Private room")
+    /// Property type filter (e.g. "Entire home", "Private room", "Hotel room", "Shared room")
     pub property_type: Option<String>,
-    /// Pagination cursor from previous search results
+    /// Pagination cursor from previous search results. Pass this to load the next page.
     pub cursor: Option<String>,
 }
 
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 pub struct DetailToolParams {
-    /// Airbnb listing ID (numeric string, e.g. "12345678")
+    /// Airbnb listing ID (numeric string from search results, e.g. "12345678")
     pub id: String,
 }
 
@@ -71,13 +125,13 @@ pub struct HostProfileToolParams {
 
 #[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
 pub struct NeighborhoodStatsToolParams {
-    /// Location to analyze (e.g. "Paris, France", "Brooklyn, NY")
+    /// Location to analyze (e.g. "Paris, France", "Brooklyn, NY"). Use the same format as `airbnb_search`.
     pub location: String,
-    /// Check-in date (YYYY-MM-DD format)
+    /// Check-in date (YYYY-MM-DD format). Filters listings available on these dates.
     pub checkin: Option<String>,
-    /// Check-out date (YYYY-MM-DD format)
+    /// Check-out date (YYYY-MM-DD format). Filters listings available on these dates.
     pub checkout: Option<String>,
-    /// Property type filter (e.g. "Entire home", "Private room")
+    /// Property type filter (e.g. "Entire home", "Private room", "Hotel room", "Shared room")
     pub property_type: Option<String>,
 }
 
@@ -89,12 +143,91 @@ pub struct OccupancyEstimateToolParams {
     pub months: Option<u32>,
 }
 
+// ---------- New analytical tool params ----------
+
+#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
+pub struct CompareListingsToolParams {
+    /// List of Airbnb listing IDs to compare (2-10 for detailed comparison).
+    /// If omitted, provide `location` to auto-discover listings for market-scale comparison.
+    pub ids: Option<Vec<String>>,
+    /// Location to auto-discover listings (e.g. "Paris, France"). Used when `ids` is omitted.
+    /// Fetches up to `max_listings` from search results for market-scale comparison.
+    pub location: Option<String>,
+    /// Maximum number of listings when using location-based discovery (default: 20, max: 100)
+    pub max_listings: Option<u32>,
+    /// Check-in date (YYYY-MM-DD) for location search
+    pub checkin: Option<String>,
+    /// Check-out date (YYYY-MM-DD) for location search
+    pub checkout: Option<String>,
+    /// Property type filter for location search
+    pub property_type: Option<String>,
+}
+
+#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
+pub struct PriceTrendsToolParams {
+    /// Airbnb listing ID
+    pub id: String,
+    /// Number of months to analyze (1-12, default: 12)
+    pub months: Option<u32>,
+}
+
+#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
+pub struct GapFinderToolParams {
+    /// Airbnb listing ID
+    pub id: String,
+    /// Number of months to analyze (1-12, default: 3)
+    pub months: Option<u32>,
+}
+
+#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
+pub struct RevenueEstimateToolParams {
+    /// Airbnb listing ID. If provided, uses the listing's actual calendar and neighborhood data.
+    pub id: Option<String>,
+    /// Location for neighborhood comparison (required if `id` is not provided)
+    pub location: Option<String>,
+    /// Number of months to project (1-12, default: 12)
+    pub months: Option<u32>,
+}
+
+#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
+pub struct ListingScoreToolParams {
+    /// Airbnb listing ID to score
+    pub id: String,
+}
+
+#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
+pub struct AmenityAnalysisToolParams {
+    /// Airbnb listing ID to analyze
+    pub id: String,
+    /// Location for neighborhood comparison. If omitted, uses the listing's location.
+    pub location: Option<String>,
+}
+
+#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
+pub struct MarketComparisonToolParams {
+    /// List of 2-5 locations to compare (e.g. `["Paris, France", "Barcelona, Spain"]`)
+    pub locations: Vec<String>,
+    /// Check-in date (YYYY-MM-DD)
+    pub checkin: Option<String>,
+    /// Check-out date (YYYY-MM-DD)
+    pub checkout: Option<String>,
+    /// Property type filter
+    pub property_type: Option<String>,
+}
+
+#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
+pub struct HostPortfolioToolParams {
+    /// Airbnb listing ID to identify the host and analyze their portfolio
+    pub id: String,
+}
+
 // ---------- MCP Server ----------
 
 #[derive(Clone)]
 pub struct AirbnbMcpServer {
     client: Arc<dyn AirbnbClient>,
     tool_router: ToolRouter<Self>,
+    resources: ResourceStore,
 }
 
 #[tool_router]
@@ -103,6 +236,7 @@ impl AirbnbMcpServer {
         Self {
             client,
             tool_router: Self::tool_router(),
+            resources: ResourceStore::default(),
         }
     }
 
@@ -110,7 +244,7 @@ impl AirbnbMcpServer {
     /// Returns a list of available listings matching the search criteria.
     #[tool(
         name = "airbnb_search",
-        description = "Search Airbnb listings by location, dates, and guest count. Returns a list of available listings with prices, ratings, and links.",
+        description = "Search Airbnb listings by location, dates, and guest count. Returns a list of available listings with prices, ratings, and links. Use this as the starting point to discover listings and get their IDs for other tools.",
         annotations(read_only_hint = true, open_world_hint = true)
     )]
     #[allow(clippy::too_many_lines)]
@@ -169,10 +303,13 @@ impl AirbnbMcpServer {
                         );
                     }
                 }
+                let uri = format!("airbnb://search/{}", search_params.location);
+                let name = format!("Search: {}", search_params.location);
+                self.resources.insert(uri, name, text.clone()).await;
                 Ok(CallToolResult::success(vec![Content::text(text)]))
             }
             Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
-                "Search failed: {e}"
+                "Search failed: {e}. Try broadening your search criteria (remove date/price filters) or check the location spelling."
             ))])),
         }
     }
@@ -181,7 +318,7 @@ impl AirbnbMcpServer {
     /// description, amenities, house rules, and photos.
     #[tool(
         name = "airbnb_listing_details",
-        description = "Get detailed information about a specific Airbnb listing including description, amenities, house rules, photos, and host info.",
+        description = "Get detailed information about a specific Airbnb listing including description, amenities, house rules, photos, and host info. Requires a listing ID from airbnb_search.",
         annotations(read_only_hint = true, open_world_hint = true)
     )]
     async fn airbnb_listing_details(
@@ -189,11 +326,16 @@ impl AirbnbMcpServer {
         Parameters(params): Parameters<DetailToolParams>,
     ) -> Result<CallToolResult, McpError> {
         match self.client.get_listing_detail(&params.id).await {
-            Ok(detail) => Ok(CallToolResult::success(vec![Content::text(
-                detail.to_string(),
-            )])),
+            Ok(detail) => {
+                let text = detail.to_string();
+                let uri = format!("airbnb://listing/{}", params.id);
+                let name = format!("Listing: {}", detail.name);
+                self.resources.insert(uri, name, text.clone()).await;
+                Ok(CallToolResult::success(vec![Content::text(text)]))
+            }
             Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
-                "Failed to get listing details: {e}"
+                "Failed to get listing details for ID '{}': {e}. Verify the listing ID is correct — use airbnb_search to find valid IDs.",
+                params.id
             ))])),
         }
     }
@@ -201,7 +343,7 @@ impl AirbnbMcpServer {
     /// Get reviews for an Airbnb listing with ratings summary and pagination.
     #[tool(
         name = "airbnb_reviews",
-        description = "Get reviews for an Airbnb listing including ratings summary, individual reviews with comments, and pagination support.",
+        description = "Get reviews for an Airbnb listing including ratings summary, individual reviews with comments, and pagination support. Requires a listing ID. Use cursor from previous response to load more reviews.",
         annotations(read_only_hint = true, open_world_hint = true)
     )]
     async fn airbnb_reviews(
@@ -213,11 +355,16 @@ impl AirbnbMcpServer {
             .get_reviews(&params.id, params.cursor.as_deref())
             .await
         {
-            Ok(page) => Ok(CallToolResult::success(vec![Content::text(
-                page.to_string(),
-            )])),
+            Ok(page) => {
+                let text = page.to_string();
+                let uri = format!("airbnb://listing/{}/reviews", params.id);
+                let name = format!("Reviews: listing {}", params.id);
+                self.resources.insert(uri, name, text.clone()).await;
+                Ok(CallToolResult::success(vec![Content::text(text)]))
+            }
             Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
-                "Failed to get reviews: {e}"
+                "Failed to get reviews for listing '{}': {e}. The listing may have no reviews yet.",
+                params.id
             ))])),
         }
     }
@@ -225,7 +372,7 @@ impl AirbnbMcpServer {
     /// Get price and availability calendar for an Airbnb listing.
     #[tool(
         name = "airbnb_price_calendar",
-        description = "Get price and availability calendar for an Airbnb listing showing daily prices, availability status, and minimum night requirements.",
+        description = "Get price and availability calendar for an Airbnb listing showing daily prices, availability status, and minimum night requirements. Useful for analyzing seasonal pricing and finding available dates.",
         annotations(read_only_hint = true, open_world_hint = true)
     )]
     async fn airbnb_price_calendar(
@@ -235,11 +382,16 @@ impl AirbnbMcpServer {
         let months = params.months.unwrap_or(3).clamp(1, 12);
 
         match self.client.get_price_calendar(&params.id, months).await {
-            Ok(calendar) => Ok(CallToolResult::success(vec![Content::text(
-                calendar.to_string(),
-            )])),
+            Ok(calendar) => {
+                let text = calendar.to_string();
+                let uri = format!("airbnb://listing/{}/calendar", params.id);
+                let name = format!("Calendar: listing {}", params.id);
+                self.resources.insert(uri, name, text.clone()).await;
+                Ok(CallToolResult::success(vec![Content::text(text)]))
+            }
             Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
-                "Failed to get price calendar: {e}"
+                "Failed to get price calendar for listing '{}': {e}. The listing may be unlisted or the calendar unavailable.",
+                params.id
             ))])),
         }
     }
@@ -247,7 +399,7 @@ impl AirbnbMcpServer {
     /// Get the host profile for an Airbnb listing.
     #[tool(
         name = "airbnb_host_profile",
-        description = "Get detailed host profile including superhost status, response rate, languages, bio, and listing count.",
+        description = "Get detailed host profile including superhost status, response rate, languages, bio, and listing count. Requires a listing ID to identify the host.",
         annotations(read_only_hint = true, open_world_hint = true)
     )]
     async fn airbnb_host_profile(
@@ -255,11 +407,16 @@ impl AirbnbMcpServer {
         Parameters(params): Parameters<HostProfileToolParams>,
     ) -> Result<CallToolResult, McpError> {
         match self.client.get_host_profile(&params.id).await {
-            Ok(profile) => Ok(CallToolResult::success(vec![Content::text(
-                profile.to_string(),
-            )])),
+            Ok(profile) => {
+                let text = profile.to_string();
+                let uri = format!("airbnb://listing/{}/host", params.id);
+                let name = format!("Host: listing {}", params.id);
+                self.resources.insert(uri, name, text.clone()).await;
+                Ok(CallToolResult::success(vec![Content::text(text)]))
+            }
             Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
-                "Failed to get host profile: {e}"
+                "Failed to get host profile for listing '{}': {e}. Try airbnb_listing_details instead for basic host info.",
+                params.id
             ))])),
         }
     }
@@ -267,15 +424,16 @@ impl AirbnbMcpServer {
     /// Get aggregated neighborhood statistics from Airbnb listings.
     #[tool(
         name = "airbnb_neighborhood_stats",
-        description = "Get aggregated statistics for a neighborhood: average/median prices, ratings, property type distribution, and superhost percentage.",
+        description = "Get aggregated statistics for a neighborhood: average/median prices, ratings, property type distribution, and superhost percentage. Use this for market analysis and price benchmarking — does not require a listing ID, only a location.",
         annotations(read_only_hint = true, open_world_hint = true)
     )]
     async fn airbnb_neighborhood_stats(
         &self,
         Parameters(params): Parameters<NeighborhoodStatsToolParams>,
     ) -> Result<CallToolResult, McpError> {
+        let location = params.location;
         let search_params = SearchParams {
-            location: params.location,
+            location: location.clone(),
             checkin: params.checkin,
             checkout: params.checkout,
             adults: None,
@@ -289,11 +447,15 @@ impl AirbnbMcpServer {
         };
 
         match self.client.get_neighborhood_stats(&search_params).await {
-            Ok(stats) => Ok(CallToolResult::success(vec![Content::text(
-                stats.to_string(),
-            )])),
+            Ok(stats) => {
+                let text = stats.to_string();
+                let uri = format!("airbnb://neighborhood/{location}");
+                let name = format!("Neighborhood: {location}");
+                self.resources.insert(uri, name, text.clone()).await;
+                Ok(CallToolResult::success(vec![Content::text(text)]))
+            }
             Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
-                "Failed to get neighborhood stats: {e}"
+                "Failed to get neighborhood stats for '{location}': {e}. Try a broader location name or check spelling."
             ))])),
         }
     }
@@ -301,7 +463,7 @@ impl AirbnbMcpServer {
     /// Get occupancy estimate for an Airbnb listing.
     #[tool(
         name = "airbnb_occupancy_estimate",
-        description = "Estimate occupancy rate, average prices (weekday vs weekend), and monthly breakdown for a listing based on calendar data.",
+        description = "Estimate occupancy rate, average prices (weekday vs weekend), and monthly breakdown for a listing based on calendar data. Useful for hosts evaluating rental income potential.",
         annotations(read_only_hint = true, open_world_hint = true)
     )]
     async fn airbnb_occupancy_estimate(
@@ -311,13 +473,435 @@ impl AirbnbMcpServer {
         let months = params.months.unwrap_or(3).clamp(1, 12);
 
         match self.client.get_occupancy_estimate(&params.id, months).await {
-            Ok(estimate) => Ok(CallToolResult::success(vec![Content::text(
-                estimate.to_string(),
-            )])),
+            Ok(estimate) => {
+                let text = estimate.to_string();
+                let uri = format!("airbnb://listing/{}/occupancy", params.id);
+                let name = format!("Occupancy: listing {}", params.id);
+                self.resources.insert(uri, name, text.clone()).await;
+                Ok(CallToolResult::success(vec![Content::text(text)]))
+            }
             Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
-                "Failed to get occupancy estimate: {e}"
+                "Failed to get occupancy estimate for listing '{}': {e}. This requires calendar data — verify the listing ID.",
+                params.id
             ))])),
         }
+    }
+
+    // ---- Analytical tools ----
+
+    /// Compare multiple Airbnb listings side-by-side or analyze an entire market.
+    #[tool(
+        name = "airbnb_compare_listings",
+        description = "Compare 2-100+ Airbnb listings side-by-side with price percentiles, ratings, and market summary. Provide listing IDs for detailed comparison (2-10), OR a location for market-scale comparison (up to 100 listings via paginated search). Returns ranking table with percentile positions.",
+        annotations(read_only_hint = true, open_world_hint = true)
+    )]
+    #[allow(clippy::too_many_lines)]
+    async fn airbnb_compare_listings(
+        &self,
+        Parameters(params): Parameters<CompareListingsToolParams>,
+    ) -> Result<CallToolResult, McpError> {
+        if params.ids.is_none() && params.location.is_none() {
+            return Ok(CallToolResult::error(vec![Content::text(
+                "Provide either `ids` (list of listing IDs) or `location` for market-scale comparison.",
+            )]));
+        }
+
+        let listings = if let Some(ref ids) = params.ids {
+            // Mode 1: Fetch by IDs — use search results for lightweight comparison
+            let mut all = Vec::new();
+            for id in ids.iter().take(10) {
+                match self.client.get_listing_detail(id).await {
+                    Ok(d) => all.push(crate::domain::listing::Listing {
+                        id: d.id,
+                        name: d.name,
+                        location: d.location,
+                        price_per_night: d.price_per_night,
+                        currency: d.currency,
+                        rating: d.rating,
+                        review_count: d.review_count,
+                        thumbnail_url: None,
+                        property_type: d.property_type,
+                        host_name: d.host_name,
+                        url: d.url,
+                        is_superhost: d.host_is_superhost,
+                        is_guest_favorite: None,
+                        instant_book: d.instant_book,
+                        total_price: None,
+                        photos: d.photos,
+                        latitude: d.latitude,
+                        longitude: d.longitude,
+                    }),
+                    Err(e) => {
+                        return Ok(CallToolResult::error(vec![Content::text(format!(
+                            "Failed to fetch listing '{id}': {e}"
+                        ))]));
+                    }
+                }
+            }
+            all
+        } else {
+            // Mode 2: Location discovery — paginate search
+            let location = params.location.as_deref().unwrap_or("");
+            let max = params.max_listings.unwrap_or(20).clamp(2, 100) as usize;
+            let max_pages = max.div_ceil(20);
+            let mut all = Vec::new();
+            let mut cursor = None;
+
+            for _ in 0..max_pages {
+                let sp = SearchParams {
+                    location: location.to_string(),
+                    checkin: params.checkin.clone(),
+                    checkout: params.checkout.clone(),
+                    adults: None,
+                    children: None,
+                    infants: None,
+                    pets: None,
+                    min_price: None,
+                    max_price: None,
+                    property_type: params.property_type.clone(),
+                    cursor: cursor.clone(),
+                };
+                match self.client.search_listings(&sp).await {
+                    Ok(result) => {
+                        all.extend(result.listings);
+                        cursor = result.next_cursor;
+                        if cursor.is_none() || all.len() >= max {
+                            break;
+                        }
+                    }
+                    Err(e) => {
+                        return Ok(CallToolResult::error(vec![Content::text(format!(
+                            "Search failed for '{location}': {e}"
+                        ))]));
+                    }
+                }
+            }
+            all.truncate(max);
+            all
+        };
+
+        if listings.len() < 2 {
+            return Ok(CallToolResult::error(vec![Content::text(
+                "Need at least 2 listings to compare. Try a different location or provide more IDs.",
+            )]));
+        }
+
+        let result = analytics::compute_compare_listings(&listings, None);
+        Ok(CallToolResult::success(vec![Content::text(
+            result.to_string(),
+        )]))
+    }
+
+    /// Analyze seasonal price trends for a listing.
+    #[tool(
+        name = "airbnb_price_trends",
+        description = "Analyze seasonal price trends for an Airbnb listing: monthly averages, weekend vs weekday premiums, price volatility, peak/off-peak months, and day-of-week breakdown. Based on calendar data.",
+        annotations(read_only_hint = true, open_world_hint = true)
+    )]
+    async fn airbnb_price_trends(
+        &self,
+        Parameters(params): Parameters<PriceTrendsToolParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let months = params.months.unwrap_or(12).clamp(1, 12);
+
+        match self.client.get_price_calendar(&params.id, months).await {
+            Ok(calendar) => {
+                let trends = analytics::compute_price_trends(&params.id, &calendar);
+                Ok(CallToolResult::success(vec![Content::text(
+                    trends.to_string(),
+                )]))
+            }
+            Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+                "Failed to get price data for listing '{}': {e}",
+                params.id
+            ))])),
+        }
+    }
+
+    /// Detect booking gaps and orphan nights in a listing's calendar.
+    #[tool(
+        name = "airbnb_gap_finder",
+        description = "Detect booking gaps and orphan nights (1-3 night gaps between reservations) in an Airbnb listing's calendar. Shows potential lost revenue and suggests minimum stay adjustments. Essential for occupancy optimization.",
+        annotations(read_only_hint = true, open_world_hint = true)
+    )]
+    async fn airbnb_gap_finder(
+        &self,
+        Parameters(params): Parameters<GapFinderToolParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let months = params.months.unwrap_or(3).clamp(1, 12);
+
+        match self.client.get_price_calendar(&params.id, months).await {
+            Ok(calendar) => {
+                let result = analytics::compute_gap_finder(&params.id, &calendar);
+                Ok(CallToolResult::success(vec![Content::text(
+                    result.to_string(),
+                )]))
+            }
+            Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+                "Failed to get calendar for listing '{}': {e}",
+                params.id
+            ))])),
+        }
+    }
+
+    /// Estimate revenue potential for a listing or location.
+    #[tool(
+        name = "airbnb_revenue_estimate",
+        description = "Estimate projected revenue for an Airbnb listing: ADR (Average Daily Rate), occupancy rate, monthly and annual revenue projections, and comparison vs neighborhood average. Provide a listing ID for specific estimates, or just a location for market-based projections.",
+        annotations(read_only_hint = true, open_world_hint = true)
+    )]
+    async fn airbnb_revenue_estimate(
+        &self,
+        Parameters(params): Parameters<RevenueEstimateToolParams>,
+    ) -> Result<CallToolResult, McpError> {
+        if params.id.is_none() && params.location.is_none() {
+            return Ok(CallToolResult::error(vec![Content::text(
+                "Provide either `id` (listing ID) or `location` for revenue estimation.",
+            )]));
+        }
+
+        let months = params.months.unwrap_or(12).clamp(1, 12);
+        let mut calendar = None;
+        let mut neighborhood = None;
+        let mut occupancy = None;
+        let mut location = params.location.clone().unwrap_or_default();
+
+        if let Some(ref id) = params.id {
+            if let Ok(cal) = self.client.get_price_calendar(id, months).await {
+                calendar = Some(cal);
+            }
+            if let Ok(occ) = self.client.get_occupancy_estimate(id, months).await {
+                occupancy = Some(occ);
+            }
+            // Get location from detail if not provided
+            if location.is_empty()
+                && let Ok(detail) = self.client.get_listing_detail(id).await
+            {
+                location.clone_from(&detail.location);
+            }
+        }
+
+        if !location.is_empty() {
+            let sp = SearchParams {
+                location: location.clone(),
+                ..SearchParams::default()
+            };
+            if let Ok(stats) = self.client.get_neighborhood_stats(&sp).await {
+                neighborhood = Some(stats);
+            }
+        }
+
+        let result = analytics::compute_revenue_estimate(
+            params.id.as_deref(),
+            &location,
+            calendar.as_ref(),
+            neighborhood.as_ref(),
+            occupancy.as_ref(),
+        );
+        Ok(CallToolResult::success(vec![Content::text(
+            result.to_string(),
+        )]))
+    }
+
+    /// Score a listing's quality and optimization level.
+    #[tool(
+        name = "airbnb_listing_score",
+        description = "Score an Airbnb listing's quality (0-100) across 6 categories: photos, description, amenities, reviews, host profile, and pricing vs market. Provides actionable improvement suggestions. Like a free listing audit.",
+        annotations(read_only_hint = true, open_world_hint = true)
+    )]
+    async fn airbnb_listing_score(
+        &self,
+        Parameters(params): Parameters<ListingScoreToolParams>,
+    ) -> Result<CallToolResult, McpError> {
+        match self.client.get_listing_detail(&params.id).await {
+            Ok(detail) => {
+                // Try to get neighborhood stats for pricing comparison
+                let sp = SearchParams {
+                    location: detail.location.clone(),
+                    ..SearchParams::default()
+                };
+                let neighborhood = self.client.get_neighborhood_stats(&sp).await.ok();
+                let score = analytics::compute_listing_score(&detail, neighborhood.as_ref());
+                Ok(CallToolResult::success(vec![Content::text(
+                    score.to_string(),
+                )]))
+            }
+            Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+                "Failed to get listing '{}': {e}",
+                params.id
+            ))])),
+        }
+    }
+
+    /// Analyze a listing's amenities vs neighborhood competition.
+    #[tool(
+        name = "airbnb_amenity_analysis",
+        description = "Compare an Airbnb listing's amenities against neighborhood competition. Identifies missing popular amenities and highlights unique ones you have. Helps optimize your listing to match or beat competitors.",
+        annotations(read_only_hint = true, open_world_hint = true)
+    )]
+    async fn airbnb_amenity_analysis(
+        &self,
+        Parameters(params): Parameters<AmenityAnalysisToolParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let detail = match self.client.get_listing_detail(&params.id).await {
+            Ok(d) => d,
+            Err(e) => {
+                return Ok(CallToolResult::error(vec![Content::text(format!(
+                    "Failed to get listing '{}': {e}",
+                    params.id
+                ))]));
+            }
+        };
+
+        let location = params.location.unwrap_or_else(|| detail.location.clone());
+
+        // Fetch a sample of neighbor listings for amenity comparison
+        let sp = SearchParams {
+            location,
+            ..SearchParams::default()
+        };
+        let neighbor_ids: Vec<String> = match self.client.search_listings(&sp).await {
+            Ok(result) => result
+                .listings
+                .into_iter()
+                .filter(|l| l.id != params.id)
+                .take(5)
+                .map(|l| l.id)
+                .collect(),
+            Err(_) => vec![],
+        };
+
+        let mut neighbor_details = Vec::new();
+        for id in &neighbor_ids {
+            if let Ok(d) = self.client.get_listing_detail(id).await {
+                neighbor_details.push(d);
+            }
+        }
+
+        let analysis = analytics::compute_amenity_analysis(&detail, &neighbor_details);
+        Ok(CallToolResult::success(vec![Content::text(
+            analysis.to_string(),
+        )]))
+    }
+
+    /// Compare multiple locations/neighborhoods side-by-side.
+    #[tool(
+        name = "airbnb_market_comparison",
+        description = "Compare 2-5 Airbnb markets side-by-side: average/median prices, ratings, superhost percentage, and dominant property types. Ideal for deciding where to invest or list a property.",
+        annotations(read_only_hint = true, open_world_hint = true)
+    )]
+    async fn airbnb_market_comparison(
+        &self,
+        Parameters(params): Parameters<MarketComparisonToolParams>,
+    ) -> Result<CallToolResult, McpError> {
+        if params.locations.len() < 2 {
+            return Ok(CallToolResult::error(vec![Content::text(
+                "Provide at least 2 locations to compare.",
+            )]));
+        }
+
+        let mut stats = Vec::new();
+        for location in params.locations.iter().take(5) {
+            let sp = SearchParams {
+                location: location.clone(),
+                checkin: params.checkin.clone(),
+                checkout: params.checkout.clone(),
+                property_type: params.property_type.clone(),
+                ..SearchParams::default()
+            };
+            match self.client.get_neighborhood_stats(&sp).await {
+                Ok(s) => stats.push(s),
+                Err(e) => {
+                    return Ok(CallToolResult::error(vec![Content::text(format!(
+                        "Failed to get stats for '{location}': {e}"
+                    ))]));
+                }
+            }
+        }
+
+        let result = analytics::compute_market_comparison(&stats);
+        Ok(CallToolResult::success(vec![Content::text(
+            result.to_string(),
+        )]))
+    }
+
+    /// Analyze a host's full property portfolio.
+    #[tool(
+        name = "airbnb_host_portfolio",
+        description = "Analyze an Airbnb host's full portfolio: all their properties, average rating, pricing strategy, total reviews, and geographic distribution. Useful for competitive intelligence on professional operators. Requires any listing ID from the host.",
+        annotations(read_only_hint = true, open_world_hint = true)
+    )]
+    async fn airbnb_host_portfolio(
+        &self,
+        Parameters(params): Parameters<HostPortfolioToolParams>,
+    ) -> Result<CallToolResult, McpError> {
+        // Get host info from the listing
+        let detail = match self.client.get_listing_detail(&params.id).await {
+            Ok(d) => d,
+            Err(e) => {
+                return Ok(CallToolResult::error(vec![Content::text(format!(
+                    "Failed to get listing '{}': {e}",
+                    params.id
+                ))]));
+            }
+        };
+
+        let host_name = detail
+            .host_name
+            .clone()
+            .unwrap_or_else(|| "Unknown Host".to_string());
+        let host_id = detail.host_id.clone();
+        let is_superhost = detail.host_is_superhost;
+
+        // Search for other listings by this host in the same location
+        let sp = SearchParams {
+            location: detail.location.clone(),
+            ..SearchParams::default()
+        };
+        let host_listings: Vec<_> = match self.client.search_listings(&sp).await {
+            Ok(result) => result
+                .listings
+                .into_iter()
+                .filter(|l| l.host_name.as_deref() == detail.host_name.as_deref())
+                .collect(),
+            Err(_) => vec![],
+        };
+
+        // If no other listings found via search, create one from the detail we have
+        let listings = if host_listings.is_empty() {
+            vec![crate::domain::listing::Listing {
+                id: detail.id.clone(),
+                name: detail.name.clone(),
+                location: detail.location.clone(),
+                price_per_night: detail.price_per_night,
+                currency: detail.currency.clone(),
+                rating: detail.rating,
+                review_count: detail.review_count,
+                thumbnail_url: None,
+                property_type: detail.property_type.clone(),
+                host_name: detail.host_name.clone(),
+                url: detail.url.clone(),
+                is_superhost: detail.host_is_superhost,
+                is_guest_favorite: None,
+                instant_book: detail.instant_book,
+                total_price: None,
+                photos: detail.photos.clone(),
+                latitude: detail.latitude,
+                longitude: detail.longitude,
+            }]
+        } else {
+            host_listings
+        };
+
+        let result = analytics::compute_host_portfolio(
+            &host_name,
+            host_id.as_deref(),
+            is_superhost,
+            &listings,
+        );
+        Ok(CallToolResult::success(vec![Content::text(
+            result.to_string(),
+        )]))
     }
 }
 
@@ -326,16 +910,199 @@ impl ServerHandler for AirbnbMcpServer {
     fn get_info(&self) -> ServerInfo {
         ServerInfo {
             protocol_version: ProtocolVersion::LATEST,
-            capabilities: ServerCapabilities::builder().enable_tools().build(),
+            capabilities: ServerCapabilities::builder()
+                .enable_tools()
+                .enable_resources()
+                .build(),
             server_info: Implementation::from_build_env(),
             instructions: Some(
-                "Airbnb MCP server for searching and browsing listings. \
-                 Use airbnb_search to find listings, airbnb_listing_details for full info, \
-                 airbnb_reviews for guest reviews, airbnb_price_calendar for pricing, \
-                 airbnb_host_profile for host details, airbnb_neighborhood_stats for area analysis, \
-                 and airbnb_occupancy_estimate for occupancy insights."
+                "Airbnb MCP server for searching and analyzing short-term rental listings.\n\
+                 \n\
+                 ## Data Tools\n\
+                 Start with airbnb_search to find listings by location. Each result includes a listing ID \
+                 you can use with other tools:\n\
+                 - airbnb_listing_details: full description, amenities, house rules, photos, capacity\n\
+                 - airbnb_reviews: guest ratings and comments (paginated via cursor)\n\
+                 - airbnb_price_calendar: daily prices and availability for 1-12 months\n\
+                 - airbnb_host_profile: host bio, superhost status, response rate, languages\n\
+                 - airbnb_occupancy_estimate: occupancy rate, weekday vs weekend pricing, monthly breakdown\n\
+                 - airbnb_neighborhood_stats: area-level avg/median prices, ratings, property types\n\
+                 \n\
+                 ## Analytical Tools\n\
+                 - airbnb_compare_listings: compare 2-100+ listings side-by-side with percentile rankings\n\
+                 - airbnb_price_trends: seasonal pricing analysis (peak/off-peak, weekend premium, volatility)\n\
+                 - airbnb_gap_finder: detect orphan nights and booking gaps with lost revenue estimate\n\
+                 - airbnb_revenue_estimate: project ADR, occupancy, monthly/annual revenue\n\
+                 - airbnb_listing_score: quality audit (0-100) with improvement suggestions\n\
+                 - airbnb_amenity_analysis: missing popular amenities vs neighborhood competition\n\
+                 - airbnb_market_comparison: compare 2-5 neighborhoods side-by-side\n\
+                 - airbnb_host_portfolio: analyze a host's full property portfolio\n\
+                 \n\
+                 ## Resources\n\
+                 Data fetched by tools is cached as MCP resources. Use resource URIs to reference \
+                 previously fetched data without re-scraping.\n\
+                 \n\
+                 ## Tips\n\
+                 - Use airbnb_compare_listings with a location to analyze an entire market (up to 100 listings).\n\
+                 - Use airbnb_listing_score + airbnb_amenity_analysis for a complete listing audit.\n\
+                 - Use airbnb_revenue_estimate to evaluate investment potential.\n\
+                 - Pagination: pass the cursor from a previous response to get the next page."
                     .into(),
             ),
+        }
+    }
+
+    async fn list_resources(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ListResourcesResult, McpError> {
+        let entries = self.resources.list().await;
+        let resources: Vec<Resource> = entries
+            .into_iter()
+            .map(|(uri, name)| Resource {
+                annotations: None,
+                raw: RawResource {
+                    uri,
+                    name,
+                    title: None,
+                    description: None,
+                    mime_type: Some("text/plain".into()),
+                    size: None,
+                    icons: None,
+                    meta: None,
+                },
+            })
+            .collect();
+        Ok(ListResourcesResult {
+            resources,
+            next_cursor: None,
+            meta: None,
+        })
+    }
+
+    #[allow(clippy::too_many_lines)]
+    async fn list_resource_templates(
+        &self,
+        _request: Option<PaginatedRequestParams>,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ListResourceTemplatesResult, McpError> {
+        let templates = vec![
+            ResourceTemplate {
+                annotations: None,
+                raw: RawResourceTemplate {
+                    uri_template: "airbnb://listing/{id}".into(),
+                    name: "Airbnb Listing".into(),
+                    title: Some("Listing details".into()),
+                    description: Some(
+                        "Full listing details (fetched via airbnb_listing_details)".into(),
+                    ),
+                    mime_type: Some("text/plain".into()),
+                    icons: None,
+                },
+            },
+            ResourceTemplate {
+                annotations: None,
+                raw: RawResourceTemplate {
+                    uri_template: "airbnb://listing/{id}/calendar".into(),
+                    name: "Price Calendar".into(),
+                    title: Some("Price & availability calendar".into()),
+                    description: Some(
+                        "Daily prices and availability (fetched via airbnb_price_calendar)".into(),
+                    ),
+                    mime_type: Some("text/plain".into()),
+                    icons: None,
+                },
+            },
+            ResourceTemplate {
+                annotations: None,
+                raw: RawResourceTemplate {
+                    uri_template: "airbnb://listing/{id}/reviews".into(),
+                    name: "Reviews".into(),
+                    title: Some("Guest reviews".into()),
+                    description: Some(
+                        "Guest reviews and ratings (fetched via airbnb_reviews)".into(),
+                    ),
+                    mime_type: Some("text/plain".into()),
+                    icons: None,
+                },
+            },
+            ResourceTemplate {
+                annotations: None,
+                raw: RawResourceTemplate {
+                    uri_template: "airbnb://listing/{id}/host".into(),
+                    name: "Host Profile".into(),
+                    title: Some("Host profile".into()),
+                    description: Some(
+                        "Host bio, superhost status, response rate (fetched via airbnb_host_profile)"
+                            .into(),
+                    ),
+                    mime_type: Some("text/plain".into()),
+                    icons: None,
+                },
+            },
+            ResourceTemplate {
+                annotations: None,
+                raw: RawResourceTemplate {
+                    uri_template: "airbnb://listing/{id}/occupancy".into(),
+                    name: "Occupancy Estimate".into(),
+                    title: Some("Occupancy estimate".into()),
+                    description: Some(
+                        "Occupancy rate and revenue breakdown (fetched via airbnb_occupancy_estimate)"
+                            .into(),
+                    ),
+                    mime_type: Some("text/plain".into()),
+                    icons: None,
+                },
+            },
+            ResourceTemplate {
+                annotations: None,
+                raw: RawResourceTemplate {
+                    uri_template: "airbnb://search/{location}".into(),
+                    name: "Search Results".into(),
+                    title: Some("Search results".into()),
+                    description: Some(
+                        "Listings found for a location (fetched via airbnb_search)".into(),
+                    ),
+                    mime_type: Some("text/plain".into()),
+                    icons: None,
+                },
+            },
+            ResourceTemplate {
+                annotations: None,
+                raw: RawResourceTemplate {
+                    uri_template: "airbnb://neighborhood/{location}".into(),
+                    name: "Neighborhood Stats".into(),
+                    title: Some("Neighborhood statistics".into()),
+                    description: Some(
+                        "Area-level price/rating stats (fetched via airbnb_neighborhood_stats)"
+                            .into(),
+                    ),
+                    mime_type: Some("text/plain".into()),
+                    icons: None,
+                },
+            },
+        ];
+        Ok(ListResourceTemplatesResult {
+            resource_templates: templates,
+            next_cursor: None,
+            meta: None,
+        })
+    }
+
+    async fn read_resource(
+        &self,
+        request: ReadResourceRequestParams,
+        _context: RequestContext<RoleServer>,
+    ) -> Result<ReadResourceResult, McpError> {
+        match self.resources.get(&request.uri).await {
+            Some(entry) => Ok(ReadResourceResult {
+                contents: vec![ResourceContents::text(entry.text, request.uri)],
+            }),
+            None => Err(McpError::resource_not_found(
+                format!("resource not found: {}", request.uri),
+                None,
+            )),
         }
     }
 }
@@ -845,9 +1612,13 @@ mod tests {
                 listing_id: id.to_string(),
                 period_start: format!("months={months}"),
                 period_end: String::new(),
-                total_days: 0, occupied_days: 0, available_days: 0,
-                occupancy_rate: 0.0, average_available_price: None,
-                weekend_avg_price: None, weekday_avg_price: None,
+                total_days: 0,
+                occupied_days: 0,
+                available_days: 0,
+                occupancy_rate: 0.0,
+                average_available_price: None,
+                weekend_avg_price: None,
+                weekday_avg_price: None,
                 monthly_breakdown: vec![],
             })
         });
@@ -856,7 +1627,8 @@ mod tests {
         // months=0 => clamped to 1
         let result = server
             .airbnb_occupancy_estimate(Parameters(OccupancyEstimateToolParams {
-                id: "1".into(), months: Some(0),
+                id: "1".into(),
+                months: Some(0),
             }))
             .await
             .unwrap();
@@ -866,12 +1638,16 @@ mod tests {
         // months=99 => clamped to 12
         let result = server
             .airbnb_occupancy_estimate(Parameters(OccupancyEstimateToolParams {
-                id: "1".into(), months: Some(99),
+                id: "1".into(),
+                months: Some(99),
             }))
             .await
             .unwrap();
         let text = extract_text(&result);
-        assert!(text.contains("months=12"), "Expected months=12, got: {text}");
+        assert!(
+            text.contains("months=12"),
+            "Expected months=12, got: {text}"
+        );
     }
 
     #[tokio::test]
@@ -887,16 +1663,26 @@ mod tests {
         let result = server
             .airbnb_search(Parameters(SearchToolParams {
                 location: "Bali".into(),
-                checkin: None, checkout: None, adults: None, children: None,
-                infants: None, pets: None, min_price: None, max_price: None,
-                property_type: None, cursor: None,
+                checkin: None,
+                checkout: None,
+                adults: None,
+                children: None,
+                infants: None,
+                pets: None,
+                min_price: None,
+                max_price: None,
+                property_type: None,
+                cursor: None,
             }))
             .await
             .unwrap();
         let text = extract_text(&result);
         assert!(text.contains("4.9"), "Should contain rating");
         assert!(text.contains("42 reviews"), "Should contain review count");
-        assert!(text.contains("Entire villa"), "Should contain property type");
+        assert!(
+            text.contains("Entire villa"),
+            "Should contain property type"
+        );
     }
 
     #[tokio::test]
@@ -911,9 +1697,16 @@ mod tests {
         let result = server
             .airbnb_search(Parameters(SearchToolParams {
                 location: "Tokyo".into(),
-                checkin: None, checkout: None, adults: None, children: None,
-                infants: None, pets: None, min_price: None, max_price: None,
-                property_type: None, cursor: None,
+                checkin: None,
+                checkout: None,
+                adults: None,
+                children: None,
+                infants: None,
+                pets: None,
+                min_price: None,
+                max_price: None,
+                property_type: None,
+                cursor: None,
             }))
             .await
             .unwrap();
@@ -956,15 +1749,22 @@ mod tests {
         let server = make_server(mock);
         let result = server
             .airbnb_reviews(Parameters(ReviewsToolParams {
-                id: "42".into(), cursor: None,
+                id: "42".into(),
+                cursor: None,
             }))
             .await
             .unwrap();
         let text = extract_text(&result);
         assert!(text.contains("Eve"));
         assert!(text.contains("Loved it!"));
-        assert!(text.contains("4.7"), "Should contain overall rating from summary");
-        assert!(text.contains("More reviews available"), "Should contain pagination indicator");
+        assert!(
+            text.contains("4.7"),
+            "Should contain overall rating from summary"
+        );
+        assert!(
+            text.contains("More reviews available"),
+            "Should contain pagination indicator"
+        );
     }
 
     #[test]
@@ -981,5 +1781,388 @@ mod tests {
         assert!(instructions.contains("airbnb_host_profile"));
         assert!(instructions.contains("airbnb_neighborhood_stats"));
         assert!(instructions.contains("airbnb_occupancy_estimate"));
+        assert!(instructions.contains("airbnb_compare_listings"));
+        assert!(instructions.contains("airbnb_price_trends"));
+        assert!(instructions.contains("airbnb_gap_finder"));
+        assert!(instructions.contains("airbnb_revenue_estimate"));
+        assert!(instructions.contains("airbnb_listing_score"));
+        assert!(instructions.contains("airbnb_amenity_analysis"));
+        assert!(instructions.contains("airbnb_market_comparison"));
+        assert!(instructions.contains("airbnb_host_portfolio"));
+        // Verify capabilities include both tools and resources
+        assert!(info.capabilities.tools.is_some());
+        assert!(info.capabilities.resources.is_some());
+    }
+
+    // ---- Analytical tools tests ----
+
+    #[tokio::test]
+    async fn price_trends_success() {
+        let mock = MockAirbnbClient::new().with_calendar(|id, _| {
+            let days = vec![
+                make_calendar_day("2025-06-06", Some(200.0), true),
+                make_calendar_day("2025-06-07", Some(250.0), true),
+                make_calendar_day("2025-06-09", Some(100.0), true),
+            ];
+            Ok(make_price_calendar(id, days))
+        });
+        let server = make_server(mock);
+        let result = server
+            .airbnb_price_trends(Parameters(PriceTrendsToolParams {
+                id: "42".into(),
+                months: Some(6),
+            }))
+            .await
+            .unwrap();
+
+        let text = extract_text(&result);
+        assert!(text.contains("Price Trends: listing 42"));
+        assert!(result.is_error.is_none() || result.is_error == Some(false));
+    }
+
+    #[tokio::test]
+    async fn price_trends_error() {
+        let mock = MockAirbnbClient::new().with_calendar(|_, _| {
+            Err(AirbnbError::Parse {
+                reason: "fail".into(),
+            })
+        });
+        let server = make_server(mock);
+        let result = server
+            .airbnb_price_trends(Parameters(PriceTrendsToolParams {
+                id: "42".into(),
+                months: None,
+            }))
+            .await
+            .unwrap();
+
+        assert_eq!(result.is_error, Some(true));
+    }
+
+    #[tokio::test]
+    async fn gap_finder_success() {
+        let mock = MockAirbnbClient::new().with_calendar(|id, _| {
+            let days = vec![
+                make_calendar_day("2025-06-01", Some(100.0), false),
+                make_calendar_day("2025-06-02", Some(150.0), true),
+                make_calendar_day("2025-06-03", Some(100.0), false),
+            ];
+            Ok(make_price_calendar(id, days))
+        });
+        let server = make_server(mock);
+        let result = server
+            .airbnb_gap_finder(Parameters(GapFinderToolParams {
+                id: "42".into(),
+                months: Some(3),
+            }))
+            .await
+            .unwrap();
+
+        let text = extract_text(&result);
+        assert!(text.contains("Gap Analysis: listing 42"));
+        assert!(text.contains("orphan"));
+    }
+
+    #[tokio::test]
+    async fn compare_listings_by_location_success() {
+        let mock = MockAirbnbClient::new().with_search(|_| {
+            Ok(make_search_result(vec![
+                make_listing("1", "A", 100.0),
+                make_listing("2", "B", 200.0),
+                make_listing("3", "C", 150.0),
+            ]))
+        });
+        let server = make_server(mock);
+        let result = server
+            .airbnb_compare_listings(Parameters(CompareListingsToolParams {
+                ids: None,
+                location: Some("Paris".into()),
+                max_listings: Some(20),
+                checkin: None,
+                checkout: None,
+                property_type: None,
+            }))
+            .await
+            .unwrap();
+
+        let text = extract_text(&result);
+        assert!(text.contains("Listing Comparison (3 listings)"));
+        assert!(result.is_error.is_none() || result.is_error == Some(false));
+    }
+
+    #[tokio::test]
+    async fn compare_listings_requires_ids_or_location() {
+        let mock = MockAirbnbClient::new();
+        let server = make_server(mock);
+        let result = server
+            .airbnb_compare_listings(Parameters(CompareListingsToolParams {
+                ids: None,
+                location: None,
+                max_listings: None,
+                checkin: None,
+                checkout: None,
+                property_type: None,
+            }))
+            .await
+            .unwrap();
+
+        assert_eq!(result.is_error, Some(true));
+    }
+
+    #[tokio::test]
+    async fn revenue_estimate_success() {
+        let mock = MockAirbnbClient::new()
+            .with_calendar(|id, _| {
+                let days = vec![
+                    make_calendar_day("2025-06-01", Some(100.0), true),
+                    make_calendar_day("2025-06-02", Some(100.0), false),
+                ];
+                Ok(make_price_calendar(id, days))
+            })
+            .with_occupancy(|id, _| Ok(make_occupancy_estimate(id)));
+        let server = make_server(mock);
+        let result = server
+            .airbnb_revenue_estimate(Parameters(RevenueEstimateToolParams {
+                id: Some("42".into()),
+                location: Some("Paris".into()),
+                months: Some(12),
+            }))
+            .await
+            .unwrap();
+
+        let text = extract_text(&result);
+        assert!(text.contains("Revenue Estimate"));
+        assert!(result.is_error.is_none() || result.is_error == Some(false));
+    }
+
+    #[tokio::test]
+    async fn revenue_estimate_requires_id_or_location() {
+        let mock = MockAirbnbClient::new();
+        let server = make_server(mock);
+        let result = server
+            .airbnb_revenue_estimate(Parameters(RevenueEstimateToolParams {
+                id: None,
+                location: None,
+                months: None,
+            }))
+            .await
+            .unwrap();
+
+        assert_eq!(result.is_error, Some(true));
+    }
+
+    #[tokio::test]
+    async fn listing_score_success() {
+        let mock = MockAirbnbClient::new();
+        let server = make_server(mock);
+        let result = server
+            .airbnb_listing_score(Parameters(ListingScoreToolParams { id: "42".into() }))
+            .await
+            .unwrap();
+
+        let text = extract_text(&result);
+        assert!(text.contains("Listing Score: 42"));
+        assert!(result.is_error.is_none() || result.is_error == Some(false));
+    }
+
+    #[tokio::test]
+    async fn amenity_analysis_success() {
+        let mock = MockAirbnbClient::new().with_search(|_| {
+            Ok(make_search_result(vec![make_listing(
+                "99", "Neighbor", 100.0,
+            )]))
+        });
+        let server = make_server(mock);
+        let result = server
+            .airbnb_amenity_analysis(Parameters(AmenityAnalysisToolParams {
+                id: "42".into(),
+                location: None,
+            }))
+            .await
+            .unwrap();
+
+        let text = extract_text(&result);
+        assert!(text.contains("Amenity Analysis: listing 42"));
+    }
+
+    #[tokio::test]
+    async fn market_comparison_success() {
+        let mock = MockAirbnbClient::new().with_neighborhood(|params| {
+            Ok(crate::domain::analytics::NeighborhoodStats {
+                location: params.location.clone(),
+                total_listings: 50,
+                average_price: Some(120.0),
+                median_price: Some(110.0),
+                price_range: Some((50.0, 300.0)),
+                average_rating: Some(4.5),
+                property_type_distribution: vec![],
+                superhost_percentage: Some(30.0),
+            })
+        });
+        let server = make_server(mock);
+        let result = server
+            .airbnb_market_comparison(Parameters(MarketComparisonToolParams {
+                locations: vec!["Paris".into(), "London".into()],
+                checkin: None,
+                checkout: None,
+                property_type: None,
+            }))
+            .await
+            .unwrap();
+
+        let text = extract_text(&result);
+        assert!(text.contains("Market Comparison"));
+        assert!(text.contains("Paris"));
+        assert!(text.contains("London"));
+    }
+
+    #[tokio::test]
+    async fn market_comparison_requires_two_locations() {
+        let mock = MockAirbnbClient::new();
+        let server = make_server(mock);
+        let result = server
+            .airbnb_market_comparison(Parameters(MarketComparisonToolParams {
+                locations: vec!["Paris".into()],
+                checkin: None,
+                checkout: None,
+                property_type: None,
+            }))
+            .await
+            .unwrap();
+
+        assert_eq!(result.is_error, Some(true));
+    }
+
+    #[tokio::test]
+    async fn host_portfolio_success() {
+        let mock = MockAirbnbClient::new().with_search(|_| {
+            let mut l1 = make_listing("1", "Apt 1", 100.0);
+            l1.host_name = Some("Test Host".into());
+            let mut l2 = make_listing("2", "Apt 2", 200.0);
+            l2.host_name = Some("Test Host".into());
+            Ok(make_search_result(vec![l1, l2]))
+        });
+        let server = make_server(mock);
+        let result = server
+            .airbnb_host_portfolio(Parameters(HostPortfolioToolParams { id: "42".into() }))
+            .await
+            .unwrap();
+
+        let text = extract_text(&result);
+        assert!(text.contains("Host Portfolio: Test Host"));
+    }
+
+    // ---- Resource store tests ----
+
+    #[tokio::test]
+    async fn resource_store_empty_initially() {
+        let store = ResourceStore::default();
+        assert!(store.list().await.is_empty());
+    }
+
+    #[tokio::test]
+    async fn resource_store_insert_and_get() {
+        let store = ResourceStore::default();
+        store
+            .insert("airbnb://listing/42", "Listing 42", "details".to_string())
+            .await;
+
+        let entry = store.get("airbnb://listing/42").await;
+        assert!(entry.is_some());
+        assert_eq!(entry.unwrap().text, "details");
+    }
+
+    #[tokio::test]
+    async fn resource_store_list_populated() {
+        let store = ResourceStore::default();
+        store
+            .insert("airbnb://listing/1", "Listing 1", "a".to_string())
+            .await;
+        store
+            .insert("airbnb://listing/2", "Listing 2", "b".to_string())
+            .await;
+
+        let list = store.list().await;
+        assert_eq!(list.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn resource_store_get_missing_returns_none() {
+        let store = ResourceStore::default();
+        assert!(store.get("airbnb://nothing").await.is_none());
+    }
+
+    #[tokio::test]
+    async fn resource_stored_after_listing_detail() {
+        let mock = MockAirbnbClient::new().with_detail(|id| Ok(make_listing_detail(id)));
+        let server = make_server(mock);
+
+        // Fetch listing detail via tool
+        let _ = server
+            .airbnb_listing_details(Parameters(DetailToolParams { id: "42".into() }))
+            .await
+            .unwrap();
+
+        // Resource should now be in the store
+        let entry = server.resources.get("airbnb://listing/42").await;
+        assert!(entry.is_some());
+        assert!(entry.unwrap().name.contains("Listing"));
+    }
+
+    #[tokio::test]
+    async fn resource_stored_after_search() {
+        let mock = MockAirbnbClient::new()
+            .with_search(|_| Ok(make_search_result(vec![make_listing("1", "Test", 100.0)])));
+        let server = make_server(mock);
+
+        let _ = server
+            .airbnb_search(Parameters(SearchToolParams {
+                location: "Paris".into(),
+                checkin: None,
+                checkout: None,
+                adults: None,
+                children: None,
+                infants: None,
+                pets: None,
+                min_price: None,
+                max_price: None,
+                property_type: None,
+                cursor: None,
+            }))
+            .await
+            .unwrap();
+
+        let entry = server.resources.get("airbnb://search/Paris").await;
+        assert!(entry.is_some());
+    }
+
+    #[tokio::test]
+    async fn resource_stored_after_calendar() {
+        let mock = MockAirbnbClient::new().with_calendar(|id, _| {
+            Ok(make_price_calendar(
+                id,
+                vec![make_calendar_day("2025-06-01", Some(100.0), true)],
+            ))
+        });
+        let server = make_server(mock);
+
+        let _ = server
+            .airbnb_price_calendar(Parameters(CalendarToolParams {
+                id: "42".into(),
+                months: None,
+            }))
+            .await
+            .unwrap();
+
+        let entry = server.resources.get("airbnb://listing/42/calendar").await;
+        assert!(entry.is_some());
+    }
+
+    #[test]
+    fn server_capabilities_include_resources() {
+        let mock = MockAirbnbClient::new();
+        let server = make_server(mock);
+        let info = server.get_info();
+        assert!(info.capabilities.resources.is_some());
     }
 }

@@ -179,11 +179,38 @@ mod tests {
             listing_id: "1".into(),
             currency: "$".into(),
             days: vec![
-                CalendarDay { date: "2025-06-01".into(), price: Some(100.0), available: true, min_nights: None, max_nights: None, closed_to_arrival: None, closed_to_departure: None },
-                CalendarDay { date: "2025-06-02".into(), price: Some(200.0), available: true, min_nights: None, max_nights: None, closed_to_arrival: None, closed_to_departure: None },
-                CalendarDay { date: "2025-06-03".into(), price: Some(150.0), available: false, min_nights: None, max_nights: None, closed_to_arrival: None, closed_to_departure: None },
+                CalendarDay {
+                    date: "2025-06-01".into(),
+                    price: Some(100.0),
+                    available: true,
+                    min_nights: None,
+                    max_nights: None,
+                    closed_to_arrival: None,
+                    closed_to_departure: None,
+                },
+                CalendarDay {
+                    date: "2025-06-02".into(),
+                    price: Some(200.0),
+                    available: true,
+                    min_nights: None,
+                    max_nights: None,
+                    closed_to_arrival: None,
+                    closed_to_departure: None,
+                },
+                CalendarDay {
+                    date: "2025-06-03".into(),
+                    price: Some(150.0),
+                    available: false,
+                    min_nights: None,
+                    max_nights: None,
+                    closed_to_arrival: None,
+                    closed_to_departure: None,
+                },
             ],
-            average_price: None, occupancy_rate: None, min_price: None, max_price: None,
+            average_price: None,
+            occupancy_rate: None,
+            min_price: None,
+            max_price: None,
         };
         cal.compute_stats();
         assert!((cal.average_price.unwrap() - 150.0).abs() < 0.01);
@@ -199,7 +226,10 @@ mod tests {
             listing_id: "1".into(),
             currency: "$".into(),
             days: vec![],
-            average_price: None, occupancy_rate: None, min_price: None, max_price: None,
+            average_price: None,
+            occupancy_rate: None,
+            min_price: None,
+            max_price: None,
         };
         cal.compute_stats();
         assert!(cal.average_price.is_none());
@@ -214,10 +244,29 @@ mod tests {
             listing_id: "1".into(),
             currency: "$".into(),
             days: vec![
-                CalendarDay { date: "2025-06-01".into(), price: Some(100.0), available: false, min_nights: None, max_nights: None, closed_to_arrival: None, closed_to_departure: None },
-                CalendarDay { date: "2025-06-02".into(), price: Some(120.0), available: false, min_nights: None, max_nights: None, closed_to_arrival: None, closed_to_departure: None },
+                CalendarDay {
+                    date: "2025-06-01".into(),
+                    price: Some(100.0),
+                    available: false,
+                    min_nights: None,
+                    max_nights: None,
+                    closed_to_arrival: None,
+                    closed_to_departure: None,
+                },
+                CalendarDay {
+                    date: "2025-06-02".into(),
+                    price: Some(120.0),
+                    available: false,
+                    min_nights: None,
+                    max_nights: None,
+                    closed_to_arrival: None,
+                    closed_to_departure: None,
+                },
             ],
-            average_price: None, occupancy_rate: None, min_price: None, max_price: None,
+            average_price: None,
+            occupancy_rate: None,
+            min_price: None,
+            max_price: None,
         };
         cal.compute_stats();
         // No available days with prices => average_price stays None
@@ -232,10 +281,29 @@ mod tests {
             listing_id: "1".into(),
             currency: "$".into(),
             days: vec![
-                CalendarDay { date: "2025-06-01".into(), price: None, available: true, min_nights: None, max_nights: None, closed_to_arrival: None, closed_to_departure: None },
-                CalendarDay { date: "2025-06-02".into(), price: None, available: true, min_nights: None, max_nights: None, closed_to_arrival: None, closed_to_departure: None },
+                CalendarDay {
+                    date: "2025-06-01".into(),
+                    price: None,
+                    available: true,
+                    min_nights: None,
+                    max_nights: None,
+                    closed_to_arrival: None,
+                    closed_to_departure: None,
+                },
+                CalendarDay {
+                    date: "2025-06-02".into(),
+                    price: None,
+                    available: true,
+                    min_nights: None,
+                    max_nights: None,
+                    closed_to_arrival: None,
+                    closed_to_departure: None,
+                },
             ],
-            average_price: None, occupancy_rate: None, min_price: None, max_price: None,
+            average_price: None,
+            occupancy_rate: None,
+            min_price: None,
+            max_price: None,
         };
         cal.compute_stats();
         assert!(cal.average_price.is_none());
@@ -249,12 +317,47 @@ mod tests {
             listing_id: "1".into(),
             currency: "$".into(),
             days: vec![
-                CalendarDay { date: "2025-06-01".into(), price: Some(100.0), available: true, min_nights: None, max_nights: None, closed_to_arrival: None, closed_to_departure: None },
-                CalendarDay { date: "2025-06-02".into(), price: None, available: true, min_nights: None, max_nights: None, closed_to_arrival: None, closed_to_departure: None },
-                CalendarDay { date: "2025-06-03".into(), price: Some(200.0), available: false, min_nights: None, max_nights: None, closed_to_arrival: None, closed_to_departure: None },
-                CalendarDay { date: "2025-06-04".into(), price: Some(150.0), available: true, min_nights: None, max_nights: None, closed_to_arrival: None, closed_to_departure: None },
+                CalendarDay {
+                    date: "2025-06-01".into(),
+                    price: Some(100.0),
+                    available: true,
+                    min_nights: None,
+                    max_nights: None,
+                    closed_to_arrival: None,
+                    closed_to_departure: None,
+                },
+                CalendarDay {
+                    date: "2025-06-02".into(),
+                    price: None,
+                    available: true,
+                    min_nights: None,
+                    max_nights: None,
+                    closed_to_arrival: None,
+                    closed_to_departure: None,
+                },
+                CalendarDay {
+                    date: "2025-06-03".into(),
+                    price: Some(200.0),
+                    available: false,
+                    min_nights: None,
+                    max_nights: None,
+                    closed_to_arrival: None,
+                    closed_to_departure: None,
+                },
+                CalendarDay {
+                    date: "2025-06-04".into(),
+                    price: Some(150.0),
+                    available: true,
+                    min_nights: None,
+                    max_nights: None,
+                    closed_to_arrival: None,
+                    closed_to_departure: None,
+                },
             ],
-            average_price: None, occupancy_rate: None, min_price: None, max_price: None,
+            average_price: None,
+            occupancy_rate: None,
+            min_price: None,
+            max_price: None,
         };
         cal.compute_stats();
         // Only available days with prices: 100 and 150 => avg = 125

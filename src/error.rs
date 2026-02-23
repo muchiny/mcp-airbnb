@@ -79,4 +79,36 @@ mod tests {
         assert!(matches!(err, AirbnbError::Json(_)));
         assert!(err.to_string().contains("JSON error"));
     }
+
+    #[test]
+    fn error_from_io() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::NotFound, "file missing");
+        let err: AirbnbError = io_err.into();
+        assert!(matches!(err, AirbnbError::Io(_)));
+        assert!(err.to_string().contains("IO error"));
+    }
+
+    #[test]
+    fn error_from_yaml() {
+        let yaml_err = serde_yaml::from_str::<serde_yaml::Value>("{{").unwrap_err();
+        let err: AirbnbError = yaml_err.into();
+        assert!(matches!(err, AirbnbError::Yaml(_)));
+        assert!(err.to_string().contains("YAML error"));
+    }
+
+    #[test]
+    fn error_from_url() {
+        let url_err = url::Url::parse("://bad").unwrap_err();
+        let err: AirbnbError = url_err.into();
+        assert!(matches!(err, AirbnbError::Url(_)));
+        assert!(err.to_string().contains("URL parse error"));
+    }
+
+    #[test]
+    fn config_error_display() {
+        let err = AirbnbError::Config("missing field".into());
+        let msg = err.to_string();
+        assert!(msg.contains("Configuration error"));
+        assert!(msg.contains("missing field"));
+    }
 }

@@ -345,11 +345,20 @@ mod tests {
         assert_eq!(profile.name, "Bob");
         assert_eq!(profile.host_id, Some("67890".to_string()));
         assert_eq!(profile.is_superhost, Some(false));
-        assert_eq!(profile.response_rate, Some("Response rate: 95%".to_string()));
-        assert_eq!(profile.response_time, Some("Responds within a few hours".to_string()));
+        assert_eq!(
+            profile.response_rate,
+            Some("Response rate: 95%".to_string())
+        );
+        assert_eq!(
+            profile.response_time,
+            Some("Responds within a few hours".to_string())
+        );
         assert_eq!(profile.description, Some("I love hosting!".to_string()));
         assert_eq!(profile.languages, vec!["English", "Spanish"]);
-        assert_eq!(profile.profile_picture_url, Some("https://example.com/bob.jpg".to_string()));
+        assert_eq!(
+            profile.profile_picture_url,
+            Some("https://example.com/bob.jpg".to_string())
+        );
     }
 
     #[test]

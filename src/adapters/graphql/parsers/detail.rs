@@ -171,7 +171,9 @@ pub fn parse_detail_response(json: &Value, id: &str, base_url: &str) -> Result<L
                     max_guests = Some(cap as u32);
                 }
             }
-            "SBUI_SENTINEL" if section_id == "OVERVIEW_DEFAULT_V2" || section_id == "OVERVIEW_DEFAULT" => {
+            "SBUI_SENTINEL"
+                if section_id == "OVERVIEW_DEFAULT_V2" || section_id == "OVERVIEW_DEFAULT" =>
+            {
                 // Overview section has room counts in detailItems
                 if let Some(detail_items) = data.get("detailItems").and_then(Value::as_array) {
                     for item in detail_items {
@@ -583,7 +585,10 @@ mod tests {
         assert_eq!(detail.host_id, Some("555".into()));
         assert_eq!(detail.host_is_superhost, Some(true));
         assert_eq!(detail.host_response_rate, Some("Response rate: 98%".into()));
-        assert_eq!(detail.host_response_time, Some("Responds within an hour".into()));
+        assert_eq!(
+            detail.host_response_time,
+            Some("Responds within an hour".into())
+        );
         assert_eq!(detail.host_languages, vec!["English", "French"]);
         assert!((detail.latitude.unwrap() - 34.03).abs() < 0.01);
         assert_eq!(detail.neighborhood, Some("Malibu Coast".into()));

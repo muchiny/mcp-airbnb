@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 
 use crate::error::{AirbnbError, Result};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SearchParams {
     pub location: String,
     pub checkin: Option<String>,

@@ -171,7 +171,7 @@ fn server_lists_seven_tools() {
     let server = AirbnbMcpServer::new(Arc::new(IntegrationMock));
     let info = server.get_info();
     let instructions = info.instructions.unwrap();
-    // Verify all 7 tools are mentioned
+    // Verify all 15 tools are mentioned
     assert!(instructions.contains("airbnb_search"));
     assert!(instructions.contains("airbnb_listing_details"));
     assert!(instructions.contains("airbnb_reviews"));
@@ -179,8 +179,17 @@ fn server_lists_seven_tools() {
     assert!(instructions.contains("airbnb_host_profile"));
     assert!(instructions.contains("airbnb_neighborhood_stats"));
     assert!(instructions.contains("airbnb_occupancy_estimate"));
-    // Verify capabilities include tools
+    assert!(instructions.contains("airbnb_compare_listings"));
+    assert!(instructions.contains("airbnb_price_trends"));
+    assert!(instructions.contains("airbnb_gap_finder"));
+    assert!(instructions.contains("airbnb_revenue_estimate"));
+    assert!(instructions.contains("airbnb_listing_score"));
+    assert!(instructions.contains("airbnb_amenity_analysis"));
+    assert!(instructions.contains("airbnb_market_comparison"));
+    assert!(instructions.contains("airbnb_host_portfolio"));
+    // Verify capabilities include tools and resources
     assert!(info.capabilities.tools.is_some());
+    assert!(info.capabilities.resources.is_some());
 }
 
 #[test]
