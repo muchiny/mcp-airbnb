@@ -739,12 +739,7 @@ async fn graphql_malformed_response_structure() {
 
     let result = client.search_listings(&base_params()).await;
     assert!(result.is_err());
-    assert!(
-        result
-            .unwrap_err()
-            .to_string()
-            .contains("could not find")
-    );
+    assert!(result.unwrap_err().to_string().contains("could not find"));
 }
 
 #[tokio::test]
@@ -754,9 +749,7 @@ async fn graphql_api_key_extraction_failure() {
     // Mount homepage that has no API key
     Mock::given(method("GET"))
         .and(path("/"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_string("<html>No config here</html>"),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_string("<html>No config here</html>"))
         .mount(&server)
         .await;
 
@@ -779,10 +772,5 @@ async fn graphql_api_key_extraction_failure() {
 
     let result = client.get_listing_detail("501").await;
     assert!(result.is_err());
-    assert!(
-        result
-            .unwrap_err()
-            .to_string()
-            .contains("API key")
-    );
+    assert!(result.unwrap_err().to_string().contains("API key"));
 }

@@ -1,7 +1,5 @@
 [advisories]
-vulnerability = "deny"
-unmaintained = "warn"
-yanked = "deny"
+ignore = []
 
 [licenses]
 allow = [
@@ -15,8 +13,6 @@ allow = [
     "Unicode-DFS-2016",
     "OpenSSL",
 ]
-unlicensed = "deny"
-copyleft = "deny"
 
 [bans]
 multiple-versions = "warn"

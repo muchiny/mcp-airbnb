@@ -43,7 +43,11 @@ pub fn parse_host_response(json: &Value) -> Result<HostProfile> {
 }
 
 /// Parse from a `MEET_YOUR_HOST` section (the real Airbnb GraphQL format).
-#[allow(clippy::unnecessary_wraps, clippy::too_many_lines, clippy::cast_possible_truncation)]
+#[allow(
+    clippy::unnecessary_wraps,
+    clippy::too_many_lines,
+    clippy::cast_possible_truncation
+)]
 fn parse_meet_your_host_section(section: &Value) -> Result<HostProfile> {
     let card = section.get("cardData");
 

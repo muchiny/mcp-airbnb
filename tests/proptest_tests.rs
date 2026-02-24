@@ -46,11 +46,11 @@ fn arb_price_calendar() -> impl Strategy<Value = PriceCalendar> {
 
 fn arb_listing() -> impl Strategy<Value = Listing> {
     (
-        0.0..5000.0_f64,                              // price
-        prop::option::of(1.0..5.0_f64),               // rating
-        0..1000_u32,                                   // review_count
-        prop::option::of(prop::bool::ANY),             // is_superhost
-        prop::option::of("[A-Za-z ]{1,20}".boxed()),   // property_type
+        0.0..5000.0_f64,                             // price
+        prop::option::of(1.0..5.0_f64),              // rating
+        0..1000_u32,                                 // review_count
+        prop::option::of(prop::bool::ANY),           // is_superhost
+        prop::option::of("[A-Za-z ]{1,20}".boxed()), // property_type
     )
         .prop_map(
             |(price, rating, review_count, is_superhost, property_type)| Listing {
