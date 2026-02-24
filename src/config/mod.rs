@@ -20,7 +20,7 @@ pub fn load_config(path: &Path) -> Result<Config> {
             path.display()
         ))
     })?;
-    let config: Config = serde_yaml::from_str(&content)?;
+    let config: Config = serde_yml::from_str(&content)?;
     Ok(config)
 }
 

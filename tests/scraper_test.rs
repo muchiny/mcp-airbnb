@@ -79,7 +79,8 @@ async fn scraper_search_parses_html_response() {
         test_cache_config(),
         cache,
         api_key_mgr,
-    );
+    )
+    .unwrap();
 
     let params = SearchParams {
         location: "MockCity".into(),
@@ -118,7 +119,8 @@ async fn scraper_detail_parses_html_response() {
         test_cache_config(),
         cache,
         api_key_mgr,
-    );
+    )
+    .unwrap();
 
     let detail = scraper.get_listing_detail("501").await.unwrap();
     assert_eq!(detail.name, "Mock Detail");
@@ -143,7 +145,8 @@ async fn scraper_caches_results() {
         test_cache_config(),
         cache,
         api_key_mgr,
-    );
+    )
+    .unwrap();
 
     // First call — hits the mock server
     let detail1 = scraper.get_listing_detail("501").await.unwrap();
@@ -179,7 +182,8 @@ async fn scraper_retries_on_server_error() {
         test_cache_config(),
         cache,
         api_key_mgr,
-    );
+    )
+    .unwrap();
 
     let detail = scraper.get_listing_detail("501").await.unwrap();
     assert_eq!(detail.name, "Mock Detail");
@@ -199,7 +203,7 @@ async fn scraper_404_returns_listing_not_found() {
     let api_key_mgr = test_api_key_manager(&mock_server.uri());
     let mut config = fast_scraper_config(&mock_server.uri());
     config.max_retries = 0; // no retries for 404
-    let scraper = AirbnbScraper::new(config, test_cache_config(), cache, api_key_mgr);
+    let scraper = AirbnbScraper::new(config, test_cache_config(), cache, api_key_mgr).unwrap();
 
     let result = scraper.get_listing_detail("nonexistent").await;
     assert!(result.is_err());
@@ -219,7 +223,7 @@ async fn scraper_429_returns_rate_limited() {
     let api_key_mgr = test_api_key_manager(&mock_server.uri());
     let mut config = fast_scraper_config(&mock_server.uri());
     config.max_retries = 0;
-    let scraper = AirbnbScraper::new(config, test_cache_config(), cache, api_key_mgr);
+    let scraper = AirbnbScraper::new(config, test_cache_config(), cache, api_key_mgr).unwrap();
 
     let result = scraper.get_listing_detail("501").await;
     assert!(result.is_err());

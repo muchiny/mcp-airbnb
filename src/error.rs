@@ -27,7 +27,7 @@ pub enum AirbnbError {
     Json(#[from] serde_json::Error),
 
     #[error("YAML error: {0}")]
-    Yaml(#[from] serde_yaml::Error),
+    Yaml(#[from] serde_yml::Error),
 
     #[error("URL parse error: {0}")]
     Url(#[from] url::ParseError),
@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn error_from_yaml() {
-        let yaml_err = serde_yaml::from_str::<serde_yaml::Value>("{{").unwrap_err();
+        let yaml_err = serde_yml::from_str::<serde_yml::Value>("{{").unwrap_err();
         let err: AirbnbError = yaml_err.into();
         assert!(matches!(err, AirbnbError::Yaml(_)));
         assert!(err.to_string().contains("YAML error"));

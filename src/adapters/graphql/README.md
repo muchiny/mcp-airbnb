@@ -6,7 +6,7 @@ Implements `AirbnbClient` using Airbnb's **internal GraphQL API** with persisted
 
 | File | Responsibility |
 |------|---------------|
-| `client.rs` | 🏗️ `AirbnbGraphQLClient` — HTTP requests, caching, all 7 `AirbnbClient` methods |
+| `client.rs` | 🏗️ `AirbnbGraphQLClient` — HTTP requests, caching, all `AirbnbClient` methods (4 required + 3 optional) |
 | `parsers/` | 🔍 Response parsers for each GraphQL operation |
 
 ## 🔧 `AirbnbGraphQLClient`

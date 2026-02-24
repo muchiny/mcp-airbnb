@@ -69,7 +69,7 @@ pub fn build_search_variables(params: &SearchParams) -> Value {
 }
 
 /// Parse the GraphQL `StaysSearch` response into a `SearchResult`.
-#[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_lines, clippy::cast_possible_truncation)]
 pub fn parse_search_response(json: &Value, base_url: &str) -> Result<SearchResult> {
     // Try multiple response paths — Airbnb's structure can vary
     let results = json

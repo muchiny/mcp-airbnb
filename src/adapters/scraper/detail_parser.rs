@@ -37,6 +37,7 @@ fn try_parse_host_from_deferred_state(html: &str) -> Option<HostProfile> {
     None
 }
 
+#[allow(clippy::cast_possible_truncation)]
 fn extract_host_from_pdp_sections(data: &serde_json::Value) -> Option<HostProfile> {
     let pdp = data
         .get("data")?
@@ -256,7 +257,7 @@ fn try_parse_deferred_state_detail(
 }
 
 /// Extract listing detail from current Airbnb PDP sections format.
-#[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_lines, clippy::cast_possible_truncation)]
 fn extract_detail_from_pdp_sections(
     data: &serde_json::Value,
     listing_id: &str,
@@ -702,7 +703,7 @@ fn extract_check_times(sections: &[serde_json::Value]) -> (Option<String>, Optio
     (check_in, check_out)
 }
 
-#[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_lines, clippy::cast_possible_truncation)]
 fn extract_detail_from_json(
     data: &serde_json::Value,
     listing_id: &str,

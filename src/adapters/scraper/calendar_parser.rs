@@ -311,6 +311,7 @@ fn parse_price_string(s: &str) -> Option<f64> {
     digits.parse::<f64>().ok()
 }
 
+#[allow(clippy::cast_possible_truncation)]
 fn extract_calendar_day(data: &serde_json::Value) -> Option<CalendarDay> {
     let date = data
         .get("date")

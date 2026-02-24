@@ -11,6 +11,7 @@ impl RateLimiter {
         let min_interval = if requests_per_second > 0.0 {
             Duration::from_secs_f64(1.0 / requests_per_second)
         } else {
+            tracing::warn!("Rate limiter initialized with non-positive rate ({requests_per_second} req/s), no rate limiting applied");
             Duration::ZERO
         };
         Self {

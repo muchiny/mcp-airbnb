@@ -39,6 +39,8 @@ The **domain layer** contains pure data types with no I/O, no network calls, and
 
 ### 📊 Analytics Types (`analytics.rs`)
 
+#### 📡 Data Tool Types
+
 | Type | Description |
 |------|-------------|
 | `HostProfile` | 👤 Host info — name, superhost status, response rate/time, languages, bio, listing count |
@@ -47,9 +49,48 @@ The **domain layer** contains pure data types with no I/O, no network calls, and
 | `OccupancyEstimate` | 📈 Occupancy — overall rate, weekday/weekend avg prices, monthly breakdown |
 | `MonthlyOccupancy` | Per-month occupancy rate, days, and average price |
 
-Analytics also provides **compute functions** (pure logic, no I/O):
-- 📊 `compute_neighborhood_stats(listings, location)` → `NeighborhoodStats`
-- 📈 `compute_occupancy_estimate(calendar)` → `OccupancyEstimate`
+#### 🧠 Analytical Tool Types
+
+| Type | Description |
+|------|-------------|
+| `ListingComparison` | 🔄 Single listing in a comparison — price/rating percentiles and ranking |
+| `ComparisonSummary` | 🔄 Aggregated comparison stats (avg price, avg rating, price range) |
+| `CompareListingsResult` | 🔄 Full comparison result with listings, summary, and location |
+| `MonthlyPriceSummary` | 📉 Monthly average price with min/max, available days, and occupancy |
+| `DayOfWeekPrice` | 📉 Average price by day of week |
+| `PriceTrends` | 📉 Seasonal pricing — monthly averages, weekend premium, volatility, peak/off-peak |
+| `CalendarGap` | 🕳️ Single booking gap with start/end dates, duration, and surrounding prices |
+| `GapFinderResult` | 🕳️ Full gap analysis with orphan nights, lost revenue estimate |
+| `MonthlyRevenue` | 💵 Projected revenue for a single month |
+| `RevenueEstimate` | 💵 Full revenue projection — ADR, occupancy, monthly/annual revenue, neighborhood comparison |
+| `CategoryScore` | 🏆 Score for a single category (0-100) with label and suggestions |
+| `ListingScore` | 🏆 Full quality audit (0-100) across 6 categories with improvement tips |
+| `AmenityGap` | 🧩 Single missing amenity with adoption percentage in neighborhood |
+| `AmenityAnalysis` | 🧩 Full amenity comparison — missing, unique, and shared amenities vs competitors |
+| `MarketSnapshot` | 🗺️ Stats for a single market in a comparison |
+| `MarketComparison` | 🗺️ Side-by-side comparison of 2-5 markets |
+| `PortfolioProperty` | 📂 Single property in a host's portfolio |
+| `HostPortfolio` | 📂 Full host portfolio — all properties, avg rating, pricing strategy, geographic spread |
+
+### 🧮 Compute Functions
+
+Analytics provides **pure compute functions** (no I/O, no async) that transform domain types:
+
+#### 📡 Data Tool Compute
+
+- 📊 `compute_neighborhood_stats(location, listings)` → `NeighborhoodStats`
+- 📈 `compute_occupancy_estimate(listing_id, calendar)` → `OccupancyEstimate`
+
+#### 🧠 Analytical Tool Compute
+
+- 🔄 `compute_compare_listings(listings, location)` → `CompareListingsResult`
+- 📉 `compute_price_trends(listing_id, calendar)` → `PriceTrends`
+- 🕳️ `compute_gap_finder(listing_id, calendar)` → `GapFinderResult`
+- 💵 `compute_revenue_estimate(id, location, calendar, neighborhood, occupancy)` → `RevenueEstimate`
+- 🏆 `compute_listing_score(detail, neighborhood)` → `ListingScore`
+- 🧩 `compute_amenity_analysis(detail, neighbors)` → `AmenityAnalysis`
+- 🗺️ `compute_market_comparison(stats)` → `MarketComparison`
+- 📂 `compute_host_portfolio(host, listings, detail)` → `HostPortfolio`
 
 ## 🗂️ Class Diagram
 
@@ -169,12 +210,40 @@ classDiagram
         +Vec~MonthlyOccupancy~ monthly_breakdown
     }
 
+    class PriceTrends {
+        +String listing_id
+        +Vec~MonthlyPriceSummary~ monthly
+        +Vec~DayOfWeekPrice~ day_of_week
+        +Option~f64~ weekend_premium_pct
+        +Option~f64~ volatility
+    }
+
+    class ListingScore {
+        +String listing_id
+        +f64 overall_score
+        +Vec~CategoryScore~ categories
+        +Vec~String~ top_suggestions
+    }
+
+    class RevenueEstimate {
+        +Option~String~ listing_id
+        +String location
+        +Option~f64~ adr
+        +Option~f64~ occupancy_rate
+        +Vec~MonthlyRevenue~ monthly
+        +Option~f64~ annual_revenue
+    }
+
     SearchResult *-- Listing : contains
     ReviewsPage *-- Review : contains
     ReviewsPage *-- ReviewsSummary : has optional
     PriceCalendar *-- CalendarDay : contains
     NeighborhoodStats *-- PropertyTypeCount : contains
     OccupancyEstimate *-- MonthlyOccupancy : contains
+    PriceTrends *-- MonthlyPriceSummary : contains
+    PriceTrends *-- DayOfWeekPrice : contains
+    ListingScore *-- CategoryScore : contains
+    RevenueEstimate *-- MonthlyRevenue : contains
 ```
 
 ## 📏 Design Rules
@@ -182,6 +251,6 @@ classDiagram
 - ✅ All types derive `Debug`, `Clone`, `Serialize`, `Deserialize`
 - 📝 `Display` implementations produce human-readable markdown output
 - 🔍 `SearchParams` is the only type with validation behavior
-- 🧮 `analytics.rs` contains pure compute functions (`compute_neighborhood_stats`, `compute_occupancy_estimate`)
+- 🧮 `analytics.rs` contains 10 pure compute functions — no async, no I/O
 - 🚫 **No `async`**, no I/O, no network calls — guaranteed by design
 - 🔗 Types are shared across all layers via `crate::domain::*`

@@ -66,7 +66,7 @@ async fn main() -> Result<()> {
             config.scraper.request_timeout_secs,
         ))
         .build()
-        .expect("failed to build HTTP client for API key manager");
+        .map_err(|e| anyhow::anyhow!("failed to build HTTP client for API key manager: {e}"))?;
     let api_key_manager = Arc::new(ApiKeyManager::new(
         http_for_key,
         config.scraper.base_url.clone(),
@@ -83,22 +83,22 @@ async fn main() -> Result<()> {
             config.cache.clone(),
             Arc::clone(&cache),
             Arc::clone(&api_key_manager),
-        );
+        )
+        .map_err(|e| anyhow::anyhow!("failed to create GraphQL client: {e}"))?;
         let scraper = AirbnbScraper::new(
             config.scraper,
             config.cache,
             Arc::clone(&cache),
             Arc::clone(&api_key_manager),
-        );
+        )
+        .map_err(|e| anyhow::anyhow!("failed to create scraper client: {e}"))?;
         Arc::new(CompositeClient::new(Box::new(graphql), Box::new(scraper)))
     } else {
         tracing::info!("GraphQL disabled — using HTML scraper only");
-        Arc::new(AirbnbScraper::new(
-            config.scraper,
-            config.cache,
-            cache,
-            api_key_manager,
-        ))
+        Arc::new(
+            AirbnbScraper::new(config.scraper, config.cache, cache, api_key_manager)
+                .map_err(|e| anyhow::anyhow!("failed to create scraper client: {e}"))?,
+        )
     };
 
     let server = AirbnbMcpServer::new(client);

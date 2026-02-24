@@ -62,6 +62,7 @@ fn try_parse_deferred_state_reviews(html: &str, listing_id: &str) -> Option<Revi
 }
 
 /// Extract reviews from current Airbnb PDP sections format.
+#[allow(clippy::cast_possible_truncation)]
 fn extract_reviews_from_pdp_sections(
     data: &serde_json::Value,
     listing_id: &str,
@@ -347,6 +348,7 @@ fn extract_single_review(data: &serde_json::Value) -> Option<Review> {
     })
 }
 
+#[allow(clippy::cast_possible_truncation)]
 fn extract_reviews_summary(data: &serde_json::Value) -> Option<ReviewsSummary> {
     let paths: &[&[&str]] = &[
         &["props", "pageProps", "listing"],

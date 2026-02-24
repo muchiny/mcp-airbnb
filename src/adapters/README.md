@@ -7,7 +7,7 @@ The **adapters layer** provides concrete implementations of the port traits. Thi
 ```
 adapters/
 ├── graphql/             # 🔗 GraphQL API — primary data source
-│   ├── client.rs        #    AirbnbGraphQLClient — persisted queries, all 7 methods
+│   ├── client.rs        #    AirbnbGraphQLClient — persisted queries, all AirbnbClient methods
 │   └── parsers/         #    JSON → domain type parsers
 │       ├── search.rs    #    🔍 StaysSearch → SearchResult
 │       ├── detail.rs    #    📋 StaysPdpSections → ListingDetail

@@ -4,7 +4,7 @@ use crate::domain::listing::ListingDetail;
 use crate::error::{AirbnbError, Result};
 
 /// Parse the GraphQL `StaysPdpSections` response into a `ListingDetail`.
-#[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_lines, clippy::cast_possible_truncation)]
 pub fn parse_detail_response(json: &Value, id: &str, base_url: &str) -> Result<ListingDetail> {
     let sections = json
         .pointer("/data/presentation/stayProductDetailPage/sections/sections")

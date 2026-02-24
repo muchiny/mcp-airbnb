@@ -198,8 +198,8 @@ mod tests {
     #[test]
     fn config_serde_roundtrip() {
         let original = Config::default();
-        let yaml = serde_yaml::to_string(&original).unwrap();
-        let restored: Config = serde_yaml::from_str(&yaml).unwrap();
+        let yaml = serde_yml::to_string(&original).unwrap();
+        let restored: Config = serde_yml::from_str(&yaml).unwrap();
         assert_eq!(restored.scraper.max_retries, original.scraper.max_retries);
         assert_eq!(restored.cache.max_entries, original.cache.max_entries);
         assert!(
@@ -211,7 +211,7 @@ mod tests {
     #[test]
     fn config_deserialize_with_overrides() {
         let yaml = "scraper:\n  max_retries: 5";
-        let config: Config = serde_yaml::from_str(yaml).unwrap();
+        let config: Config = serde_yml::from_str(yaml).unwrap();
         assert_eq!(config.scraper.max_retries, 5);
         // Other fields get defaults
         assert_eq!(config.scraper.request_timeout_secs, 30);

@@ -37,17 +37,16 @@ impl AirbnbGraphQLClient {
         cache_config: CacheConfig,
         cache: Arc<dyn ListingCache>,
         api_key_manager: Arc<ApiKeyManager>,
-    ) -> Self {
+    ) -> std::result::Result<Self, reqwest::Error> {
         let http = Client::builder()
             .user_agent(&config.user_agent)
             .timeout(Duration::from_secs(config.request_timeout_secs))
             .cookie_store(true)
-            .build()
-            .expect("failed to build HTTP client");
+            .build()?;
 
         let rate_limiter = RateLimiter::new(config.rate_limit_per_second);
 
-        Self {
+        Ok(Self {
             http,
             rate_limiter,
             cache,
@@ -55,7 +54,7 @@ impl AirbnbGraphQLClient {
             hashes: config.graphql_hashes.clone(),
             cache_config,
             api_key_manager,
-        }
+        })
     }
 
     /// Execute a GraphQL GET request with persisted query hash.

@@ -57,6 +57,7 @@ pub fn parse_reviews_response(json: &Value, listing_id: &str) -> Result<ReviewsP
     })
 }
 
+#[allow(clippy::cast_possible_truncation)]
 fn parse_summary(data: &Value) -> Option<ReviewsSummary> {
     let overall = data
         .get("overallRating")

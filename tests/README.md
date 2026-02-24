@@ -6,7 +6,7 @@ Integration and unit tests for the mcp-airbnb server.
 
 | File | Scope | Description |
 |------|-------|-------------|
-| `mcp_server_test.rs` | 📡 MCP layer | Tests all 7 MCP tools via the server interface |
+| `mcp_server_test.rs` | 📡 MCP layer | Tests MCP server: tool registration, instructions, capabilities |
 | `scraper_test.rs` | 🕷️ Scraper | Tests HTML parsing and scraping logic |
 | `fixtures/` | 📁 Test data | HTML fixtures for parser tests |
 
@@ -17,8 +17,10 @@ flowchart TD
     Tests["🧪 Integration Tests"]
     Tests --> MockClient["🎭 MockAirbnbClient<br/>(from test_helpers.rs)"]
     MockClient --> Server["📡 AirbnbMcpServer"]
-    Server --> Tools["🔧 Tool methods"]
+    Server --> Tools["🔧 15 Tool methods"]
 ```
+
+> There are also 40+ inline unit tests in `src/mcp/server.rs` that test all 15 tools (7 data + 8 analytical) with mock clients.
 
 ## 🎭 Mock Infrastructure
 

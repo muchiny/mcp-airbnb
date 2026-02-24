@@ -497,6 +497,7 @@ fn extract_property_type_from_title(title: &str) -> Option<String> {
 }
 
 /// Extract listing from legacy Airbnb format (__`NEXT_DATA`__ style)
+#[allow(clippy::cast_possible_truncation)]
 fn extract_listing_legacy_format(section: &serde_json::Value, base_url: &str) -> Option<Listing> {
     let listing_data = section.get("listing").unwrap_or(section);
 
@@ -709,6 +710,13 @@ fn parse_search_css(html: &str, base_url: &str) -> Result<SearchResult> {
                 longitude: None,
             });
         }
+    }
+
+    if !listings.is_empty() {
+        tracing::warn!(
+            count = listings.len(),
+            "CSS fallback produced listings with incomplete data (price=0, no location)"
+        );
     }
 
     if listings.is_empty() {

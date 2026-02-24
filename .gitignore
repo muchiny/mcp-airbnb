@@ -4,3 +4,16 @@
 .DS_Store
 .mcp.json
 .claude/
+
+# Fuzz
+fuzz/target/
+fuzz/corpus/
+fuzz/artifacts/
+
+# Coverage
+tarpaulin-report.html
+lcov.info
+cobertura.xml
+
+# Proptest regressions
+proptest-regressions/

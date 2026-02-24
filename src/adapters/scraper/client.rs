@@ -38,24 +38,23 @@ impl AirbnbScraper {
         cache_config: CacheConfig,
         cache: Arc<dyn ListingCache>,
         api_key_manager: Arc<ApiKeyManager>,
-    ) -> Self {
+    ) -> std::result::Result<Self, reqwest::Error> {
         let http = Client::builder()
             .user_agent(&config.user_agent)
             .timeout(Duration::from_secs(config.request_timeout_secs))
             .cookie_store(true)
-            .build()
-            .expect("failed to build HTTP client");
+            .build()?;
 
         let rate_limiter = RateLimiter::new(config.rate_limit_per_second);
 
-        Self {
+        Ok(Self {
             http,
             rate_limiter,
             cache,
             config,
             cache_config,
             api_key_manager,
-        }
+        })
     }
 
     async fn fetch_html(&self, url: &str) -> Result<String> {
@@ -265,11 +264,10 @@ fn build_search_url(base_url: &str, params: &SearchParams) -> String {
         parsed.to_string()
     } else {
         // Fallback: manual construction if base URL can't be parsed
-        let pairs: Vec<String> = query_pairs
-            .iter()
-            .map(|(k, v)| format!("{k}={v}"))
-            .collect();
-        format!("{base}?{}", pairs.join("&"))
+        let encoded: String = url::form_urlencoded::Serializer::new(String::new())
+            .extend_pairs(&query_pairs)
+            .finish();
+        format!("{base}?{encoded}")
     }
 }
 
@@ -440,5 +438,16 @@ mod tests {
         // The cursor value should be properly encoded, not breaking the URL
         assert!(!url.contains("cursor=abc&def=123"));
         assert!(url.contains("cursor=abc%26def%3D123") || url.contains("cursor=abc%26def=123"));
+    }
+
+    #[test]
+    fn build_search_url_fallback_encodes_special_chars() {
+        // Non-absolute URL triggers Url::parse failure, exercising the fallback path
+        let mut params = base_params();
+        params.cursor = Some("abc&def=123".into());
+        let url = build_search_url("not-a-valid-url", &params);
+        // The fallback must still URL-encode special characters
+        assert!(!url.contains("cursor=abc&def=123"));
+        assert!(url.contains("cursor=abc%26def%3D123"));
     }
 }

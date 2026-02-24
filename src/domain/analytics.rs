@@ -756,11 +756,16 @@ impl std::fmt::Display for HostPortfolio {
 // Pure computation functions
 // ---------------------------------------------------------------------------
 
+#[allow(clippy::cast_possible_truncation)]
 pub fn compute_neighborhood_stats(location: &str, listings: &[Listing]) -> NeighborhoodStats {
     let total_listings = listings.len() as u32;
 
-    // Prices
-    let mut prices: Vec<f64> = listings.iter().map(|l| l.price_per_night).collect();
+    // Prices (exclude zero-price listings from incomplete data sources like CSS fallback)
+    let mut prices: Vec<f64> = listings
+        .iter()
+        .map(|l| l.price_per_night)
+        .filter(|&p| p > 0.0)
+        .collect();
     prices.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let average_price = if prices.is_empty() {
@@ -843,6 +848,7 @@ pub fn compute_neighborhood_stats(location: &str, listings: &[Listing]) -> Neigh
     }
 }
 
+#[allow(clippy::cast_possible_truncation)]
 pub fn compute_occupancy_estimate(listing_id: &str, calendar: &PriceCalendar) -> OccupancyEstimate {
     let days = &calendar.days;
 
@@ -959,7 +965,7 @@ pub fn compute_occupancy_estimate(listing_id: &str, calendar: &PriceCalendar) ->
 // Price Trends computation
 // ---------------------------------------------------------------------------
 
-#[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_lines, clippy::cast_possible_truncation)]
 pub fn compute_price_trends(listing_id: &str, calendar: &PriceCalendar) -> PriceTrends {
     let days = &calendar.days;
     let available_with_price: Vec<_> = days
@@ -1158,6 +1164,7 @@ pub fn compute_price_trends(listing_id: &str, calendar: &PriceCalendar) -> Price
 // Gap Finder computation
 // ---------------------------------------------------------------------------
 
+#[allow(clippy::cast_possible_truncation)]
 pub fn compute_gap_finder(listing_id: &str, calendar: &PriceCalendar) -> GapFinderResult {
     let days = &calendar.days;
     let mut gaps = Vec::new();
@@ -1179,7 +1186,7 @@ pub fn compute_gap_finder(listing_id: &str, calendar: &PriceCalendar) -> GapFind
         }
         let has_occupied_after = i < days.len() && !days[i].available;
 
-        // Only count as gap if bordered by occupied days on at least one side
+        // Only count as gap if bordered by occupied days on both sides
         if has_occupied_before && has_occupied_after {
             let gap_days = &days[start..i];
             let nights = gap_days.len() as u32;
@@ -1297,7 +1304,7 @@ pub fn compute_revenue_estimate(
         vec![]
     };
 
-    let monthly_revenue = adr * (occ_rate / 100.0) * 30.0;
+    let monthly_revenue = adr * (occ_rate / 100.0) * 30.44; // avg days per month (365.25/12)
     let annual_revenue = monthly_revenue * 12.0;
 
     RevenueEstimate {
@@ -1317,7 +1324,7 @@ pub fn compute_revenue_estimate(
 // Listing Score computation
 // ---------------------------------------------------------------------------
 
-#[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_lines, clippy::cast_possible_truncation)]
 pub fn compute_listing_score(
     detail: &ListingDetail,
     neighborhood: Option<&NeighborhoodStats>,
@@ -1502,6 +1509,7 @@ pub fn compute_listing_score(
 // Amenity Analysis computation
 // ---------------------------------------------------------------------------
 
+#[allow(clippy::cast_possible_truncation)]
 pub fn compute_amenity_analysis(
     detail: &ListingDetail,
     neighborhood_details: &[ListingDetail],
@@ -1584,13 +1592,18 @@ pub fn compute_amenity_analysis(
 // Compare Listings computation
 // ---------------------------------------------------------------------------
 
+#[allow(clippy::cast_possible_truncation)]
 pub fn compute_compare_listings(
     listings: &[Listing],
     _details: Option<&[ListingDetail]>,
 ) -> CompareListingsResult {
     let count = listings.len() as u32;
 
-    let mut prices: Vec<f64> = listings.iter().map(|l| l.price_per_night).collect();
+    let mut prices: Vec<f64> = listings
+        .iter()
+        .map(|l| l.price_per_night)
+        .filter(|&p| p > 0.0)
+        .collect();
     prices.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let avg_price = if prices.is_empty() {
@@ -1713,6 +1726,7 @@ pub fn compute_market_comparison(stats: &[NeighborhoodStats]) -> MarketCompariso
 // Host Portfolio computation
 // ---------------------------------------------------------------------------
 
+#[allow(clippy::cast_possible_truncation)]
 pub fn compute_host_portfolio(
     host_name: &str,
     host_id: Option<&str>,
@@ -1721,7 +1735,11 @@ pub fn compute_host_portfolio(
 ) -> HostPortfolio {
     let total_properties = listings.len() as u32;
 
-    let prices: Vec<f64> = listings.iter().map(|l| l.price_per_night).collect();
+    let prices: Vec<f64> = listings
+        .iter()
+        .map(|l| l.price_per_night)
+        .filter(|&p| p > 0.0)
+        .collect();
     let avg_price = if prices.is_empty() {
         0.0
     } else {

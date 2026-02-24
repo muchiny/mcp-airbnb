@@ -23,7 +23,7 @@ scraper = "0.25.0"
 # Serialization
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
-serde_yaml = "0.9.34-deprecated"
+serde_yml = "0.0.12"
 schemars = "1.2.1"
 
 # Error handling
@@ -48,6 +48,7 @@ tempfile = "3.25.0"
 insta = { version = "1.46.3", features = ["json"] }
 pretty_assertions = "1.4.1"
 tokio-test = "0.4.5"
+proptest = "1.6.0"
 
 [profile.release]
 lto = true
@@ -67,6 +68,5 @@ module_name_repetitions = "allow"
 must_use_candidate = "allow"
 missing_errors_doc = "allow"
 missing_panics_doc = "allow"
-cast_possible_truncation = "allow"
 similar_names = "allow"
 format_push_string = "allow"

@@ -17,7 +17,10 @@ pub struct MemoryCache {
 
 impl MemoryCache {
     pub fn new(max_entries: usize) -> Self {
-        let cap = NonZeroUsize::new(max_entries).unwrap_or(NonZeroUsize::new(100).unwrap());
+        let cap = NonZeroUsize::new(max_entries).unwrap_or_else(|| {
+            tracing::warn!("Cache max_entries was 0, defaulting to 100");
+            NonZeroUsize::new(100).unwrap()
+        });
         Self {
             inner: RwLock::new(LruCache::new(cap)),
         }
@@ -26,7 +29,13 @@ impl MemoryCache {
 
 impl ListingCache for MemoryCache {
     fn get(&self, key: &str) -> Option<String> {
-        let mut cache = self.inner.write().ok()?;
+        let mut cache = self.inner.write().map_or_else(
+            |_| {
+                tracing::error!("Cache lock poisoned on get('{key}'), returning miss");
+                None
+            },
+            Some,
+        )?;
         let entry = cache.get(key)?;
         if Instant::now() > entry.expires_at {
             cache.pop(key);
@@ -44,6 +53,8 @@ impl ListingCache for MemoryCache {
                     expires_at: Instant::now() + ttl,
                 },
             );
+        } else {
+            tracing::error!("Cache lock poisoned on set('{key}'), skipping write");
         }
     }
 }
