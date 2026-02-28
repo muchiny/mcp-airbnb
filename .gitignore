@@ -12,6 +12,7 @@ fuzz/artifacts/
 
 # Coverage
 tarpaulin-report.html
+tarpaulin-report.json
 lcov.info
 cobertura.xml
 
