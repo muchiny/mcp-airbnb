@@ -109,6 +109,7 @@ cache:
 | `detail_ttl_secs` | `3600` (1 hour) | 📋 Time-to-live for listing details |
 | `reviews_ttl_secs` | `3600` (1 hour) | ⭐ Time-to-live for reviews |
 | `calendar_ttl_secs` | `1800` (30 min) | 📅 Time-to-live for price calendars |
+| `host_profile_ttl_secs` | `3600` (1 hour) | 👤 Time-to-live for host profiles |
 
 ## 🔍 Config Loading
 

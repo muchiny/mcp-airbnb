@@ -8,7 +8,7 @@ The **MCP layer** exposes domain capabilities as [Model Context Protocol](https:
 
 The main server struct, defined in `server.rs`. It uses rmcp macros:
 
-- **`#[tool_router]`** on the `impl` block — registers all 15 tool methods
+- **`#[tool_router]`** on the `impl` block — registers all 18 tool methods
 - **`#[tool(...)]`** on each method — defines tool name, description, and annotations
 - **`#[tool_handler]`** on the `ServerHandler` impl — provides server info and capabilities
 
@@ -31,7 +31,7 @@ flowchart TD
         O["📈 airbnb_occupancy_estimate"]
     end
 
-    subgraph Analytical["🧠 Analytical Tools (8)"]
+    subgraph Analytical["🧠 Analytical Tools (11)"]
         CMP["🔄 airbnb_compare_listings"]
         PT["📉 airbnb_price_trends"]
         GF["🕳️ airbnb_gap_finder"]
@@ -40,6 +40,9 @@ flowchart TD
         AA["🧩 airbnb_amenity_analysis"]
         MC["🗺️ airbnb_market_comparison"]
         HP["📂 airbnb_host_portfolio"]
+        RS["💬 airbnb_review_sentiment"]
+        CP["🎯 airbnb_competitive_positioning"]
+        OP["💲 airbnb_optimal_pricing"]
     end
 
     Router --> Data
@@ -76,6 +79,12 @@ you can use with other tools:
 - airbnb_amenity_analysis: missing popular amenities vs neighborhood competition
 - airbnb_market_comparison: compare 2-5 neighborhoods side-by-side
 - airbnb_host_portfolio: analyze a host's full property portfolio
+- airbnb_review_sentiment: keyword-based sentiment analysis of guest reviews
+- airbnb_competitive_positioning: 5-axis competitive score vs neighborhood
+- airbnb_optimal_pricing: data-driven pricing recommendation with reasoning
+
+## Resources
+Data fetched by tools is cached as MCP resources. Use resource URIs to reference previously fetched data without re-scraping.
 
 ## Tips
 - Use airbnb_compare_listings with a location to analyze an entire market (up to 100 listings).
@@ -112,6 +121,9 @@ Each description explains **what** the tool does and **when** to use it:
 | 🧩 `airbnb_amenity_analysis` | Compare a listing's amenities against neighborhood competition. Identifies missing popular amenities and highlights unique ones. Helps optimize listings to match or beat competitors. |
 | 🗺️ `airbnb_market_comparison` | Compare 2-5 Airbnb markets side-by-side: average/median prices, ratings, superhost percentage, and dominant property types. Ideal for deciding where to invest or list a property. |
 | 📂 `airbnb_host_portfolio` | Analyze a host's full portfolio: all their properties, average rating, pricing strategy, total reviews, and geographic distribution. Useful for competitive intelligence. |
+| 💬 `airbnb_review_sentiment` | Analyze guest review sentiment: positive/negative/neutral breakdown, recurring themes (cleanliness, location, communication, amenities, value), and top keywords. Helps identify strengths and weaknesses from guest feedback. |
+| 🎯 `airbnb_competitive_positioning` | Evaluate a listing's competitive position across 5 axes: price value, rating, amenity count, review volume, and occupancy. Returns percentile rankings, overall competitiveness score (0-100), strengths, and weaknesses vs the neighborhood. |
+| 💲 `airbnb_optimal_pricing` | Suggest optimal pricing based on neighborhood comparables, seasonal trends, rating premium, and amenity analysis. Returns recommended price, range, weekday/weekend split, and detailed reasoning. |
 
 ### ❌ Actionable Error Messages
 
@@ -141,6 +153,9 @@ Error messages guide AI self-correction:
 | 🧩 Amenity | `"Failed to get listing '{id}': {error}"` |
 | 🗺️ Market | `"Provide at least 2 locations to compare."` / `"Failed to get stats for '{location}': {error}"` |
 | 📂 Portfolio | `"Failed to get listing '{id}': {error}"` |
+| 💬 Sentiment | `"Failed to get reviews for listing '{id}': {error}"` |
+| 🎯 Positioning | `"Failed to get listing '{id}': {error}"` / `"Failed to get neighborhood stats for '{location}': {error}"` |
+| 💲 Pricing | `"Failed to get listing '{id}': {error}"` |
 
 ## 🔧 Tool Parameter Types
 
@@ -168,12 +183,17 @@ Error messages guide AI self-correction:
 | `AmenityAnalysisToolParams` | 🧩 `airbnb_amenity_analysis` | `id`, `location` |
 | `MarketComparisonToolParams` | 🗺️ `airbnb_market_comparison` | `locations`, `checkin`, `checkout`, `property_type` |
 | `HostPortfolioToolParams` | 📂 `airbnb_host_portfolio` | `id` |
+| `ReviewSentimentToolParams` | 💬 `airbnb_review_sentiment` | `id`, `max_pages` |
+| `CompetitivePositioningToolParams` | 🎯 `airbnb_competitive_positioning` | `id`, `location` |
+| `OptimalPricingToolParams` | 💲 `airbnb_optimal_pricing` | `id`, `location` |
 
 All parameter types derive `Debug`, `Deserialize`, and `JsonSchema` (for MCP schema generation via `schemars`). The `///` doc comments on each field become JSON Schema descriptions that AI assistants see.
 
 ## 📦 MCP Resources
 
-The server exposes 7 resource templates. Data fetched by tools is automatically cached in a thread-safe `ResourceStore` and served as MCP resources.
+The server exposes 18 resource templates. Data fetched by tools is automatically cached in a thread-safe `ResourceStore` and served as MCP resources.
+
+#### 📡 Data Resources
 
 | Resource | URI Pattern | Source Tool |
 |----------|------------|-------------|
@@ -185,12 +205,28 @@ The server exposes 7 resource templates. Data fetched by tools is automatically 
 | Search Results | `airbnb://search/{location}` | `airbnb_search` |
 | Neighborhood Stats | `airbnb://neighborhood/{location}` | `airbnb_neighborhood_stats` |
 
+#### 🧠 Analytical Resources
+
+| Resource | URI Pattern | Source Tool |
+|----------|------------|-------------|
+| Comparison | `airbnb://analysis/compare/{key}` | `airbnb_compare_listings` |
+| Price Trends | `airbnb://analysis/price-trends/{id}` | `airbnb_price_trends` |
+| Booking Gaps | `airbnb://analysis/gaps/{id}` | `airbnb_gap_finder` |
+| Revenue Estimate | `airbnb://analysis/revenue/{key}` | `airbnb_revenue_estimate` |
+| Listing Score | `airbnb://analysis/score/{id}` | `airbnb_listing_score` |
+| Amenity Analysis | `airbnb://analysis/amenities/{id}` | `airbnb_amenity_analysis` |
+| Market Comparison | `airbnb://analysis/market/{key}` | `airbnb_market_comparison` |
+| Host Portfolio | `airbnb://analysis/portfolio/{id}` | `airbnb_host_portfolio` |
+| Review Sentiment | `airbnb://analysis/sentiment/{id}` | `airbnb_review_sentiment` |
+| Competitive Positioning | `airbnb://analysis/positioning/{id}` | `airbnb_competitive_positioning` |
+| Optimal Pricing | `airbnb://analysis/pricing/{id}` | `airbnb_optimal_pricing` |
+
 ## 🔌 Protocol Details
 
 - 📡 **Transport**: stdio (`stdin`/`stdout`)
 - 🔄 **Protocol**: JSON-RPC (MCP specification)
 - 📝 **Logging**: All tracing output goes to `stderr` — `stdout` is strictly reserved for MCP JSON-RPC messages
-- 🔧 **Capabilities**: Tools (15) + Resources (7 templates)
+- 🔧 **Capabilities**: Tools (18) + Resources (18 templates)
 - 🏷️ **Version**: `ProtocolVersion::LATEST`
 - 🔒 **Annotations**: All tools marked `read_only_hint = true, open_world_hint = true`
 
@@ -222,3 +258,6 @@ Each tool formats its output as human-readable markdown-like text:
 | 🧩 **Amenity** | Missing/unique amenities vs neighborhood, adoption percentages |
 | 🗺️ **Market** | Side-by-side neighborhood stats with price/rating/superhost comparisons |
 | 📂 **Portfolio** | Host overview, property list, rating/pricing strategy summary |
+| 💬 **Sentiment** | Positive/negative/neutral breakdown, themes, top keywords |
+| 🎯 **Positioning** | 5-axis radar with percentiles, overall score, strengths/weaknesses |
+| 💲 **Pricing** | Recommended price, range, weekday/weekend split, reasoning factors |

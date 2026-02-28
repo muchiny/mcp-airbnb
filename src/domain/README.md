@@ -71,6 +71,11 @@ The **domain layer** contains pure data types with no I/O, no network calls, and
 | `MarketComparison` | 🗺️ Side-by-side comparison of 2-5 markets |
 | `PortfolioProperty` | 📂 Single property in a host's portfolio |
 | `HostPortfolio` | 📂 Full host portfolio — all properties, avg rating, pricing strategy, geographic spread |
+| `ReviewTheme` | 💬 Review theme with mention count, positive/negative counts, sample quotes |
+| `ReviewSentiment` | 💬 Full sentiment analysis — positive/negative/neutral percentages, themes, keywords |
+| `CompetitiveAxis` | 🎯 Single competitive axis with listing value, neighborhood avg, percentile, assessment |
+| `CompetitivePositioning` | 🎯 5-axis competitive score with overall competitiveness (0-100), strengths, weaknesses |
+| `PricingRecommendation` | 💲 Optimal pricing — recommended price, range, weekday/weekend split, reasoning, amenity premium |
 
 ### 🧮 Compute Functions
 
@@ -91,6 +96,9 @@ Analytics provides **pure compute functions** (no I/O, no async) that transform 
 - 🧩 `compute_amenity_analysis(detail, neighbors)` → `AmenityAnalysis`
 - 🗺️ `compute_market_comparison(stats)` → `MarketComparison`
 - 📂 `compute_host_portfolio(host, listings, detail)` → `HostPortfolio`
+- 💬 `compute_review_sentiment(listing_id, reviews)` → `ReviewSentiment`
+- 🎯 `compute_competitive_positioning(detail, neighborhood, occupancy, amenities)` → `CompetitivePositioning`
+- 💲 `compute_optimal_pricing(detail, neighborhood, trends, amenities)` → `PricingRecommendation`
 
 ## 🗂️ Class Diagram
 
@@ -234,6 +242,38 @@ classDiagram
         +Option~f64~ annual_revenue
     }
 
+    class ReviewSentiment {
+        +String listing_id
+        +u32 total_reviews_analyzed
+        +f64 positive_pct
+        +f64 negative_pct
+        +f64 neutral_pct
+        +Vec~ReviewTheme~ themes
+        +Vec~Tuple~ top_positive_keywords
+        +Vec~Tuple~ top_negative_keywords
+    }
+
+    class CompetitivePositioning {
+        +String listing_id
+        +Vec~CompetitiveAxis~ axes
+        +f64 overall_competitiveness
+        +Vec~String~ strengths
+        +Vec~String~ weaknesses
+    }
+
+    class PricingRecommendation {
+        +String listing_id
+        +f64 current_price
+        +f64 recommended_price
+        +Tuple recommended_range
+        +String currency
+        +Vec~String~ reasoning
+        +Option~f64~ weekday_recommendation
+        +Option~f64~ weekend_recommendation
+        +Option~f64~ amenity_premium_pct
+        +Option~f64~ vs_neighborhood_median
+    }
+
     SearchResult *-- Listing : contains
     ReviewsPage *-- Review : contains
     ReviewsPage *-- ReviewsSummary : has optional
@@ -244,6 +284,8 @@ classDiagram
     PriceTrends *-- DayOfWeekPrice : contains
     ListingScore *-- CategoryScore : contains
     RevenueEstimate *-- MonthlyRevenue : contains
+    ReviewSentiment *-- ReviewTheme : contains
+    CompetitivePositioning *-- CompetitiveAxis : contains
 ```
 
 ## 📏 Design Rules
@@ -251,6 +293,6 @@ classDiagram
 - ✅ All types derive `Debug`, `Clone`, `Serialize`, `Deserialize`
 - 📝 `Display` implementations produce human-readable markdown output
 - 🔍 `SearchParams` is the only type with validation behavior
-- 🧮 `analytics.rs` contains 10 pure compute functions — no async, no I/O
+- 🧮 `analytics.rs` contains 13 pure compute functions — no async, no I/O
 - 🚫 **No `async`**, no I/O, no network calls — guaranteed by design
 - 🔗 Types are shared across all layers via `crate::domain::*`

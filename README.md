@@ -8,7 +8,7 @@
 
 ## 🤔 What is this?
 
-[MCP (Model Context Protocol)](https://modelcontextprotocol.io/) is an open standard that lets AI assistants call external tools. This server gives any MCP-compatible AI (Claude, etc.) **15 tools** to search, analyze, and compare Airbnb listings — no API key required.
+[MCP (Model Context Protocol)](https://modelcontextprotocol.io/) is an open standard that lets AI assistants call external tools. This server gives any MCP-compatible AI (Claude, etc.) **18 tools** to search, analyze, and compare Airbnb listings — no API key required.
 
 **Who is it for?**
 
@@ -37,12 +37,15 @@
 - 🧩 **Amenity analysis** — missing popular amenities vs neighborhood competition
 - 🗺️ **Market comparison** — compare 2-5 neighborhoods side-by-side
 - 📂 **Host portfolio** — analyze a host's full property collection
+- 💬 **Review sentiment** — positive/negative/neutral breakdown, recurring themes, keywords
+- 🎯 **Competitive positioning** — 5-axis competitive score (0-100) vs neighborhood
+- 💲 **Optimal pricing** — data-driven pricing recommendation with reasoning
 
 ### 🔧 Infrastructure
 - 🔗 **Dual data source** — GraphQL API (fast, structured) + HTML scraper (fallback)
 - 💾 **In-memory LRU cache** with configurable TTLs per tool
 - ⏱️ **Rate limiting** to respect Airbnb (default: 1 request per 2 seconds)
-- 📦 **MCP Resources** — fetched data cached as reusable resources (7 templates)
+- 📦 **MCP Resources** — fetched data cached as reusable resources (18 templates)
 - 🏗️ **Hexagonal architecture** — clean separation of domain, ports, and adapters
 
 ## 🏗️ Architecture
@@ -55,7 +58,7 @@ graph TB
     end
 
     subgraph MCP["📡 MCP Protocol Layer"]
-        Server["AirbnbMcpServer<br/>rmcp 0.16 · stdio · 15 tools"]
+        Server["AirbnbMcpServer<br/>rmcp 0.16 · stdio · 18 tools"]
     end
 
     subgraph Core["💎 Domain & Ports"]
@@ -98,7 +101,7 @@ graph TB
 | 📊 `airbnb_neighborhood_stats` | Aggregated area statistics | `location`, `checkin`, `checkout`, `property_type` |
 | 📈 `airbnb_occupancy_estimate` | Occupancy rate and pricing breakdown | `id`, `months` (1-12, default: 3) |
 
-### 🧠 Analytical Tools (8)
+### 🧠 Analytical Tools (11)
 
 These tools compose data from the tools above — no additional scraping required.
 
@@ -112,10 +115,15 @@ These tools compose data from the tools above — no additional scraping require
 | 🧩 `airbnb_amenity_analysis` | Missing popular amenities vs neighborhood competition | `id`, `location` |
 | 🗺️ `airbnb_market_comparison` | Compare 2-5 neighborhoods side-by-side | `locations` (required), `checkin`, `checkout`, `property_type` |
 | 📂 `airbnb_host_portfolio` | Analyze a host's full property portfolio | `id` |
+| 💬 `airbnb_review_sentiment` | Sentiment analysis of guest reviews: themes, keywords, breakdown | `id`, `max_pages` (1-20, default: 5) |
+| 🎯 `airbnb_competitive_positioning` | 5-axis competitive score (0-100) with strengths/weaknesses | `id`, `location` |
+| 💲 `airbnb_optimal_pricing` | Data-driven pricing recommendation with reasoning | `id`, `location` |
 
 ## 📦 MCP Resources
 
 Data fetched by tools is automatically cached as MCP resources. Clients can reference previously fetched data without re-scraping.
+
+#### 📡 Data Resources
 
 | Resource | URI Pattern | Source Tool |
 |----------|------------|-------------|
@@ -126,6 +134,22 @@ Data fetched by tools is automatically cached as MCP resources. Clients can refe
 | Occupancy Estimate | `airbnb://listing/{id}/occupancy` | `airbnb_occupancy_estimate` |
 | Search Results | `airbnb://search/{location}` | `airbnb_search` |
 | Neighborhood Stats | `airbnb://neighborhood/{location}` | `airbnb_neighborhood_stats` |
+
+#### 🧠 Analytical Resources
+
+| Resource | URI Pattern | Source Tool |
+|----------|------------|-------------|
+| Comparison | `airbnb://analysis/compare/{key}` | `airbnb_compare_listings` |
+| Price Trends | `airbnb://analysis/price-trends/{id}` | `airbnb_price_trends` |
+| Booking Gaps | `airbnb://analysis/gaps/{id}` | `airbnb_gap_finder` |
+| Revenue Estimate | `airbnb://analysis/revenue/{key}` | `airbnb_revenue_estimate` |
+| Listing Score | `airbnb://analysis/score/{id}` | `airbnb_listing_score` |
+| Amenity Analysis | `airbnb://analysis/amenities/{id}` | `airbnb_amenity_analysis` |
+| Market Comparison | `airbnb://analysis/market/{key}` | `airbnb_market_comparison` |
+| Host Portfolio | `airbnb://analysis/portfolio/{id}` | `airbnb_host_portfolio` |
+| Review Sentiment | `airbnb://analysis/sentiment/{id}` | `airbnb_review_sentiment` |
+| Competitive Positioning | `airbnb://analysis/positioning/{id}` | `airbnb_competitive_positioning` |
+| Optimal Pricing | `airbnb://analysis/pricing/{id}` | `airbnb_optimal_pricing` |
 
 ## 🚀 Quick Start
 
@@ -244,6 +268,7 @@ All settings live in `config.yaml` (optional — sensible defaults are provided)
 | `cache` | `detail_ttl_secs` | `3600` | Detail cache TTL (1 hour) |
 | `cache` | `reviews_ttl_secs` | `3600` | Reviews cache TTL (1 hour) |
 | `cache` | `calendar_ttl_secs` | `1800` | Calendar cache TTL (30 min) |
+| `cache` | `host_profile_ttl_secs` | `3600` | Host profile cache TTL (1 hour) |
 
 > See [src/config/README.md](src/config/README.md) for the full configuration reference.
 
@@ -262,13 +287,18 @@ mcp-airbnb/
 │   │   ├── cache/           # 💾 In-memory LRU cache
 │   │   ├── composite.rs     # 🔀 GraphQL + Scraper with auto-fallback
 │   │   └── shared.rs        # 🔑 ApiKeyManager (shared auth)
-│   ├── mcp/                 # 📡 MCP server (rmcp 0.16, stdio, 15 tools)
+│   ├── mcp/                 # 📡 MCP server (rmcp 0.16, stdio, 18 tools)
 │   ├── config/              # ⚙️ YAML configuration
 │   ├── error.rs             # ❌ Error types (thiserror)
 │   ├── lib.rs               # Module re-exports
 │   └── main.rs              # 🚀 Entrypoint & DI wiring
 ├── tests/                   # 🧪 Integration tests + fixtures
+├── fuzz/                    # 🎲 Fuzzing targets (8 targets)
+├── .github/workflows/       # 🔄 CI/CD (check, test, coverage, security, release)
 ├── config.yaml              # Runtime configuration
+├── justfile                 # Just task runner recipes
+├── tarpaulin.toml           # Code coverage configuration
+├── deny.toml                # Dependency security audit config
 ├── Cargo.toml               # Rust manifest
 └── CLAUDE.md                # Development guide
 ```
@@ -316,8 +346,27 @@ sequenceDiagram
 cargo test                     # 🧪 Run all tests
 cargo test --test mcp_server   # 📡 MCP tests only
 cargo test --test scraper      # 🕷️ Scraper tests only
+cargo test --test graphql      # 🔗 GraphQL parser tests only
+cargo test --test analytical   # 🧠 Analytical tools tests only
 cargo clippy                   # 🔍 Lint
 cargo fmt --check              # ✅ Check formatting
+```
+
+### 🎲 Fuzzing
+
+8 fuzz targets are available in the `fuzz/` directory:
+
+```bash
+cargo +nightly fuzz run fuzz_search_parser      # 🕷️ Search parser
+cargo +nightly fuzz run fuzz_detail_parser      # 🕷️ Detail parser
+cargo +nightly fuzz run fuzz_graphql_search     # 🔗 GraphQL search parser
+cargo +nightly fuzz run fuzz_graphql_detail     # 🔗 GraphQL detail parser
+```
+
+### 🎲 Property-Based Testing
+
+```bash
+cargo test --test proptest_tests   # Run proptest-based tests
 ```
 
 > See [tests/README.md](tests/README.md) for the test architecture and mock infrastructure.
