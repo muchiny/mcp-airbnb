@@ -225,9 +225,27 @@ impl AirbnbClient for AirbnbScraper {
     }
 
     async fn get_host_profile(&self, listing_id: &str) -> Result<HostProfile> {
+        let cache_key = format!("host:{listing_id}");
+        if let Some(cached) = self.cache.get(&cache_key) {
+            debug!(listing_id, "Cache hit for host profile");
+            if let Ok(profile) = serde_json::from_str::<HostProfile>(&cached) {
+                return Ok(profile);
+            }
+        }
+
         let url = format!("{}/rooms/{listing_id}", self.config.base_url);
         let html = self.fetch_html(&url).await?;
-        detail_parser::parse_host_profile(&html)
+        let profile = detail_parser::parse_host_profile(&html)?;
+
+        if let Ok(json) = serde_json::to_string(&profile) {
+            self.cache.set(
+                &cache_key,
+                &json,
+                Duration::from_secs(self.cache_config.host_profile_ttl_secs),
+            );
+        }
+
+        Ok(profile)
     }
 
     async fn get_neighborhood_stats(&self, params: &SearchParams) -> Result<NeighborhoodStats> {

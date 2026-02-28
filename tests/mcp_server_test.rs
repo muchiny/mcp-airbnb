@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use mcp_airbnb::domain::analytics::{HostProfile, NeighborhoodStats, OccupancyEstimate};
 use mcp_airbnb::domain::calendar::{CalendarDay, PriceCalendar};
 use mcp_airbnb::domain::listing::{Listing, ListingDetail, SearchResult};
 use mcp_airbnb::domain::review::{Review, ReviewsPage};
@@ -30,6 +31,7 @@ impl AirbnbClient for IntegrationMock {
                     thumbnail_url: None,
                     property_type: Some("Apartment".into()),
                     host_name: Some("Hans".into()),
+                    host_id: None,
                     url: "https://www.airbnb.com/rooms/101".into(),
                     is_superhost: None,
                     is_guest_favorite: None,
@@ -50,6 +52,7 @@ impl AirbnbClient for IntegrationMock {
                     thumbnail_url: None,
                     property_type: None,
                     host_name: None,
+                    host_id: None,
                     url: "https://www.airbnb.com/rooms/102".into(),
                     is_superhost: None,
                     is_guest_favorite: None,
@@ -134,11 +137,57 @@ impl AirbnbClient for IntegrationMock {
                 max_nights: None,
                 closed_to_arrival: None,
                 closed_to_departure: None,
+                unavailability_reason: None,
             }],
             average_price: None,
             occupancy_rate: None,
             min_price: None,
             max_price: None,
+        })
+    }
+
+    async fn get_host_profile(&self, _listing_id: &str) -> Result<HostProfile> {
+        Ok(HostProfile {
+            host_id: Some("host-1".into()),
+            name: "Hans".into(),
+            is_superhost: Some(true),
+            response_rate: Some("95%".into()),
+            response_time: Some("within an hour".into()),
+            member_since: Some("2020".into()),
+            languages: vec!["English".into(), "German".into()],
+            total_listings: Some(2),
+            description: None,
+            profile_picture_url: None,
+            identity_verified: Some(true),
+        })
+    }
+
+    async fn get_neighborhood_stats(&self, params: &SearchParams) -> Result<NeighborhoodStats> {
+        Ok(NeighborhoodStats {
+            location: params.location.clone(),
+            total_listings: 2,
+            average_price: Some(120.0),
+            median_price: Some(110.0),
+            price_range: Some((80.0, 160.0)),
+            average_rating: Some(4.5),
+            property_type_distribution: vec![],
+            superhost_percentage: Some(50.0),
+        })
+    }
+
+    async fn get_occupancy_estimate(&self, id: &str, _months: u32) -> Result<OccupancyEstimate> {
+        Ok(OccupancyEstimate {
+            listing_id: id.into(),
+            period_start: "2025-06-01".into(),
+            period_end: "2025-08-31".into(),
+            total_days: 92,
+            occupied_days: 60,
+            available_days: 32,
+            occupancy_rate: 65.2,
+            average_available_price: Some(90.0),
+            weekend_avg_price: Some(110.0),
+            weekday_avg_price: Some(80.0),
+            monthly_breakdown: vec![],
         })
     }
 }
@@ -164,6 +213,24 @@ impl AirbnbClient for ErrorMock {
             reason: "no calendar".into(),
         })
     }
+
+    async fn get_host_profile(&self, _listing_id: &str) -> Result<HostProfile> {
+        Err(AirbnbError::Parse {
+            reason: "no host".into(),
+        })
+    }
+
+    async fn get_neighborhood_stats(&self, _params: &SearchParams) -> Result<NeighborhoodStats> {
+        Err(AirbnbError::Parse {
+            reason: "no stats".into(),
+        })
+    }
+
+    async fn get_occupancy_estimate(&self, _id: &str, _months: u32) -> Result<OccupancyEstimate> {
+        Err(AirbnbError::Parse {
+            reason: "no occupancy".into(),
+        })
+    }
 }
 
 #[test]
@@ -171,7 +238,7 @@ fn server_lists_seven_tools() {
     let server = AirbnbMcpServer::new(Arc::new(IntegrationMock));
     let info = server.get_info();
     let instructions = info.instructions.unwrap();
-    // Verify all 15 tools are mentioned
+    // Verify all 18 tools are mentioned
     assert!(instructions.contains("airbnb_search"));
     assert!(instructions.contains("airbnb_listing_details"));
     assert!(instructions.contains("airbnb_reviews"));
@@ -187,6 +254,9 @@ fn server_lists_seven_tools() {
     assert!(instructions.contains("airbnb_amenity_analysis"));
     assert!(instructions.contains("airbnb_market_comparison"));
     assert!(instructions.contains("airbnb_host_portfolio"));
+    assert!(instructions.contains("airbnb_review_sentiment"));
+    assert!(instructions.contains("airbnb_competitive_positioning"));
+    assert!(instructions.contains("airbnb_optimal_pricing"));
     // Verify capabilities include tools and resources
     assert!(info.capabilities.tools.is_some());
     assert!(info.capabilities.resources.is_some());

@@ -43,6 +43,7 @@ url = "2.5.8"
 base64 = "0.22.1"
 
 [dev-dependencies]
+rmcp = { version = "0.16.0", features = ["server", "client", "macros", "transport-io", "schemars"] }
 wiremock = "0.6.5"
 tempfile = "3.25.0"
 insta = { version = "1.46.3", features = ["json"] }

@@ -353,6 +353,19 @@ fn extract_listing_niobe_format(section: &serde_json::Value, base_url: &str) -> 
             digits.parse::<f64>().ok()
         });
 
+    // Host ID: try demandStayListing.hostId or primaryHost.id
+    let host_id = dsl
+        .and_then(|d| d.get("hostId"))
+        .or_else(|| {
+            dsl.and_then(|d| d.get("primaryHost"))
+                .and_then(|h| h.get("id"))
+        })
+        .and_then(|v| {
+            v.as_str()
+                .map(String::from)
+                .or_else(|| v.as_u64().map(|n| n.to_string()))
+        });
+
     Some(Listing {
         id,
         name,
@@ -364,6 +377,7 @@ fn extract_listing_niobe_format(section: &serde_json::Value, base_url: &str) -> 
         thumbnail_url,
         property_type,
         host_name,
+        host_id,
         url,
         is_superhost,
         is_guest_favorite,
@@ -497,7 +511,7 @@ fn extract_property_type_from_title(title: &str) -> Option<String> {
 }
 
 /// Extract listing from legacy Airbnb format (__`NEXT_DATA`__ style)
-#[allow(clippy::cast_possible_truncation)]
+#[allow(clippy::cast_possible_truncation, clippy::too_many_lines)]
 fn extract_listing_legacy_format(section: &serde_json::Value, base_url: &str) -> Option<Listing> {
     let listing_data = section.get("listing").unwrap_or(section);
 
@@ -585,6 +599,17 @@ fn extract_listing_legacy_format(section: &serde_json::Value, base_url: &str) ->
         .and_then(|v| v.as_str())
         .map(String::from);
 
+    // Host ID: try user.id or hostId
+    let host_id = listing_data
+        .get("user")
+        .and_then(|u| u.get("id"))
+        .or_else(|| listing_data.get("hostId"))
+        .and_then(|v| {
+            v.as_str()
+                .map(String::from)
+                .or_else(|| v.as_u64().map(|n| n.to_string()))
+        });
+
     let url = format!("{base_url}/rooms/{id}");
 
     Some(Listing {
@@ -598,6 +623,7 @@ fn extract_listing_legacy_format(section: &serde_json::Value, base_url: &str) ->
         thumbnail_url,
         property_type,
         host_name,
+        host_id,
         url,
         is_superhost: None,
         is_guest_favorite: None,
@@ -700,6 +726,7 @@ fn parse_search_css(html: &str, base_url: &str) -> Result<SearchResult> {
                 thumbnail_url: None,
                 property_type: None,
                 host_name: None,
+                host_id: None,
                 url: format!("{base_url}/rooms/{id}"),
                 is_superhost: None,
                 is_guest_favorite: None,

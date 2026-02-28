@@ -166,6 +166,7 @@ pub fn make_listing(id: &str, name: &str, price: f64) -> Listing {
         thumbnail_url: None,
         property_type: Some("Apartment".to_string()),
         host_name: Some("Test Host".to_string()),
+        host_id: None,
         url: format!("https://www.airbnb.com/rooms/{id}"),
         is_superhost: None,
         is_guest_favorite: None,
@@ -272,6 +273,7 @@ pub fn make_calendar_day(date: &str, price: Option<f64>, available: bool) -> Cal
         max_nights: None,
         closed_to_arrival: None,
         closed_to_departure: None,
+        unavailability_reason: None,
     }
 }
 

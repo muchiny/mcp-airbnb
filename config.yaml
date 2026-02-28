@@ -20,3 +20,4 @@ cache:
   detail_ttl_secs: 3600
   reviews_ttl_secs: 3600
   calendar_ttl_secs: 1800
+  host_profile_ttl_secs: 3600

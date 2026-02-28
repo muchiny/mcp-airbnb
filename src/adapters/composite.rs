@@ -48,7 +48,14 @@ impl AirbnbClient for CompositeClient {
         match self.graphql.get_listing_detail(id).await {
             Ok(mut gql) => {
                 // If GraphQL result is missing critical fields, try to fill from scraper
-                if (gql.name.is_empty() || gql.location.is_empty() || gql.amenities.is_empty())
+                if (gql.name.is_empty()
+                    || gql.location.is_empty()
+                    || gql.amenities.is_empty()
+                    || gql.description.is_empty()
+                    || gql.photos.is_empty()
+                    || gql.house_rules.is_empty()
+                    || gql.price_per_night == 0.0
+                    || gql.rating.is_none())
                     && let Ok(scraped) = self.scraper.get_listing_detail(id).await
                 {
                     if gql.name.is_empty() && !scraped.name.is_empty() {
@@ -66,8 +73,24 @@ impl AirbnbClient for CompositeClient {
                     if gql.photos.is_empty() && !scraped.photos.is_empty() {
                         gql.photos = scraped.photos;
                     }
+                    if gql.house_rules.is_empty() && !scraped.house_rules.is_empty() {
+                        gql.house_rules = scraped.house_rules;
+                    }
                     if gql.host_name.is_none() {
                         gql.host_name = scraped.host_name;
+                    }
+                    if gql.price_per_night == 0.0 && scraped.price_per_night > 0.0 {
+                        gql.price_per_night = scraped.price_per_night;
+                        gql.currency = scraped.currency;
+                    }
+                    if gql.rating.is_none() {
+                        gql.rating = scraped.rating;
+                    }
+                    if gql.review_count == 0 {
+                        gql.review_count = scraped.review_count;
+                    }
+                    if gql.host_id.is_none() {
+                        gql.host_id = scraped.host_id;
                     }
                 }
                 Ok(gql)
@@ -491,8 +514,12 @@ mod tests {
             let mut d = make_listing_detail(id);
             d.name = "Present".into();
             d.location = "Present".into();
+            d.description = "Present desc".into();
             d.amenities = vec!["Present".into()];
-            d.photos = vec![]; // empty but non-critical — merge NOT triggered
+            d.photos = vec!["photo.jpg".into()];
+            d.house_rules = vec!["No parties".into()];
+            d.price_per_night = 100.0;
+            d.rating = Some(4.5);
             Ok(d)
         });
         // Scraper returns error — should never be called since merge condition not met
@@ -504,7 +531,23 @@ mod tests {
         let composite = make_composite(gql, scraper);
         let detail = composite.get_listing_detail("42").await.unwrap();
         assert_eq!(detail.name, "Present");
-        assert!(detail.photos.is_empty()); // stays empty since merge was skipped
+    }
+
+    #[tokio::test]
+    async fn detail_merge_fills_empty_house_rules() {
+        let gql = MockAirbnbClient::new().with_detail(|id| {
+            let mut d = make_listing_detail(id);
+            d.house_rules = vec![]; // triggers merge condition
+            Ok(d)
+        });
+        let scraper = MockAirbnbClient::new().with_detail(|id| {
+            let mut d = make_listing_detail(id);
+            d.house_rules = vec!["No smoking".into(), "No pets".into()];
+            Ok(d)
+        });
+        let composite = make_composite(gql, scraper);
+        let detail = composite.get_listing_detail("42").await.unwrap();
+        assert_eq!(detail.house_rules, vec!["No smoking", "No pets"]);
     }
 
     #[tokio::test]

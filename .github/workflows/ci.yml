@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
@@ -81,3 +84,32 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo install cargo-deny
       - run: cargo deny check
+
+  fuzz:
+    name: Fuzz Testing
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: fuzz
+      - run: cargo install cargo-fuzz
+      - name: Run fuzz targets
+        run: |
+          FUZZ_TARGETS=(
+            fuzz_search_parser
+            fuzz_detail_parser
+            fuzz_calendar_parser
+            fuzz_review_parser
+            fuzz_graphql_search
+            fuzz_graphql_detail
+            fuzz_graphql_review
+            fuzz_graphql_host
+          )
+          for target in "${FUZZ_TARGETS[@]}"; do
+            echo "::group::Fuzzing $target"
+            cargo fuzz run "$target" -- -max_total_time=30
+            echo "::endgroup::"
+          done

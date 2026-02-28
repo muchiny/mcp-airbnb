@@ -79,6 +79,8 @@ pub struct CacheConfig {
     pub reviews_ttl_secs: u64,
     #[serde(default = "default_calendar_ttl")]
     pub calendar_ttl_secs: u64,
+    #[serde(default = "default_host_profile_ttl")]
+    pub host_profile_ttl_secs: u64,
 }
 
 impl Default for CacheConfig {
@@ -89,6 +91,7 @@ impl Default for CacheConfig {
             detail_ttl_secs: default_detail_ttl(),
             reviews_ttl_secs: default_reviews_ttl(),
             calendar_ttl_secs: default_calendar_ttl(),
+            host_profile_ttl_secs: default_host_profile_ttl(),
         }
     }
 }
@@ -171,6 +174,10 @@ fn default_calendar_ttl() -> u64 {
     1800
 }
 
+fn default_host_profile_ttl() -> u64 {
+    3600
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -193,6 +200,7 @@ mod tests {
         assert_eq!(config.detail_ttl_secs, 3600);
         assert_eq!(config.reviews_ttl_secs, 3600);
         assert_eq!(config.calendar_ttl_secs, 1800);
+        assert_eq!(config.host_profile_ttl_secs, 3600);
     }
 
     #[test]

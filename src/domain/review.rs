@@ -206,4 +206,100 @@ mod tests {
         let s = page.to_string();
         assert!(s.contains("More reviews available"));
     }
+
+    #[test]
+    fn review_display_with_location() {
+        let review = Review {
+            author: "Jean".into(),
+            date: "2025-05-10".into(),
+            rating: Some(4.5),
+            comment: "Magnifique!".into(),
+            response: None,
+            reviewer_location: Some("Paris".into()),
+            language: None,
+            is_translated: None,
+        };
+        let s = review.to_string();
+        assert!(
+            s.contains("from Paris"),
+            "Display should contain 'from Paris', got: {s}"
+        );
+        assert!(s.contains("**Jean**"));
+    }
+
+    #[test]
+    fn reviews_page_display_multiple_reviews() {
+        let reviews = vec![
+            Review {
+                author: "Alice".into(),
+                date: "2025-01-10".into(),
+                rating: Some(5.0),
+                comment: "Wonderful stay!".into(),
+                response: None,
+                reviewer_location: None,
+                language: None,
+                is_translated: None,
+            },
+            Review {
+                author: "Bob".into(),
+                date: "2025-02-15".into(),
+                rating: Some(3.0),
+                comment: "Average experience".into(),
+                response: Some("Thank you for the feedback".into()),
+                reviewer_location: Some("London".into()),
+                language: None,
+                is_translated: None,
+            },
+            Review {
+                author: "Charlie".into(),
+                date: "2025-03-20".into(),
+                rating: None,
+                comment: "No complaints".into(),
+                response: None,
+                reviewer_location: None,
+                language: None,
+                is_translated: None,
+            },
+        ];
+        let page = ReviewsPage {
+            listing_id: "456".into(),
+            summary: None,
+            reviews,
+            next_cursor: None,
+        };
+        let s = page.to_string();
+
+        // All three reviews should appear
+        assert!(
+            s.contains("**Alice**"),
+            "Display should contain Alice's review"
+        );
+        assert!(s.contains("**Bob**"), "Display should contain Bob's review");
+        assert!(
+            s.contains("**Charlie**"),
+            "Display should contain Charlie's review"
+        );
+        assert!(
+            s.contains("Wonderful stay!"),
+            "Display should contain Alice's comment"
+        );
+        assert!(
+            s.contains("Average experience"),
+            "Display should contain Bob's comment"
+        );
+        assert!(
+            s.contains("No complaints"),
+            "Display should contain Charlie's comment"
+        );
+        assert!(
+            s.contains("from London"),
+            "Display should contain Bob's location"
+        );
+        assert!(
+            s.contains("Host response: Thank you for the feedback"),
+            "Display should contain host response"
+        );
+        // Should NOT have cursor message
+        assert!(!s.contains("More reviews available"));
+    }
 }

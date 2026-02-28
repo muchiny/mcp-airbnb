@@ -12,6 +12,8 @@ pub struct Listing {
     pub thumbnail_url: Option<String>,
     pub property_type: Option<String>,
     pub host_name: Option<String>,
+    #[serde(default)]
+    pub host_id: Option<String>,
     pub url: String,
     #[serde(default)]
     pub is_superhost: Option<bool>,
@@ -105,6 +107,9 @@ impl std::fmt::Display for Listing {
         }
         if self.is_guest_favorite == Some(true) {
             write!(f, " | Guest Favorite")?;
+        }
+        if let Some(ref hid) = self.host_id {
+            write!(f, " | Host ID: {hid}")?;
         }
         if let Some(total) = self.total_price {
             write!(f, " | Total: {}{total:.0}", self.currency)?;
@@ -206,6 +211,7 @@ mod tests {
             thumbnail_url: None,
             property_type: Some("Apartment".into()),
             host_name: Some("Alice".into()),
+            host_id: None,
             url: "https://airbnb.com/rooms/123".into(),
             is_superhost: None,
             is_guest_favorite: None,
@@ -234,6 +240,7 @@ mod tests {
             thumbnail_url: None,
             property_type: None,
             host_name: None,
+            host_id: None,
             url: "https://airbnb.com/rooms/456".into(),
             is_superhost: None,
             is_guest_favorite: None,
@@ -392,5 +399,217 @@ mod tests {
         assert!(s.contains("Bedrooms: 2"));
         assert!(s.contains("Beds: 3"));
         assert!(s.contains("Bathrooms: 1.5"));
+    }
+
+    #[test]
+    fn listing_display_with_host_id() {
+        let listing = Listing {
+            id: "100".into(),
+            name: "Test Place".into(),
+            location: "Berlin".into(),
+            price_per_night: 90.0,
+            currency: "$".into(),
+            rating: Some(4.0),
+            review_count: 5,
+            thumbnail_url: None,
+            property_type: None,
+            host_name: None,
+            host_id: Some("12345".into()),
+            url: "https://airbnb.com/rooms/100".into(),
+            is_superhost: None,
+            is_guest_favorite: None,
+            instant_book: None,
+            total_price: None,
+            photos: vec![],
+            latitude: None,
+            longitude: None,
+        };
+        let s = listing.to_string();
+        assert!(
+            s.contains("Host ID: 12345"),
+            "Display should contain 'Host ID: 12345', got: {s}"
+        );
+    }
+
+    #[test]
+    fn listing_display_with_total_price() {
+        let listing = Listing {
+            id: "101".into(),
+            name: "Cozy Flat".into(),
+            location: "Madrid".into(),
+            price_per_night: 100.0,
+            currency: "$".into(),
+            rating: None,
+            review_count: 0,
+            thumbnail_url: None,
+            property_type: None,
+            host_name: None,
+            host_id: None,
+            url: "https://airbnb.com/rooms/101".into(),
+            is_superhost: None,
+            is_guest_favorite: None,
+            instant_book: None,
+            total_price: Some(500.0),
+            photos: vec![],
+            latitude: None,
+            longitude: None,
+        };
+        let s = listing.to_string();
+        assert!(
+            s.contains("Total: $500"),
+            "Display should contain 'Total: $500', got: {s}"
+        );
+    }
+
+    #[test]
+    fn listing_display_guest_favorite() {
+        let listing = Listing {
+            id: "102".into(),
+            name: "Great Stay".into(),
+            location: "Lisbon".into(),
+            price_per_night: 120.0,
+            currency: "$".into(),
+            rating: Some(4.9),
+            review_count: 30,
+            thumbnail_url: None,
+            property_type: None,
+            host_name: None,
+            host_id: None,
+            url: "https://airbnb.com/rooms/102".into(),
+            is_superhost: None,
+            is_guest_favorite: Some(true),
+            instant_book: None,
+            total_price: None,
+            photos: vec![],
+            latitude: None,
+            longitude: None,
+        };
+        let s = listing.to_string();
+        assert!(
+            s.contains("Guest Favorite"),
+            "Display should contain 'Guest Favorite', got: {s}"
+        );
+    }
+
+    #[test]
+    fn listing_detail_with_fees() {
+        let detail = ListingDetail {
+            id: "200".into(),
+            name: "Fee Test".into(),
+            location: "Tokyo".into(),
+            description: String::new(),
+            price_per_night: 150.0,
+            currency: "$".into(),
+            rating: None,
+            review_count: 0,
+            property_type: None,
+            host_name: None,
+            url: "https://airbnb.com/rooms/200".into(),
+            amenities: vec![],
+            house_rules: vec![],
+            latitude: None,
+            longitude: None,
+            photos: vec![],
+            bedrooms: None,
+            beds: None,
+            bathrooms: None,
+            max_guests: None,
+            check_in_time: None,
+            check_out_time: None,
+            host_id: None,
+            host_is_superhost: None,
+            host_response_rate: None,
+            host_response_time: None,
+            host_joined: None,
+            host_total_listings: None,
+            host_languages: vec![],
+            cancellation_policy: None,
+            instant_book: None,
+            cleaning_fee: Some(75.0),
+            service_fee: Some(45.0),
+            neighborhood: None,
+        };
+        let s = detail.to_string();
+        assert!(
+            s.contains("Fees:"),
+            "Display should contain 'Fees:', got: {s}"
+        );
+        assert!(
+            s.contains("Cleaning $75"),
+            "Display should contain 'Cleaning $75', got: {s}"
+        );
+        assert!(
+            s.contains("Service $45"),
+            "Display should contain 'Service $45', got: {s}"
+        );
+    }
+
+    #[test]
+    fn listing_detail_with_host_details() {
+        let detail = ListingDetail {
+            id: "201".into(),
+            name: "Host Detail Test".into(),
+            location: "Rome".into(),
+            description: "Nice place".into(),
+            price_per_night: 100.0,
+            currency: "$".into(),
+            rating: Some(4.5),
+            review_count: 10,
+            property_type: Some("Apartment".into()),
+            host_name: Some("Maria".into()),
+            url: "https://airbnb.com/rooms/201".into(),
+            amenities: vec![],
+            house_rules: vec![],
+            latitude: None,
+            longitude: None,
+            photos: vec![],
+            bedrooms: None,
+            beds: None,
+            bathrooms: None,
+            max_guests: None,
+            check_in_time: None,
+            check_out_time: None,
+            host_id: None,
+            host_is_superhost: Some(true),
+            host_response_rate: Some("99%".into()),
+            host_response_time: Some("within an hour".into()),
+            host_joined: Some("2019".into()),
+            host_total_listings: Some(3),
+            host_languages: vec!["English".into(), "Italian".into()],
+            cancellation_policy: None,
+            instant_book: None,
+            cleaning_fee: None,
+            service_fee: None,
+            neighborhood: None,
+        };
+        let s = detail.to_string();
+        assert!(
+            s.contains("Host: Maria"),
+            "Display should contain 'Host: Maria', got: {s}"
+        );
+        assert!(
+            s.contains("(Superhost)"),
+            "Display should contain '(Superhost)', got: {s}"
+        );
+        assert!(
+            s.contains("Response rate: 99%"),
+            "Display should contain 'Response rate: 99%', got: {s}"
+        );
+        assert!(
+            s.contains("Response time: within an hour"),
+            "Display should contain 'Response time: within an hour', got: {s}"
+        );
+        assert!(
+            s.contains("Host since: 2019"),
+            "Display should contain 'Host since: 2019', got: {s}"
+        );
+        assert!(
+            s.contains("Host listings: 3"),
+            "Display should contain 'Host listings: 3', got: {s}"
+        );
+        assert!(
+            s.contains("Languages: English, Italian"),
+            "Display should contain 'Languages: English, Italian', got: {s}"
+        );
     }
 }

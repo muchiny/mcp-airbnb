@@ -1,6 +1,6 @@
 use scraper::{Html, Selector};
 
-use crate::domain::calendar::{CalendarDay, PriceCalendar};
+use crate::domain::calendar::{CalendarDay, PriceCalendar, UnavailabilityReason};
 use crate::error::{AirbnbError, Result};
 
 /// Parse price calendar from Airbnb listing page or calendar API response.
@@ -311,6 +311,61 @@ fn parse_price_string(s: &str) -> Option<f64> {
     digits.parse::<f64>().ok()
 }
 
+/// Infer why a day is unavailable from JSON fields and the date itself.
+fn infer_unavailability_reason(data: &serde_json::Value, date: &str) -> UnavailabilityReason {
+    // Check if the date is in the past
+    if let Ok(parsed) = chrono::NaiveDate::parse_from_str(date, "%Y-%m-%d")
+        && parsed < chrono::Utc::now().date_naive()
+    {
+        return UnavailabilityReason::PastDate;
+    }
+
+    // Check for booking status indicators (various Airbnb JSON formats)
+    if let Some(status) = data
+        .get("bookingStatusType")
+        .or_else(|| data.get("booking_status_type"))
+        .or_else(|| data.get("bookingStatus"))
+        .and_then(|v| v.as_str())
+    {
+        let status_lower = status.to_lowercase();
+        if status_lower.contains("booked") || status_lower.contains("reservation") {
+            return UnavailabilityReason::Booked;
+        }
+    }
+
+    // Check for host-blocked indicators
+    if let Some(false) = data
+        .get("autoAvailability")
+        .or_else(|| data.get("auto_availability"))
+        .and_then(serde_json::Value::as_bool)
+    {
+        return UnavailabilityReason::BlockedByHost;
+    }
+
+    // Check if blocked by host via a "blocked" or "hostBlocked" field
+    if let Some(true) = data
+        .get("hostBlocked")
+        .or_else(|| data.get("host_blocked"))
+        .or_else(|| data.get("blocked"))
+        .and_then(serde_json::Value::as_bool)
+    {
+        return UnavailabilityReason::BlockedByHost;
+    }
+
+    // Check for minimum night restriction signals
+    if let Some(true) = data
+        .get("closedToArrival")
+        .and_then(serde_json::Value::as_bool)
+        && let Some(true) = data
+            .get("closedToDeparture")
+            .and_then(serde_json::Value::as_bool)
+    {
+        return UnavailabilityReason::MinNightRestriction;
+    }
+
+    UnavailabilityReason::Unknown
+}
+
 #[allow(clippy::cast_possible_truncation)]
 fn extract_calendar_day(data: &serde_json::Value) -> Option<CalendarDay> {
     let date = data
@@ -374,6 +429,13 @@ fn extract_calendar_day(data: &serde_json::Value) -> Option<CalendarDay> {
         .get("closedToDeparture")
         .and_then(serde_json::Value::as_bool);
 
+    // Infer unavailability reason for unavailable days
+    let unavailability_reason = if available {
+        None
+    } else {
+        Some(infer_unavailability_reason(data, &date))
+    };
+
     Some(CalendarDay {
         date,
         price,
@@ -382,6 +444,7 @@ fn extract_calendar_day(data: &serde_json::Value) -> Option<CalendarDay> {
         max_nights,
         closed_to_arrival,
         closed_to_departure,
+        unavailability_reason,
     })
 }
 

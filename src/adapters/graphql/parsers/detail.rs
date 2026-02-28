@@ -1,4 +1,5 @@
 use serde_json::Value;
+use tracing::warn;
 
 use crate::domain::listing::ListingDetail;
 use crate::error::{AirbnbError, Result};
@@ -148,6 +149,33 @@ pub fn parse_detail_response(json: &Value, id: &str, base_url: &str) -> Result<L
                 }
             }
             "BOOK_IT_SIDEBAR" => {
+                // Try ratePlanTitle (e.g. "€107 night") — most reliable price source
+                if price_per_night == 0.0
+                    && let Some(rpt) = data.get("ratePlanTitle").and_then(Value::as_str)
+                    && let Some(p) = extract_price_from_text(rpt)
+                {
+                    price_per_night = p;
+                }
+                // Try descriptionItems for price
+                if price_per_night == 0.0
+                    && let Some(items) = data.get("descriptionItems").and_then(Value::as_array)
+                {
+                    for item in items {
+                        if let Some(title) = item.get("title").and_then(Value::as_str)
+                            && let Some(p) = extract_price_from_text(title)
+                        {
+                            price_per_night = p;
+                            break;
+                        }
+                    }
+                }
+                // Try priceDisclaimer
+                if price_per_night == 0.0
+                    && let Some(disclaimer) = data.get("priceDisclaimer").and_then(Value::as_str)
+                    && let Some(p) = extract_price_from_text(disclaimer)
+                {
+                    price_per_night = p;
+                }
                 // Pricing from sidebar — try multiple field name variants
                 if let Some(n) = data
                     .pointer("/structuredStayDisplayPrice/primaryLine/price")
@@ -352,6 +380,28 @@ pub fn parse_detail_response(json: &Value, id: &str, base_url: &str) -> Result<L
         price_per_night = p;
     }
 
+    if price_per_night == 0.0
+        && let Some(logging) = json.pointer("/data/presentation/stayProductDetailPage/sections/metadata/loggingContext/eventDataLogging")
+    {
+        for key in ["nightly_price", "listingPrice", "price", "pricePerNight", "native_price"] {
+            if let Some(p) = logging.get(key).and_then(Value::as_f64).filter(|&p| p > 0.0) {
+                price_per_night = p;
+                break;
+            }
+            if let Some(p) = logging.get(key).and_then(Value::as_str).and_then(extract_price_number).filter(|&p| p > 0.0) {
+                price_per_night = p;
+                break;
+            }
+        }
+    }
+
+    if price_per_night == 0.0 {
+        warn!(
+            id,
+            "Could not extract price from GraphQL detail response — will rely on search cache or scraper fallback"
+        );
+    }
+
     // Extract fees from pricing breakdown
     if let Some(breakdown) = json.pointer(
         "/data/presentation/stayProductDetailPage/sections/metadata/bookingPrefetchData/priceBreakdown/priceItems",
@@ -443,6 +493,85 @@ fn extract_price_number(s: &str) -> Option<f64> {
     cleaned.parse().ok()
 }
 
+/// Extract a price from text that contains a currency symbol or price-like pattern.
+/// More robust than `extract_price_number` — looks for currency symbol + number patterns
+/// like "$120", "€95.50", "107 €", "USD 85", or numbers followed by "night"/"nuit".
+fn extract_price_from_text(s: &str) -> Option<f64> {
+    let currency_markers = ['$', '€', '£', '¥'];
+
+    // Pattern: currency symbol followed by number (e.g. "$120", "€95.50")
+    for (i, ch) in s.char_indices() {
+        if !currency_markers.contains(&ch) {
+            continue;
+        }
+        let rest = &s[i + ch.len_utf8()..];
+        let num_str: String = rest
+            .chars()
+            .skip_while(|c| c.is_whitespace())
+            .take_while(|c| c.is_ascii_digit() || *c == '.' || *c == ',')
+            .filter(|c| c.is_ascii_digit() || *c == '.')
+            .collect();
+        if let Ok(p) = num_str.parse::<f64>()
+            && p > 0.0
+        {
+            return Some(p);
+        }
+    }
+
+    // Pattern: number followed by currency symbol (e.g. "107 €", "85€")
+    let words: Vec<&str> = s.split_whitespace().collect();
+    for (i, word) in words.iter().enumerate() {
+        if let Some(last_char) = word.chars().last()
+            && currency_markers.contains(&last_char)
+        {
+            let num_part: String = word
+                .chars()
+                .take_while(|c| c.is_ascii_digit() || *c == '.' || *c == ',')
+                .filter(|c| c.is_ascii_digit() || *c == '.')
+                .collect();
+            if let Ok(p) = num_part.parse::<f64>()
+                && p > 0.0
+            {
+                return Some(p);
+            }
+        }
+        // Check if next word is a single currency symbol
+        if i + 1 < words.len()
+            && words[i + 1].chars().count() == 1
+            && let Some(next_char) = words[i + 1].chars().next()
+            && currency_markers.contains(&next_char)
+        {
+            let num_str: String = word
+                .chars()
+                .filter(|c| c.is_ascii_digit() || *c == '.')
+                .collect();
+            if let Ok(p) = num_str.parse::<f64>()
+                && p > 0.0
+            {
+                return Some(p);
+            }
+        }
+    }
+
+    // Pattern: number followed by "night"/"nuit"/"notte"/"noche"
+    for (i, word) in words.iter().enumerate() {
+        let lower = word.to_lowercase();
+        if i > 0 && matches!(lower.as_str(), "night" | "nuit" | "notte" | "noche") {
+            let num_str: String = words[i - 1]
+                .chars()
+                .filter(|c| c.is_ascii_digit() || *c == '.')
+                .collect();
+            if let Ok(p) = num_str.parse::<f64>()
+                && p > 0.0
+            {
+                return Some(p);
+            }
+        }
+    }
+
+    None
+}
+
 /// Extract languages from hostHighlights like "Speaks English and French".
 fn extract_languages_from_highlights(data: &Value) -> Vec<String> {
     let Some(highlights) = data.get("hostHighlights").and_then(Value::as_array) else {
@@ -492,6 +621,31 @@ mod tests {
     fn extract_number_from_text() {
         assert_eq!(extract_number("3 bedrooms"), Some(3));
         assert_eq!(extract_number("studio"), None);
+    }
+
+    #[test]
+    fn extract_price_from_text_currency_prefix() {
+        assert_eq!(extract_price_from_text("$120"), Some(120.0));
+        assert_eq!(extract_price_from_text("€95.50 night"), Some(95.5));
+        assert_eq!(extract_price_from_text("£ 200 per night"), Some(200.0));
+    }
+
+    #[test]
+    fn extract_price_from_text_currency_suffix() {
+        assert_eq!(extract_price_from_text("107 €"), Some(107.0));
+        assert_eq!(extract_price_from_text("85€"), Some(85.0));
+    }
+
+    #[test]
+    fn extract_price_from_text_night_pattern() {
+        assert_eq!(extract_price_from_text("107 night"), Some(107.0));
+        assert_eq!(extract_price_from_text("85 nuit"), Some(85.0));
+    }
+
+    #[test]
+    fn extract_price_from_text_no_match() {
+        assert_eq!(extract_price_from_text("Beautiful apartment"), None);
+        assert_eq!(extract_price_from_text("4.96 rating"), None);
     }
 
     #[test]

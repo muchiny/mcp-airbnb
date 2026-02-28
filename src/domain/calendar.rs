@@ -2,6 +2,33 @@
 
 use serde::{Deserialize, Serialize};
 
+/// Reason why a calendar day is unavailable.
+#[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema, PartialEq)]
+pub enum UnavailabilityReason {
+    /// Reason could not be determined from available data.
+    Unknown,
+    /// The day is booked by a guest (reservation exists).
+    Booked,
+    /// The host has manually blocked this date.
+    BlockedByHost,
+    /// The date is in the past and therefore unavailable.
+    PastDate,
+    /// Unavailable due to minimum night stay restriction.
+    MinNightRestriction,
+}
+
+impl std::fmt::Display for UnavailabilityReason {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Unknown => write!(f, "Unknown"),
+            Self::Booked => write!(f, "Booked"),
+            Self::BlockedByHost => write!(f, "Blocked by host"),
+            Self::PastDate => write!(f, "Past date"),
+            Self::MinNightRestriction => write!(f, "Min night restriction"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CalendarDay {
     pub date: String,
@@ -14,6 +41,8 @@ pub struct CalendarDay {
     pub closed_to_arrival: Option<bool>,
     #[serde(default)]
     pub closed_to_departure: Option<bool>,
+    #[serde(default)]
+    pub unavailability_reason: Option<UnavailabilityReason>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -84,7 +113,13 @@ impl std::fmt::Display for PriceCalendar {
             let price = day
                 .price
                 .map_or_else(|| "-".to_string(), |p| format!("{}{p:.0}", self.currency));
-            let available = if day.available { "Yes" } else { "No" };
+            let available = if day.available {
+                "Yes".to_string()
+            } else if let Some(reason) = &day.unavailability_reason {
+                format!("No ({reason})")
+            } else {
+                "No".to_string()
+            };
             let min_nights = day
                 .min_nights
                 .map_or_else(|| "-".to_string(), |n| n.to_string());
@@ -115,6 +150,7 @@ mod tests {
                 max_nights: None,
                 closed_to_arrival: None,
                 closed_to_departure: None,
+                unavailability_reason: None,
             }],
             average_price: None,
             occupancy_rate: None,
@@ -139,6 +175,7 @@ mod tests {
                 max_nights: None,
                 closed_to_arrival: None,
                 closed_to_departure: None,
+                unavailability_reason: None,
             }],
             average_price: None,
             occupancy_rate: None,
@@ -163,6 +200,7 @@ mod tests {
                 max_nights: None,
                 closed_to_arrival: None,
                 closed_to_departure: None,
+                unavailability_reason: None,
             }],
             average_price: None,
             occupancy_rate: None,
@@ -187,6 +225,7 @@ mod tests {
                     max_nights: None,
                     closed_to_arrival: None,
                     closed_to_departure: None,
+                    unavailability_reason: None,
                 },
                 CalendarDay {
                     date: "2025-06-02".into(),
@@ -196,6 +235,7 @@ mod tests {
                     max_nights: None,
                     closed_to_arrival: None,
                     closed_to_departure: None,
+                    unavailability_reason: None,
                 },
                 CalendarDay {
                     date: "2025-06-03".into(),
@@ -205,6 +245,7 @@ mod tests {
                     max_nights: None,
                     closed_to_arrival: None,
                     closed_to_departure: None,
+                    unavailability_reason: None,
                 },
             ],
             average_price: None,
@@ -252,6 +293,7 @@ mod tests {
                     max_nights: None,
                     closed_to_arrival: None,
                     closed_to_departure: None,
+                    unavailability_reason: None,
                 },
                 CalendarDay {
                     date: "2025-06-02".into(),
@@ -261,6 +303,7 @@ mod tests {
                     max_nights: None,
                     closed_to_arrival: None,
                     closed_to_departure: None,
+                    unavailability_reason: None,
                 },
             ],
             average_price: None,
@@ -289,6 +332,7 @@ mod tests {
                     max_nights: None,
                     closed_to_arrival: None,
                     closed_to_departure: None,
+                    unavailability_reason: None,
                 },
                 CalendarDay {
                     date: "2025-06-02".into(),
@@ -298,6 +342,7 @@ mod tests {
                     max_nights: None,
                     closed_to_arrival: None,
                     closed_to_departure: None,
+                    unavailability_reason: None,
                 },
             ],
             average_price: None,
@@ -325,6 +370,7 @@ mod tests {
                     max_nights: None,
                     closed_to_arrival: None,
                     closed_to_departure: None,
+                    unavailability_reason: None,
                 },
                 CalendarDay {
                     date: "2025-06-02".into(),
@@ -334,6 +380,7 @@ mod tests {
                     max_nights: None,
                     closed_to_arrival: None,
                     closed_to_departure: None,
+                    unavailability_reason: None,
                 },
                 CalendarDay {
                     date: "2025-06-03".into(),
@@ -343,6 +390,7 @@ mod tests {
                     max_nights: None,
                     closed_to_arrival: None,
                     closed_to_departure: None,
+                    unavailability_reason: None,
                 },
                 CalendarDay {
                     date: "2025-06-04".into(),
@@ -352,6 +400,7 @@ mod tests {
                     max_nights: None,
                     closed_to_arrival: None,
                     closed_to_departure: None,
+                    unavailability_reason: None,
                 },
             ],
             average_price: None,
@@ -381,6 +430,7 @@ mod tests {
                 max_nights: None,
                 closed_to_arrival: None,
                 closed_to_departure: None,
+                unavailability_reason: None,
             }],
             average_price: None,
             occupancy_rate: None,
@@ -393,5 +443,47 @@ mod tests {
         let day_line = lines.iter().find(|l| l.contains("2025-06-01")).unwrap();
         // Date "2025-06-01" has 2 hyphens, plus 2 placeholder "-" for price and min_nights = 4
         assert_eq!(day_line.matches('-').count(), 4);
+    }
+
+    #[test]
+    fn unavailability_reason_display_all_variants() {
+        assert_eq!(UnavailabilityReason::Unknown.to_string(), "Unknown");
+        assert_eq!(UnavailabilityReason::Booked.to_string(), "Booked");
+        assert_eq!(
+            UnavailabilityReason::BlockedByHost.to_string(),
+            "Blocked by host"
+        );
+        assert_eq!(UnavailabilityReason::PastDate.to_string(), "Past date");
+        assert_eq!(
+            UnavailabilityReason::MinNightRestriction.to_string(),
+            "Min night restriction"
+        );
+    }
+
+    #[test]
+    fn calendar_display_with_unavailability_reason() {
+        let cal = PriceCalendar {
+            listing_id: "1".into(),
+            currency: "$".into(),
+            days: vec![CalendarDay {
+                date: "2025-06-01".into(),
+                price: Some(120.0),
+                available: false,
+                min_nights: Some(2),
+                max_nights: None,
+                closed_to_arrival: None,
+                closed_to_departure: None,
+                unavailability_reason: Some(UnavailabilityReason::Booked),
+            }],
+            average_price: None,
+            occupancy_rate: None,
+            min_price: None,
+            max_price: None,
+        };
+        let s = cal.to_string();
+        assert!(
+            s.contains("(Booked)"),
+            "Display should contain '(Booked)', got: {s}"
+        );
     }
 }

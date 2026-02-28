@@ -159,6 +159,16 @@ pub fn parse_search_response(json: &Value, base_url: &str) -> Result<SearchResul
             .and_then(Value::as_str)
             .and_then(extract_price_number);
 
+        // Host ID: try listing.user.id or listing.hostId
+        let host_id = listing_data
+            .pointer("/user/id")
+            .or_else(|| listing_data.get("hostId"))
+            .and_then(|v| {
+                v.as_str()
+                    .map(String::from)
+                    .or_else(|| v.as_u64().map(|n| n.to_string()))
+            });
+
         let url = format!("{base_url}/rooms/{id}");
 
         listings.push(Listing {
@@ -172,6 +182,7 @@ pub fn parse_search_response(json: &Value, base_url: &str) -> Result<SearchResul
             thumbnail_url,
             property_type,
             host_name: None,
+            host_id,
             url,
             is_superhost,
             is_guest_favorite: None,

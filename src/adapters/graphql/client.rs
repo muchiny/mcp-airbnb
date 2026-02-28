@@ -363,6 +363,14 @@ impl AirbnbClient for AirbnbGraphQLClient {
     }
 
     async fn get_host_profile(&self, listing_id: &str) -> Result<HostProfile> {
+        let cache_key = format!("gql:host:{listing_id}");
+        if let Some(cached) = self.cache.get(&cache_key) {
+            debug!(listing_id, "Cache hit for GraphQL host profile");
+            if let Ok(profile) = serde_json::from_str::<HostProfile>(&cached) {
+                return Ok(profile);
+            }
+        }
+
         // Use PDP sections instead of GetUserProfile (which requires a user_id, not listing_id)
         let b64 = base64::engine::general_purpose::STANDARD;
         let encoded_id = b64.encode(format!("StayListing:{listing_id}"));
@@ -387,7 +395,17 @@ impl AirbnbClient for AirbnbGraphQLClient {
                 &variables,
             )
             .await?;
-        parsers::host::parse_host_response(&json)
+        let profile = parsers::host::parse_host_response(&json)?;
+
+        if let Ok(serialized) = serde_json::to_string(&profile) {
+            self.cache.set(
+                &cache_key,
+                &serialized,
+                Duration::from_secs(self.cache_config.host_profile_ttl_secs),
+            );
+        }
+
+        Ok(profile)
     }
 
     async fn get_neighborhood_stats(&self, params: &SearchParams) -> Result<NeighborhoodStats> {

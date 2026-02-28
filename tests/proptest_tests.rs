@@ -29,6 +29,7 @@ fn arb_calendar_day() -> impl Strategy<Value = CalendarDay> {
             max_nights: None,
             closed_to_arrival: None,
             closed_to_departure: None,
+            unavailability_reason: None,
         })
 }
 
@@ -64,6 +65,7 @@ fn arb_listing() -> impl Strategy<Value = Listing> {
                 thumbnail_url: None,
                 property_type,
                 host_name: None,
+                host_id: None,
                 url: "https://airbnb.com/rooms/1".to_string(),
                 is_superhost,
                 is_guest_favorite: None,
@@ -223,6 +225,7 @@ proptest! {
                 max_nights: None,
                 closed_to_arrival: None,
                 closed_to_departure: None,
+                unavailability_reason: None,
             }).collect(),
             average_price: None,
             occupancy_rate: None,
@@ -248,6 +251,7 @@ proptest! {
                 max_nights: None,
                 closed_to_arrival: None,
                 closed_to_departure: None,
+                unavailability_reason: None,
             }).collect(),
             average_price: None,
             occupancy_rate: None,

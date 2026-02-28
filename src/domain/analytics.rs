@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use super::calendar::PriceCalendar;
 use super::listing::{Listing, ListingDetail};
+use super::review::Review;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -289,6 +290,71 @@ pub struct HostPortfolio {
     pub total_reviews: u32,
     pub is_superhost: Option<bool>,
     pub properties: Vec<PortfolioProperty>,
+}
+
+// ---------------------------------------------------------------------------
+// Review Sentiment types
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReviewTheme {
+    pub theme: String,
+    pub mention_count: u32,
+    pub positive_count: u32,
+    pub negative_count: u32,
+    pub sample_quotes: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReviewSentiment {
+    pub listing_id: String,
+    pub total_reviews_analyzed: u32,
+    pub positive_pct: f64,
+    pub negative_pct: f64,
+    pub neutral_pct: f64,
+    pub themes: Vec<ReviewTheme>,
+    pub top_positive_keywords: Vec<(String, u32)>,
+    pub top_negative_keywords: Vec<(String, u32)>,
+}
+
+// ---------------------------------------------------------------------------
+// Competitive Positioning types
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CompetitiveAxis {
+    pub axis: String,
+    pub listing_value: f64,
+    pub neighborhood_avg: f64,
+    pub percentile: f64,
+    pub assessment: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CompetitivePositioning {
+    pub listing_id: String,
+    pub axes: Vec<CompetitiveAxis>,
+    pub overall_competitiveness: f64,
+    pub strengths: Vec<String>,
+    pub weaknesses: Vec<String>,
+}
+
+// ---------------------------------------------------------------------------
+// Optimal Pricing types
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PricingRecommendation {
+    pub listing_id: String,
+    pub current_price: f64,
+    pub recommended_price: f64,
+    pub recommended_range: (f64, f64),
+    pub currency: String,
+    pub reasoning: Vec<String>,
+    pub weekday_recommendation: Option<f64>,
+    pub weekend_recommendation: Option<f64>,
+    pub amenity_premium_pct: Option<f64>,
+    pub vs_neighborhood_median: Option<f64>,
 }
 
 // ---------------------------------------------------------------------------
@@ -746,6 +812,119 @@ impl std::fmt::Display for HostPortfolio {
                     p.review_count,
                     ptype,
                 )?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl std::fmt::Display for ReviewSentiment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(
+            f,
+            "=== Review Sentiment Analysis: listing {} ===",
+            self.listing_id
+        )?;
+        writeln!(f, "Reviews Analyzed: {}", self.total_reviews_analyzed)?;
+        writeln!(
+            f,
+            "Sentiment: {:.0}% positive, {:.0}% negative, {:.0}% neutral",
+            self.positive_pct, self.negative_pct, self.neutral_pct
+        )?;
+        if !self.themes.is_empty() {
+            writeln!(f, "\n--- Themes ---")?;
+            for theme in &self.themes {
+                writeln!(
+                    f,
+                    "{}: {} mentions ({} positive, {} negative)",
+                    theme.theme, theme.mention_count, theme.positive_count, theme.negative_count
+                )?;
+                for quote in &theme.sample_quotes {
+                    writeln!(f, "  \"{quote}\"")?;
+                }
+            }
+        }
+        if !self.top_positive_keywords.is_empty() {
+            writeln!(f, "\n--- Top Positive Keywords ---")?;
+            for (word, count) in &self.top_positive_keywords {
+                writeln!(f, "  {word} ({count})")?;
+            }
+        }
+        if !self.top_negative_keywords.is_empty() {
+            writeln!(f, "\n--- Top Negative Keywords ---")?;
+            for (word, count) in &self.top_negative_keywords {
+                writeln!(f, "  {word} ({count})")?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl std::fmt::Display for CompetitivePositioning {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(
+            f,
+            "=== Competitive Positioning: listing {} ===",
+            self.listing_id
+        )?;
+        writeln!(
+            f,
+            "Overall Competitiveness: {:.0}/100",
+            self.overall_competitiveness
+        )?;
+        if !self.axes.is_empty() {
+            writeln!(f, "\n--- Axes ---")?;
+            for axis in &self.axes {
+                writeln!(
+                    f,
+                    "{}: {:.1} (avg: {:.1}) — {:.0}th percentile — {}",
+                    axis.axis,
+                    axis.listing_value,
+                    axis.neighborhood_avg,
+                    axis.percentile,
+                    axis.assessment
+                )?;
+            }
+        }
+        if !self.strengths.is_empty() {
+            writeln!(f, "\nStrengths: {}", self.strengths.join(", "))?;
+        }
+        if !self.weaknesses.is_empty() {
+            writeln!(f, "Weaknesses: {}", self.weaknesses.join(", "))?;
+        }
+        Ok(())
+    }
+}
+
+impl std::fmt::Display for PricingRecommendation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(
+            f,
+            "=== Pricing Recommendation: listing {} ===",
+            self.listing_id
+        )?;
+        writeln!(f, "Current Price: ${:.2}/night", self.current_price)?;
+        writeln!(f, "Recommended Price: ${:.2}/night", self.recommended_price)?;
+        writeln!(
+            f,
+            "Recommended Range: ${:.2} - ${:.2}/night",
+            self.recommended_range.0, self.recommended_range.1
+        )?;
+        if let (Some(weekday), Some(weekend)) =
+            (self.weekday_recommendation, self.weekend_recommendation)
+        {
+            writeln!(f, "\nWeekday: ${weekday:.2}  |  Weekend: ${weekend:.2}")?;
+        }
+        if let Some(prem) = self.amenity_premium_pct {
+            writeln!(f, "Amenity Premium: {prem:.0}%")?;
+        }
+        if let Some(vs) = self.vs_neighborhood_median {
+            writeln!(f, "vs Neighborhood Median: {vs:+.0}%")?;
+        }
+        if !self.reasoning.is_empty() {
+            writeln!(f, "\nReasoning:")?;
+            for reason in &self.reasoning {
+                writeln!(f, "  - {reason}")?;
             }
         }
         Ok(())
@@ -1509,13 +1688,54 @@ pub fn compute_listing_score(
 // Amenity Analysis computation
 // ---------------------------------------------------------------------------
 
+/// Normalize amenity names to canonical forms for consistent comparison.
+fn normalize_amenity(name: &str) -> String {
+    let lowered = name.trim().to_lowercase();
+    match lowered.as_str() {
+        "wi-fi" | "wi fi" | "wireless internet" | "wifi included" | "free wifi" => {
+            "wifi".to_string()
+        }
+        "air conditioning" | "a/c" | "ac" | "central air" | "central air conditioning" => {
+            "air conditioning".to_string()
+        }
+        "washer" | "washing machine" | "washer/dryer" => "washer".to_string(),
+        "dryer" | "clothes dryer" => "dryer".to_string(),
+        "tv" | "television" | "cable tv" | "hdtv" => "tv".to_string(),
+        "hot tub" | "jacuzzi" | "spa" => "hot tub".to_string(),
+        "bbq" | "bbq grill" | "barbecue" | "grill" => "bbq grill".to_string(),
+        "parking" | "free parking" | "free parking on premises" | "off-street parking" => {
+            "parking".to_string()
+        }
+        "pool" | "swimming pool" | "private pool" | "shared pool" => "pool".to_string(),
+        "gym" | "fitness center" | "exercise equipment" => "gym".to_string(),
+        "kitchen" | "full kitchen" | "kitchenette" => "kitchen".to_string(),
+        "self check-in" | "self-check-in" | "keypad" | "lockbox" | "smart lock" => {
+            "self check-in".to_string()
+        }
+        "heating" | "central heating" | "radiant heating" => "heating".to_string(),
+        "iron" | "iron & board" | "iron and board" => "iron".to_string(),
+        "hair dryer" | "hairdryer" | "blow dryer" => "hair dryer".to_string(),
+        "essentials" | "towels" | "bed linens" | "bed sheets" => "essentials".to_string(),
+        "smoke alarm" | "smoke detector" => "smoke alarm".to_string(),
+        "carbon monoxide alarm" | "carbon monoxide detector" | "co detector" => {
+            "carbon monoxide alarm".to_string()
+        }
+        "first aid kit" | "first-aid kit" => "first aid kit".to_string(),
+        "fire extinguisher" | "fire blanket" => "fire extinguisher".to_string(),
+        other => other.to_string(),
+    }
+}
+
 #[allow(clippy::cast_possible_truncation)]
 pub fn compute_amenity_analysis(
     detail: &ListingDetail,
     neighborhood_details: &[ListingDetail],
 ) -> AmenityAnalysis {
-    let listing_amenities: std::collections::HashSet<&str> =
-        detail.amenities.iter().map(String::as_str).collect();
+    let listing_amenities: std::collections::HashSet<String> = detail
+        .amenities
+        .iter()
+        .map(|a| normalize_amenity(a))
+        .collect();
     let listing_amenity_count = listing_amenities.len() as u32;
 
     // Count amenity frequency across neighborhood
@@ -1530,10 +1750,10 @@ pub fn compute_amenity_analysis(
             / total_neighbors as f64
     };
 
-    let mut amenity_freq: HashMap<&str, u32> = HashMap::new();
+    let mut amenity_freq: HashMap<String, u32> = HashMap::new();
     for d in neighborhood_details {
         for a in &d.amenities {
-            *amenity_freq.entry(a.as_str()).or_insert(0) += 1;
+            *amenity_freq.entry(normalize_amenity(a)).or_insert(0) += 1;
         }
     }
 
@@ -1545,14 +1765,14 @@ pub fn compute_amenity_analysis(
             let freq_pct = f64::from(*count) / total_neighbors as f64 * 100.0;
             if !listing_amenities.contains(amenity) && freq_pct >= 50.0 {
                 missing_popular.push(AmenityGap {
-                    amenity: (*amenity).to_string(),
+                    amenity: amenity.clone(),
                     neighborhood_frequency_pct: freq_pct,
                     is_present: false,
                 });
             }
             if listing_amenities.contains(amenity) && freq_pct < 30.0 {
                 present_rare.push(AmenityGap {
-                    amenity: (*amenity).to_string(),
+                    amenity: amenity.clone(),
                     neighborhood_frequency_pct: freq_pct,
                     is_present: true,
                 });
@@ -1785,6 +2005,506 @@ pub fn compute_host_portfolio(
         total_reviews,
         is_superhost,
         properties,
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Review Sentiment computation
+// ---------------------------------------------------------------------------
+
+#[allow(clippy::too_many_lines, clippy::cast_possible_truncation)]
+pub fn compute_review_sentiment(listing_id: &str, reviews: &[Review]) -> ReviewSentiment {
+    let total = reviews.len() as u32;
+
+    let positive_keywords: &[&str] = &[
+        "amazing",
+        "beautiful",
+        "perfect",
+        "clean",
+        "great",
+        "lovely",
+        "excellent",
+        "wonderful",
+        "comfortable",
+        "spacious",
+        "friendly",
+        "helpful",
+        "quiet",
+        "cozy",
+        "stunning",
+    ];
+    let negative_keywords: &[&str] = &[
+        "dirty",
+        "noisy",
+        "broken",
+        "disappointing",
+        "uncomfortable",
+        "small",
+        "smelly",
+        "rude",
+        "cold",
+        "late",
+        "missing",
+        "poor",
+        "terrible",
+        "awful",
+        "worst",
+    ];
+
+    let theme_map: &[(&str, &[&str])] = &[
+        (
+            "Cleanliness",
+            &["clean", "dirty", "spotless", "dust", "tidy", "stain"],
+        ),
+        (
+            "Location",
+            &[
+                "location",
+                "area",
+                "neighborhood",
+                "walk",
+                "transport",
+                "central",
+                "convenient",
+                "nearby",
+            ],
+        ),
+        (
+            "Communication",
+            &[
+                "communication",
+                "host",
+                "responsive",
+                "helpful",
+                "friendly",
+                "rude",
+                "contact",
+            ],
+        ),
+        (
+            "Amenities",
+            &[
+                "amenities",
+                "kitchen",
+                "wifi",
+                "pool",
+                "bed",
+                "bathroom",
+                "towel",
+                "equipment",
+            ],
+        ),
+        (
+            "Value",
+            &[
+                "value",
+                "price",
+                "expensive",
+                "cheap",
+                "worth",
+                "overpriced",
+                "bargain",
+                "money",
+            ],
+        ),
+    ];
+
+    let mut positive_count = 0u32;
+    let mut negative_count = 0u32;
+    let mut neutral_count = 0u32;
+
+    let mut pos_keyword_counts: HashMap<String, u32> = HashMap::new();
+    let mut neg_keyword_counts: HashMap<String, u32> = HashMap::new();
+
+    // Per-theme tracking: (mention_count, positive_count, negative_count, sample_quotes)
+    let mut theme_data: HashMap<&str, (u32, u32, u32, Vec<String>)> = HashMap::new();
+    for &(theme_name, _) in theme_map {
+        theme_data.insert(theme_name, (0, 0, 0, Vec::new()));
+    }
+
+    for review in reviews {
+        let comment_lower = review.comment.to_lowercase();
+
+        let mut pos_hits = 0u32;
+        let mut neg_hits = 0u32;
+
+        for &kw in positive_keywords {
+            let count = comment_lower.matches(kw).count() as u32;
+            if count > 0 {
+                pos_hits += count;
+                *pos_keyword_counts.entry(kw.to_string()).or_insert(0) += count;
+            }
+        }
+        for &kw in negative_keywords {
+            let count = comment_lower.matches(kw).count() as u32;
+            if count > 0 {
+                neg_hits += count;
+                *neg_keyword_counts.entry(kw.to_string()).or_insert(0) += count;
+            }
+        }
+
+        match pos_hits.cmp(&neg_hits) {
+            std::cmp::Ordering::Greater => positive_count += 1,
+            std::cmp::Ordering::Less => negative_count += 1,
+            std::cmp::Ordering::Equal => neutral_count += 1,
+        }
+
+        // Theme analysis
+        let is_positive_review = pos_hits > neg_hits;
+        let is_negative_review = neg_hits > pos_hits;
+
+        for &(theme_name, theme_keywords) in theme_map {
+            let has_theme_keyword = theme_keywords.iter().any(|&kw| comment_lower.contains(kw));
+            if has_theme_keyword {
+                let entry = theme_data.get_mut(theme_name).unwrap();
+                entry.0 += 1; // mention_count
+                if is_positive_review {
+                    entry.1 += 1; // positive_count
+                }
+                if is_negative_review {
+                    entry.2 += 1; // negative_count
+                }
+                if entry.3.len() < 2 {
+                    let truncated: String = review.comment.chars().take(100).collect();
+                    entry.3.push(truncated);
+                }
+            }
+        }
+    }
+
+    let (positive_pct, negative_pct, neutral_pct) = if total > 0 {
+        (
+            f64::from(positive_count) / f64::from(total) * 100.0,
+            f64::from(negative_count) / f64::from(total) * 100.0,
+            f64::from(neutral_count) / f64::from(total) * 100.0,
+        )
+    } else {
+        (0.0, 0.0, 0.0)
+    };
+
+    let mut themes: Vec<ReviewTheme> = theme_data
+        .into_iter()
+        .filter(|(_, (mention_count, _, _, _))| *mention_count > 0)
+        .map(
+            |(theme_name, (mention_count, pos_count, neg_count, quotes))| ReviewTheme {
+                theme: theme_name.to_string(),
+                mention_count,
+                positive_count: pos_count,
+                negative_count: neg_count,
+                sample_quotes: quotes,
+            },
+        )
+        .collect();
+    themes.sort_by(|a, b| b.mention_count.cmp(&a.mention_count));
+
+    let mut top_positive: Vec<(String, u32)> = pos_keyword_counts.into_iter().collect();
+    top_positive.sort_by(|a, b| b.1.cmp(&a.1));
+    top_positive.truncate(10);
+
+    let mut top_negative: Vec<(String, u32)> = neg_keyword_counts.into_iter().collect();
+    top_negative.sort_by(|a, b| b.1.cmp(&a.1));
+    top_negative.truncate(10);
+
+    ReviewSentiment {
+        listing_id: listing_id.to_string(),
+        total_reviews_analyzed: total,
+        positive_pct,
+        negative_pct,
+        neutral_pct,
+        themes,
+        top_positive_keywords: top_positive,
+        top_negative_keywords: top_negative,
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Competitive Positioning computation
+// ---------------------------------------------------------------------------
+
+#[allow(clippy::too_many_lines)]
+pub fn compute_competitive_positioning(
+    detail: &ListingDetail,
+    neighborhood: &NeighborhoodStats,
+    occupancy: Option<&OccupancyEstimate>,
+    amenity_analysis: Option<&AmenityAnalysis>,
+) -> CompetitivePositioning {
+    let mut axes = Vec::new();
+
+    // 1. Price Value (lower price relative to market = better value = higher score)
+    let price_axis = if let Some(median) = neighborhood.median_price
+        && median > 0.0
+    {
+        let ratio = detail.price_per_night / median * 100.0;
+        let percentile = (200.0 - ratio).clamp(0.0, 100.0);
+        let assessment = if percentile >= 70.0 {
+            "Strong value".to_string()
+        } else if percentile >= 40.0 {
+            "Fair value".to_string()
+        } else {
+            "Premium priced".to_string()
+        };
+        CompetitiveAxis {
+            axis: "Price Value".to_string(),
+            listing_value: detail.price_per_night,
+            neighborhood_avg: median,
+            percentile,
+            assessment,
+        }
+    } else {
+        CompetitiveAxis {
+            axis: "Price Value".to_string(),
+            listing_value: detail.price_per_night,
+            neighborhood_avg: 0.0,
+            percentile: 50.0,
+            assessment: "No market data".to_string(),
+        }
+    };
+    axes.push(price_axis);
+
+    // 2. Rating
+    let rating_axis = if let Some(rating) = detail.rating
+        && let Some(avg_rating) = neighborhood.average_rating
+        && avg_rating > 0.0
+    {
+        // Scale percentile: 5.0 is max, position relative to avg
+        let diff = rating - avg_rating;
+        let percentile = (50.0 + diff * 50.0).clamp(0.0, 100.0);
+        let assessment = if percentile >= 70.0 {
+            "Above average".to_string()
+        } else if percentile >= 40.0 {
+            "Average".to_string()
+        } else {
+            "Below average".to_string()
+        };
+        CompetitiveAxis {
+            axis: "Rating".to_string(),
+            listing_value: rating,
+            neighborhood_avg: avg_rating,
+            percentile,
+            assessment,
+        }
+    } else {
+        CompetitiveAxis {
+            axis: "Rating".to_string(),
+            listing_value: detail.rating.unwrap_or(0.0),
+            neighborhood_avg: neighborhood.average_rating.unwrap_or(0.0),
+            percentile: 50.0,
+            assessment: "Insufficient data".to_string(),
+        }
+    };
+    axes.push(rating_axis);
+
+    // 3. Amenity Count
+    let amenity_axis = if let Some(aa) = amenity_analysis {
+        let percentile = aa.amenity_score_pct.clamp(0.0, 100.0);
+        let assessment = if percentile >= 70.0 {
+            "Well equipped".to_string()
+        } else if percentile >= 40.0 {
+            "Adequate".to_string()
+        } else {
+            "Under-equipped".to_string()
+        };
+        CompetitiveAxis {
+            axis: "Amenity Count".to_string(),
+            listing_value: f64::from(aa.listing_amenity_count),
+            neighborhood_avg: aa.neighborhood_avg_amenity_count,
+            percentile,
+            assessment,
+        }
+    } else {
+        CompetitiveAxis {
+            axis: "Amenity Count".to_string(),
+            listing_value: detail.amenities.len() as f64,
+            neighborhood_avg: 0.0,
+            percentile: 50.0,
+            assessment: "No comparison data".to_string(),
+        }
+    };
+    axes.push(amenity_axis);
+
+    // 4. Review Volume (benchmark: 50 reviews = 100%)
+    let review_percentile = (f64::from(detail.review_count) / 50.0 * 100.0).clamp(0.0, 100.0);
+    let review_assessment = if review_percentile >= 70.0 {
+        "Well reviewed".to_string()
+    } else if review_percentile >= 40.0 {
+        "Moderate reviews".to_string()
+    } else {
+        "Few reviews".to_string()
+    };
+    axes.push(CompetitiveAxis {
+        axis: "Review Volume".to_string(),
+        listing_value: f64::from(detail.review_count),
+        neighborhood_avg: 50.0,
+        percentile: review_percentile,
+        assessment: review_assessment,
+    });
+
+    // 5. Occupancy
+    let occupancy_axis = if let Some(occ) = occupancy {
+        let percentile = occ.occupancy_rate.clamp(0.0, 100.0);
+        let assessment = if percentile >= 70.0 {
+            "High demand".to_string()
+        } else if percentile >= 40.0 {
+            "Moderate demand".to_string()
+        } else {
+            "Low demand".to_string()
+        };
+        CompetitiveAxis {
+            axis: "Occupancy".to_string(),
+            listing_value: occ.occupancy_rate,
+            neighborhood_avg: 65.0, // industry average
+            percentile,
+            assessment,
+        }
+    } else {
+        CompetitiveAxis {
+            axis: "Occupancy".to_string(),
+            listing_value: 0.0,
+            neighborhood_avg: 65.0,
+            percentile: 50.0,
+            assessment: "No occupancy data".to_string(),
+        }
+    };
+    axes.push(occupancy_axis);
+
+    let overall_competitiveness =
+        axes.iter().map(|a| a.percentile).sum::<f64>() / axes.len() as f64;
+
+    let strengths: Vec<String> = axes
+        .iter()
+        .filter(|a| a.percentile >= 70.0)
+        .map(|a| a.axis.clone())
+        .collect();
+
+    let weaknesses: Vec<String> = axes
+        .iter()
+        .filter(|a| a.percentile <= 30.0)
+        .map(|a| a.axis.clone())
+        .collect();
+
+    CompetitivePositioning {
+        listing_id: detail.id.clone(),
+        axes,
+        overall_competitiveness,
+        strengths,
+        weaknesses,
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Optimal Pricing computation
+// ---------------------------------------------------------------------------
+
+pub fn compute_optimal_pricing(
+    detail: &ListingDetail,
+    neighborhood: Option<&NeighborhoodStats>,
+    price_trends: Option<&PriceTrends>,
+    amenity_analysis: Option<&AmenityAnalysis>,
+) -> PricingRecommendation {
+    let current_price = detail.price_per_night;
+    let currency = detail.currency.clone();
+    let mut reasoning = Vec::new();
+
+    // Start with neighborhood median as baseline, or current price if unavailable
+    let baseline = if let Some(stats) = neighborhood
+        && let Some(median) = stats.median_price
+        && median > 0.0
+    {
+        reasoning.push(format!("Baseline: neighborhood median ${median:.2}/night"));
+        median
+    } else {
+        reasoning.push(format!(
+            "Baseline: current listing price ${current_price:.2}/night (no neighborhood data)"
+        ));
+        current_price
+    };
+
+    let mut recommended = baseline;
+
+    // Adjust for rating
+    let rating_adjustment = if let Some(rating) = detail.rating
+        && let Some(stats) = neighborhood
+        && let Some(avg_rating) = stats.average_rating
+        && avg_rating > 0.0
+    {
+        let diff = rating - avg_rating;
+        // Each 0.1 rating point above average = ~2% premium
+        let pct = diff * 20.0;
+        let adj = baseline * pct / 100.0;
+        recommended += adj;
+        reasoning.push(format!(
+            "Rating adjustment: {pct:+.1}% (your {rating:.2} vs avg {avg_rating:.2})"
+        ));
+        adj
+    } else {
+        0.0
+    };
+    let _ = rating_adjustment;
+
+    // Adjust for amenities
+    let amenity_premium_pct = if let Some(aa) = amenity_analysis {
+        let score = aa.amenity_score_pct;
+        if (score - 100.0).abs() > f64::EPSILON {
+            let pct = (score - 100.0) * 0.1; // 10% of the amenity difference
+            let adj = baseline * pct / 100.0;
+            recommended += adj;
+            reasoning.push(format!(
+                "Amenity adjustment: {pct:+.1}% (amenity score {score:.0}% vs market)"
+            ));
+            Some(pct)
+        } else {
+            reasoning.push("Amenities in line with market".to_string());
+            Some(0.0)
+        }
+    } else {
+        None
+    };
+
+    // Ensure recommended price is positive
+    recommended = recommended.max(1.0);
+
+    // Compute range as +/-15%
+    let range_low = recommended * 0.85;
+    let range_high = recommended * 1.15;
+
+    // Weekend / weekday split
+    let (weekday_rec, weekend_rec) = if let Some(trends) = price_trends
+        && let Some(premium_pct) = trends.weekend_premium_pct
+    {
+        // Split so that the average comes out to recommended
+        // weekend = recommended * (1 + premium/200), weekday = recommended * (1 - premium/200)
+        let factor = premium_pct / 200.0;
+        let weekday = recommended * (1.0 - factor);
+        let weekend = recommended * (1.0 + factor);
+        reasoning.push(format!(
+            "Weekend premium: {premium_pct:+.1}% applied to weekday/weekend split"
+        ));
+        (Some(weekday), Some(weekend))
+    } else {
+        (None, None)
+    };
+
+    // vs neighborhood median
+    let vs_median = if let Some(stats) = neighborhood
+        && let Some(median) = stats.median_price
+        && median > 0.0
+    {
+        Some((recommended - median) / median * 100.0)
+    } else {
+        None
+    };
+
+    PricingRecommendation {
+        listing_id: detail.id.clone(),
+        current_price,
+        recommended_price: recommended,
+        recommended_range: (range_low, range_high),
+        currency,
+        reasoning,
+        weekday_recommendation: weekday_rec,
+        weekend_recommendation: weekend_rec,
+        amenity_premium_pct,
+        vs_neighborhood_median: vs_median,
     }
 }
 
@@ -2368,12 +3088,12 @@ mod tests {
 
         assert_eq!(analysis.listing_amenity_count, 2);
         assert!((analysis.neighborhood_avg_amenity_count - 3.0).abs() < 0.01);
-        // Kitchen is in 100% of neighbors, missing from listing
+        // Kitchen is in 100% of neighbors, missing from listing (normalized to "kitchen")
         assert!(
             analysis
                 .missing_popular_amenities
                 .iter()
-                .any(|a| a.amenity == "Kitchen")
+                .any(|a| a.amenity == "kitchen")
         );
     }
 
@@ -2505,5 +3225,685 @@ mod tests {
         let s = result.to_string();
         assert!(s.contains("Host Portfolio: Alice"));
         assert!(s.contains("Superhost: Yes"));
+    }
+
+    // -----------------------------------------------------------------------
+    // Amenity normalization tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn amenity_normalization_wifi_variants() {
+        assert_eq!(normalize_amenity("Wi-Fi"), "wifi");
+        assert_eq!(normalize_amenity("WiFi"), "wifi");
+        assert_eq!(normalize_amenity("FREE WIFI"), "wifi");
+        assert_eq!(normalize_amenity("Wireless Internet"), "wifi");
+        assert_eq!(normalize_amenity("  wifi included  "), "wifi");
+    }
+
+    #[test]
+    fn amenity_normalization_ac_variants() {
+        assert_eq!(normalize_amenity("Air Conditioning"), "air conditioning");
+        assert_eq!(normalize_amenity("A/C"), "air conditioning");
+        assert_eq!(normalize_amenity("AC"), "air conditioning");
+        assert_eq!(normalize_amenity("Central Air"), "air conditioning");
+    }
+
+    #[test]
+    fn amenity_normalization_misc_variants() {
+        assert_eq!(normalize_amenity("Swimming Pool"), "pool");
+        assert_eq!(normalize_amenity("Private Pool"), "pool");
+        assert_eq!(normalize_amenity("BBQ"), "bbq grill");
+        assert_eq!(normalize_amenity("Barbecue"), "bbq grill");
+        assert_eq!(normalize_amenity("Fitness Center"), "gym");
+        assert_eq!(normalize_amenity("Full Kitchen"), "kitchen");
+        assert_eq!(normalize_amenity("Kitchenette"), "kitchen");
+        assert_eq!(normalize_amenity("HairDryer"), "hair dryer");
+        assert_eq!(normalize_amenity("Smoke Detector"), "smoke alarm");
+    }
+
+    #[test]
+    fn amenity_normalization_passthrough() {
+        assert_eq!(normalize_amenity("Balcony"), "balcony");
+        assert_eq!(normalize_amenity("  Garden View  "), "garden view");
+    }
+
+    #[test]
+    fn amenity_analysis_with_normalization() {
+        let mut detail = make_listing_detail("42");
+        detail.amenities = vec!["Wi-Fi".into(), "A/C".into()];
+
+        let mut neighbor = make_listing_detail("1");
+        neighbor.amenities = vec![
+            "WiFi".into(),
+            "Air Conditioning".into(),
+            "Swimming Pool".into(),
+        ];
+
+        let analysis = compute_amenity_analysis(&detail, &[neighbor]);
+
+        // wifi and air conditioning should match via normalization — NOT missing
+        assert!(
+            !analysis
+                .missing_popular_amenities
+                .iter()
+                .any(|a| a.amenity == "wifi")
+        );
+        assert!(
+            !analysis
+                .missing_popular_amenities
+                .iter()
+                .any(|a| a.amenity == "air conditioning")
+        );
+        // pool should be missing (100% of neighbors have it)
+        assert!(
+            analysis
+                .missing_popular_amenities
+                .iter()
+                .any(|a| a.amenity == "pool")
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Review Sentiment tests
+    // -----------------------------------------------------------------------
+
+    fn make_review(comment: &str) -> Review {
+        Review {
+            author: "TestUser".to_string(),
+            date: "2025-01-01".to_string(),
+            rating: Some(4.0),
+            comment: comment.to_string(),
+            response: None,
+            reviewer_location: None,
+            language: None,
+            is_translated: None,
+        }
+    }
+
+    #[test]
+    fn test_review_sentiment_basic() {
+        let reviews = vec![
+            make_review("Amazing place, beautiful and clean!"),
+            make_review("Terrible stay, dirty and noisy room"),
+            make_review("Great location, wonderful host, very friendly"),
+        ];
+        let sentiment = compute_review_sentiment("42", &reviews);
+
+        assert_eq!(sentiment.listing_id, "42");
+        assert_eq!(sentiment.total_reviews_analyzed, 3);
+        // 2 positive (review 1 and 3), 1 negative (review 2)
+        assert!((sentiment.positive_pct - 66.66).abs() < 1.0);
+        assert!((sentiment.negative_pct - 33.33).abs() < 1.0);
+        assert!((sentiment.neutral_pct - 0.0).abs() < 0.01);
+        assert!(!sentiment.top_positive_keywords.is_empty());
+        assert!(!sentiment.top_negative_keywords.is_empty());
+        // Themes should include Cleanliness (clean, dirty) and Communication (host, friendly)
+        assert!(sentiment.themes.iter().any(|t| t.theme == "Cleanliness"));
+    }
+
+    #[test]
+    fn test_review_sentiment_empty() {
+        let sentiment = compute_review_sentiment("42", &[]);
+
+        assert_eq!(sentiment.total_reviews_analyzed, 0);
+        assert!((sentiment.positive_pct - 0.0).abs() < 0.01);
+        assert!((sentiment.negative_pct - 0.0).abs() < 0.01);
+        assert!((sentiment.neutral_pct - 0.0).abs() < 0.01);
+        assert!(sentiment.themes.is_empty());
+        assert!(sentiment.top_positive_keywords.is_empty());
+        assert!(sentiment.top_negative_keywords.is_empty());
+    }
+
+    // -----------------------------------------------------------------------
+    // Competitive Positioning tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_competitive_positioning_basic() {
+        let detail = make_listing_detail("42");
+        let stats = NeighborhoodStats {
+            location: "Paris".to_string(),
+            total_listings: 100,
+            average_price: Some(100.0),
+            median_price: Some(100.0),
+            price_range: Some((50.0, 300.0)),
+            average_rating: Some(4.5),
+            property_type_distribution: vec![],
+            superhost_percentage: Some(30.0),
+        };
+        let result = compute_competitive_positioning(&detail, &stats, None, None);
+
+        assert_eq!(result.listing_id, "42");
+        assert_eq!(result.axes.len(), 5);
+        assert!(result.overall_competitiveness > 0.0);
+        assert!(result.overall_competitiveness <= 100.0);
+        // The listing has price 100 and median is 100 -> ratio 100%, percentile = 200-100 = 100
+        let price_axis = result
+            .axes
+            .iter()
+            .find(|a| a.axis == "Price Value")
+            .unwrap();
+        assert!((price_axis.percentile - 100.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_competitive_positioning_no_neighborhood() {
+        let detail = make_listing_detail("42");
+        let stats = NeighborhoodStats {
+            location: "Unknown".to_string(),
+            total_listings: 0,
+            average_price: None,
+            median_price: None,
+            price_range: None,
+            average_rating: None,
+            property_type_distribution: vec![],
+            superhost_percentage: None,
+        };
+        let result = compute_competitive_positioning(&detail, &stats, None, None);
+
+        assert_eq!(result.axes.len(), 5);
+        // All axes should default to 50 percentile when no data
+        let price_axis = result
+            .axes
+            .iter()
+            .find(|a| a.axis == "Price Value")
+            .unwrap();
+        assert!((price_axis.percentile - 50.0).abs() < 0.01);
+        let rating_axis = result.axes.iter().find(|a| a.axis == "Rating").unwrap();
+        assert!((rating_axis.percentile - 50.0).abs() < 0.01);
+    }
+
+    // -----------------------------------------------------------------------
+    // Optimal Pricing tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_optimal_pricing_basic() {
+        let detail = make_listing_detail("42"); // price 100, rating 4.8
+        let stats = NeighborhoodStats {
+            location: "Paris".to_string(),
+            total_listings: 100,
+            average_price: Some(100.0),
+            median_price: Some(95.0),
+            price_range: Some((50.0, 300.0)),
+            average_rating: Some(4.5),
+            property_type_distribution: vec![],
+            superhost_percentage: Some(30.0),
+        };
+        let days = vec![
+            make_calendar_day("2025-06-06", Some(200.0), true), // Fri
+            make_calendar_day("2025-06-07", Some(250.0), true), // Sat
+            make_calendar_day("2025-06-09", Some(100.0), true), // Mon
+            make_calendar_day("2025-06-10", Some(110.0), true), // Tue
+        ];
+        let cal = make_price_calendar("42", days);
+        let trends = compute_price_trends("42", &cal);
+
+        let rec = compute_optimal_pricing(&detail, Some(&stats), Some(&trends), None);
+
+        assert_eq!(rec.listing_id, "42");
+        assert!(rec.recommended_price > 0.0);
+        assert!(rec.recommended_range.0 < rec.recommended_price);
+        assert!(rec.recommended_range.1 > rec.recommended_price);
+        assert!(!rec.reasoning.is_empty());
+        // With a higher-than-average rating, recommended should be above median
+        assert!(rec.recommended_price > 95.0);
+        // Weekend / weekday should be present since we have trends
+        assert!(rec.weekday_recommendation.is_some());
+        assert!(rec.weekend_recommendation.is_some());
+    }
+
+    // -----------------------------------------------------------------------
+    // Compare Listings deeper tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn compare_listings_two_listings() {
+        let mut l1 = make_listing("1", "Budget Apt", 80.0);
+        l1.rating = Some(4.2);
+        l1.is_superhost = Some(true);
+        let mut l2 = make_listing("2", "Luxury Suite", 250.0);
+        l2.rating = Some(4.9);
+
+        let result = compute_compare_listings(&[l1, l2], None);
+
+        assert_eq!(result.summary.count, 2);
+        assert_eq!(result.listings.len(), 2);
+        assert_eq!(result.summary.superhost_count, 1);
+        assert_eq!(result.summary.price_range, (80.0, 250.0));
+        assert!(result.summary.avg_rating.is_some());
+
+        // Verify both listings appear by name
+        let names: Vec<&str> = result.listings.iter().map(|l| l.name.as_str()).collect();
+        assert!(names.contains(&"Budget Apt"));
+        assert!(names.contains(&"Luxury Suite"));
+
+        // Verify percentile ordering: cheaper listing should have lower price percentile
+        let budget = result.listings.iter().find(|l| l.id == "1").unwrap();
+        let luxury = result.listings.iter().find(|l| l.id == "2").unwrap();
+        assert!(budget.price_percentile < luxury.price_percentile);
+
+        // Verify rating percentiles exist
+        assert!(budget.rating_percentile.is_some());
+        assert!(luxury.rating_percentile.is_some());
+    }
+
+    // -----------------------------------------------------------------------
+    // Listing Score deeper tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn listing_score_perfect() {
+        let mut detail = make_listing_detail("42");
+        // Fill in all fields to maximize score
+        detail.photos = (0..25).map(|i| format!("photo_{i}.jpg")).collect();
+        detail.description = "A".repeat(600); // >500 chars
+        detail.amenities = (0..30).map(|i| format!("amenity_{i}")).collect();
+        detail.review_count = 100;
+        detail.rating = Some(4.95);
+        detail.host_is_superhost = Some(true);
+        detail.host_response_rate = Some("100%".to_string());
+        detail.host_response_time = Some("within an hour".to_string());
+
+        let stats = NeighborhoodStats {
+            location: "Paris".to_string(),
+            total_listings: 100,
+            average_price: Some(100.0),
+            median_price: Some(100.0),
+            price_range: Some((50.0, 300.0)),
+            average_rating: Some(4.5),
+            property_type_distribution: vec![],
+            superhost_percentage: Some(30.0),
+        };
+
+        let score = compute_listing_score(&detail, Some(&stats));
+        assert!(
+            score.overall_score > 80.0,
+            "Perfect listing should score > 80, got {}",
+            score.overall_score
+        );
+        // Check each category is high
+        for cat in &score.category_scores {
+            assert!(
+                cat.score >= 75.0,
+                "Category {} should score >= 75, got {}",
+                cat.category,
+                cat.score
+            );
+        }
+    }
+
+    #[test]
+    fn listing_score_minimal() {
+        let mut detail = make_listing_detail("42");
+        detail.photos = vec![];
+        detail.description = String::new();
+        detail.amenities = vec![];
+        detail.review_count = 0;
+        detail.rating = None;
+        detail.host_is_superhost = None;
+        detail.host_response_rate = None;
+        detail.host_response_time = None;
+
+        let score = compute_listing_score(&detail, None);
+        // Minimal listing: photos=0, desc=0, amenities=0, reviews=0, host=50, pricing=50
+        // Average should be low
+        assert!(
+            score.overall_score < 30.0,
+            "Minimal listing should score < 30, got {}",
+            score.overall_score
+        );
+        assert!(
+            !score.suggestions.is_empty(),
+            "Minimal listing should have suggestions"
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Market Comparison deeper tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn market_comparison_two_locations() {
+        let paris_stats = NeighborhoodStats {
+            location: "Paris".to_string(),
+            total_listings: 50,
+            average_price: Some(150.0),
+            median_price: Some(140.0),
+            price_range: Some((50.0, 500.0)),
+            average_rating: Some(4.6),
+            property_type_distribution: vec![PropertyTypeCount {
+                property_type: "Apartment".to_string(),
+                count: 40,
+                percentage: 80.0,
+            }],
+            superhost_percentage: Some(35.0),
+        };
+        let london_stats = NeighborhoodStats {
+            location: "London".to_string(),
+            total_listings: 80,
+            average_price: Some(200.0),
+            median_price: Some(180.0),
+            price_range: Some((70.0, 800.0)),
+            average_rating: Some(4.4),
+            property_type_distribution: vec![PropertyTypeCount {
+                property_type: "Flat".to_string(),
+                count: 60,
+                percentage: 75.0,
+            }],
+            superhost_percentage: Some(25.0),
+        };
+
+        let result = compute_market_comparison(&[paris_stats, london_stats]);
+
+        assert_eq!(result.locations.len(), 2);
+
+        let paris = &result.locations[0];
+        assert_eq!(paris.location, "Paris");
+        assert_eq!(paris.total_listings, 50);
+        assert!((paris.avg_price.unwrap() - 150.0).abs() < 0.01);
+        assert!((paris.median_price.unwrap() - 140.0).abs() < 0.01);
+        assert!((paris.avg_rating.unwrap() - 4.6).abs() < 0.01);
+        assert!((paris.superhost_pct.unwrap() - 35.0).abs() < 0.01);
+        assert_eq!(paris.top_property_type.as_deref(), Some("Apartment"));
+
+        let london = &result.locations[1];
+        assert_eq!(london.location, "London");
+        assert_eq!(london.total_listings, 80);
+        assert!((london.avg_price.unwrap() - 200.0).abs() < 0.01);
+        assert_eq!(london.top_property_type.as_deref(), Some("Flat"));
+    }
+
+    // -----------------------------------------------------------------------
+    // Review Sentiment deeper tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn review_sentiment_all_positive() {
+        let reviews = vec![
+            make_review("Amazing place, truly beautiful and perfect!"),
+            make_review("Lovely, excellent stay, wonderful views!"),
+            make_review("Great host, clean and comfortable apartment!"),
+            make_review("Stunning location, friendly and helpful!"),
+            make_review("Perfect stay, beautiful and spacious home!"),
+        ];
+        let sentiment = compute_review_sentiment("42", &reviews);
+
+        assert_eq!(sentiment.total_reviews_analyzed, 5);
+        assert!(
+            sentiment.positive_pct > 80.0,
+            "All positive reviews should yield > 80% positive, got {}",
+            sentiment.positive_pct
+        );
+        assert!(
+            sentiment.negative_pct < 5.0,
+            "All positive reviews should yield < 5% negative, got {}",
+            sentiment.negative_pct
+        );
+    }
+
+    #[test]
+    fn review_sentiment_mixed() {
+        let reviews = vec![
+            make_review("Amazing and beautiful place!"),
+            make_review("Dirty, noisy, and uncomfortable"),
+            make_review("Great location but broken shower"),
+            make_review("Nothing special to say about it"),
+        ];
+        let sentiment = compute_review_sentiment("42", &reviews);
+
+        assert_eq!(sentiment.total_reviews_analyzed, 4);
+        // Should have mix of positive, negative, neutral
+        assert!(sentiment.positive_pct > 0.0);
+        assert!(sentiment.negative_pct > 0.0);
+        // "Nothing special" has no positive or negative keywords -> neutral
+        assert!(sentiment.neutral_pct > 0.0);
+    }
+
+    #[test]
+    fn review_sentiment_theme_detection() {
+        let reviews = vec![
+            make_review("The place was spotless and clean, everything was tidy"),
+            make_review("Very clean apartment, no dust anywhere"),
+            make_review("Location was great, easy walk to transport"),
+        ];
+        let sentiment = compute_review_sentiment("42", &reviews);
+
+        // Check cleanliness theme detected via "clean", "spotless", "tidy", "dust"
+        let cleanliness = sentiment.themes.iter().find(|t| t.theme == "Cleanliness");
+        assert!(
+            cleanliness.is_some(),
+            "Cleanliness theme should be detected"
+        );
+        let cleanliness = cleanliness.unwrap();
+        assert!(
+            cleanliness.mention_count >= 2,
+            "Cleanliness should have at least 2 mentions, got {}",
+            cleanliness.mention_count
+        );
+
+        // Check location theme detected via "location", "walk", "transport"
+        let location = sentiment.themes.iter().find(|t| t.theme == "Location");
+        assert!(location.is_some(), "Location theme should be detected");
+    }
+
+    // -----------------------------------------------------------------------
+    // Competitive Positioning deeper tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn competitive_positioning_all_axes() {
+        let mut detail = make_listing_detail("42");
+        detail.review_count = 60; // above the 50 benchmark -> high percentile
+        detail.rating = Some(4.9);
+
+        let stats = NeighborhoodStats {
+            location: "Paris".to_string(),
+            total_listings: 100,
+            average_price: Some(120.0),
+            median_price: Some(110.0),
+            price_range: Some((50.0, 300.0)),
+            average_rating: Some(4.3),
+            property_type_distribution: vec![],
+            superhost_percentage: Some(30.0),
+        };
+
+        let occupancy = OccupancyEstimate {
+            listing_id: "42".to_string(),
+            period_start: "2025-06-01".to_string(),
+            period_end: "2025-08-31".to_string(),
+            total_days: 90,
+            occupied_days: 72,
+            available_days: 18,
+            occupancy_rate: 80.0,
+            average_available_price: Some(110.0),
+            weekend_avg_price: Some(130.0),
+            weekday_avg_price: Some(100.0),
+            monthly_breakdown: vec![],
+        };
+
+        let amenity_analysis = AmenityAnalysis {
+            listing_id: "42".to_string(),
+            listing_amenity_count: 15,
+            neighborhood_avg_amenity_count: 10.0,
+            missing_popular_amenities: vec![],
+            present_rare_amenities: vec![],
+            amenity_score_pct: 150.0, // 15/10 * 100 = 150, clamped to 100 in percentile
+        };
+
+        let result = compute_competitive_positioning(
+            &detail,
+            &stats,
+            Some(&occupancy),
+            Some(&amenity_analysis),
+        );
+
+        assert_eq!(result.axes.len(), 5);
+
+        // Verify all 5 axes present
+        let axis_names: Vec<&str> = result.axes.iter().map(|a| a.axis.as_str()).collect();
+        assert!(axis_names.contains(&"Price Value"));
+        assert!(axis_names.contains(&"Rating"));
+        assert!(axis_names.contains(&"Amenity Count"));
+        assert!(axis_names.contains(&"Review Volume"));
+        assert!(axis_names.contains(&"Occupancy"));
+
+        // Review Volume: 60 reviews / 50 benchmark * 100 = 120, clamped to 100
+        let review_axis = result
+            .axes
+            .iter()
+            .find(|a| a.axis == "Review Volume")
+            .unwrap();
+        assert!(
+            (review_axis.percentile - 100.0).abs() < 0.01,
+            "Review volume should be at 100 percentile, got {}",
+            review_axis.percentile
+        );
+
+        // Occupancy: 80% occupancy rate -> percentile 80
+        let occ_axis = result.axes.iter().find(|a| a.axis == "Occupancy").unwrap();
+        assert!(
+            (occ_axis.percentile - 80.0).abs() < 0.01,
+            "Occupancy should be at 80 percentile, got {}",
+            occ_axis.percentile
+        );
+    }
+
+    #[test]
+    fn competitive_positioning_strengths_weaknesses() {
+        let mut detail = make_listing_detail("42");
+        detail.price_per_night = 200.0; // expensive relative to median
+        detail.rating = Some(4.9); // high rating
+        detail.review_count = 5; // few reviews -> low percentile
+
+        let stats = NeighborhoodStats {
+            location: "Paris".to_string(),
+            total_listings: 100,
+            average_price: Some(100.0),
+            median_price: Some(100.0),
+            price_range: Some((50.0, 300.0)),
+            average_rating: Some(4.3),
+            property_type_distribution: vec![],
+            superhost_percentage: Some(30.0),
+        };
+
+        let result = compute_competitive_positioning(&detail, &stats, None, None);
+
+        // Rating: 4.9 vs avg 4.3 -> diff 0.6 -> percentile = 50 + 0.6*50 = 80 -> strength
+        assert!(
+            result.strengths.contains(&"Rating".to_string()),
+            "Rating should be a strength, strengths: {:?}",
+            result.strengths
+        );
+
+        // Review Volume: 5/50*100 = 10 -> weakness (<=30)
+        assert!(
+            result.weaknesses.contains(&"Review Volume".to_string()),
+            "Review Volume should be a weakness, weaknesses: {:?}",
+            result.weaknesses
+        );
+
+        // Price Value: price 200 / median 100 = 200%, percentile = 200-200 = 0 -> weakness
+        assert!(
+            result.weaknesses.contains(&"Price Value".to_string()),
+            "Price Value should be a weakness, weaknesses: {:?}",
+            result.weaknesses
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Optimal Pricing deeper tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn optimal_pricing_with_trends() {
+        let detail = make_listing_detail("42");
+        let stats = NeighborhoodStats {
+            location: "Paris".to_string(),
+            total_listings: 100,
+            average_price: Some(100.0),
+            median_price: Some(95.0),
+            price_range: Some((50.0, 300.0)),
+            average_rating: Some(4.5),
+            property_type_distribution: vec![],
+            superhost_percentage: Some(30.0),
+        };
+        // Create trends with a weekend premium
+        let days = vec![
+            make_calendar_day("2025-06-06", Some(200.0), true), // Fri (weekend)
+            make_calendar_day("2025-06-07", Some(250.0), true), // Sat (weekend)
+            make_calendar_day("2025-06-09", Some(100.0), true), // Mon (weekday)
+            make_calendar_day("2025-06-10", Some(110.0), true), // Tue (weekday)
+        ];
+        let cal = make_price_calendar("42", days);
+        let trends = compute_price_trends("42", &cal);
+
+        let rec = compute_optimal_pricing(&detail, Some(&stats), Some(&trends), None);
+
+        // Should produce weekday/weekend split
+        assert!(rec.weekday_recommendation.is_some());
+        assert!(rec.weekend_recommendation.is_some());
+
+        // Weekend should be higher than weekday
+        let weekday = rec.weekday_recommendation.unwrap();
+        let weekend = rec.weekend_recommendation.unwrap();
+        assert!(
+            weekend > weekday,
+            "Weekend ({weekend}) should be higher than weekday ({weekday})"
+        );
+    }
+
+    #[test]
+    fn optimal_pricing_no_data() {
+        let detail = make_listing_detail("42"); // price 100
+
+        let rec = compute_optimal_pricing(&detail, None, None, None);
+
+        assert_eq!(rec.listing_id, "42");
+        assert!(rec.recommended_price > 0.0);
+        // With no neighborhood data, baseline = current price = 100
+        assert!(
+            (rec.recommended_price - 100.0).abs() < 0.01,
+            "With no data, recommended should equal current price, got {}",
+            rec.recommended_price
+        );
+        assert!(rec.weekday_recommendation.is_none());
+        assert!(rec.weekend_recommendation.is_none());
+        assert!(rec.amenity_premium_pct.is_none());
+        assert!(rec.vs_neighborhood_median.is_none());
+        assert!(!rec.reasoning.is_empty());
+    }
+
+    #[test]
+    fn optimal_pricing_high_rating_premium() {
+        let mut detail = make_listing_detail("42");
+        detail.rating = Some(4.95);
+
+        let stats = NeighborhoodStats {
+            location: "Paris".to_string(),
+            total_listings: 100,
+            average_price: Some(100.0),
+            median_price: Some(100.0),
+            price_range: Some((50.0, 300.0)),
+            average_rating: Some(4.5),
+            property_type_distribution: vec![],
+            superhost_percentage: Some(30.0),
+        };
+
+        let rec = compute_optimal_pricing(&detail, Some(&stats), None, None);
+
+        // Rating diff = 4.95 - 4.5 = 0.45, adjustment = 0.45 * 20 = 9%
+        // recommended = 100 (median) + 100 * 9/100 = 109
+        assert!(
+            rec.recommended_price > 100.0,
+            "High-rated listing should be priced above median, got {}",
+            rec.recommended_price
+        );
+        assert!(rec.vs_neighborhood_median.is_some());
+        let vs_median = rec.vs_neighborhood_median.unwrap();
+        assert!(
+            vs_median > 0.0,
+            "vs_neighborhood_median should be positive, got {vs_median}"
+        );
     }
 }
