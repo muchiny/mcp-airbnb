@@ -194,11 +194,11 @@ impl AirbnbClient for AirbnbGraphQLClient {
         params.validate()?;
 
         let cache_key = format!("gql:search:{}", params.location.to_lowercase());
-        if let Some(cached) = self.cache.get(&cache_key) {
+        if let Some(cached) = self.cache.get(&cache_key)
+            && let Ok(result) = serde_json::from_str::<SearchResult>(&cached)
+        {
             debug!("Cache hit for GraphQL search");
-            if let Ok(result) = serde_json::from_str::<SearchResult>(&cached) {
-                return Ok(result);
-            }
+            return Ok(result);
         }
 
         let variables = parsers::search::build_search_variables(params);
@@ -220,11 +220,11 @@ impl AirbnbClient for AirbnbGraphQLClient {
 
     async fn get_listing_detail(&self, id: &str) -> Result<ListingDetail> {
         let cache_key = format!("gql:detail:{id}");
-        if let Some(cached) = self.cache.get(&cache_key) {
+        if let Some(cached) = self.cache.get(&cache_key)
+            && let Ok(detail) = serde_json::from_str::<ListingDetail>(&cached)
+        {
             debug!(id, "Cache hit for GraphQL listing detail");
-            if let Ok(detail) = serde_json::from_str::<ListingDetail>(&cached) {
-                return Ok(detail);
-            }
+            return Ok(detail);
         }
 
         let b64 = base64::engine::general_purpose::STANDARD;
@@ -273,11 +273,11 @@ impl AirbnbClient for AirbnbGraphQLClient {
 
     async fn get_reviews(&self, id: &str, cursor: Option<&str>) -> Result<ReviewsPage> {
         let cache_key = format!("gql:reviews:{id}:{}", cursor.unwrap_or("first"));
-        if let Some(cached) = self.cache.get(&cache_key) {
+        if let Some(cached) = self.cache.get(&cache_key)
+            && let Ok(page) = serde_json::from_str::<ReviewsPage>(&cached)
+        {
             debug!(id, "Cache hit for GraphQL reviews");
-            if let Ok(page) = serde_json::from_str::<ReviewsPage>(&cached) {
-                return Ok(page);
-            }
+            return Ok(page);
         }
 
         let offset: u64 = cursor.and_then(|c| c.parse().ok()).unwrap_or(0);
@@ -321,11 +321,11 @@ impl AirbnbClient for AirbnbGraphQLClient {
 
     async fn get_price_calendar(&self, id: &str, months: u32) -> Result<PriceCalendar> {
         let cache_key = format!("gql:calendar:{id}:m={months}");
-        if let Some(cached) = self.cache.get(&cache_key) {
+        if let Some(cached) = self.cache.get(&cache_key)
+            && let Ok(calendar) = serde_json::from_str::<PriceCalendar>(&cached)
+        {
             debug!(id, "Cache hit for GraphQL calendar");
-            if let Ok(calendar) = serde_json::from_str::<PriceCalendar>(&cached) {
-                return Ok(calendar);
-            }
+            return Ok(calendar);
         }
 
         let now = chrono::Utc::now();
@@ -364,11 +364,11 @@ impl AirbnbClient for AirbnbGraphQLClient {
 
     async fn get_host_profile(&self, listing_id: &str) -> Result<HostProfile> {
         let cache_key = format!("gql:host:{listing_id}");
-        if let Some(cached) = self.cache.get(&cache_key) {
+        if let Some(cached) = self.cache.get(&cache_key)
+            && let Ok(profile) = serde_json::from_str::<HostProfile>(&cached)
+        {
             debug!(listing_id, "Cache hit for GraphQL host profile");
-            if let Ok(profile) = serde_json::from_str::<HostProfile>(&cached) {
-                return Ok(profile);
-            }
+            return Ok(profile);
         }
 
         // Use PDP sections instead of GetUserProfile (which requires a user_id, not listing_id)

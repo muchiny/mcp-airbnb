@@ -72,7 +72,7 @@ mod tests {
     #[test]
     fn set_then_get_returns_value() {
         let cache = MemoryCache::new(10);
-        cache.set("key1", "value1", Duration::from_secs(60));
+        cache.set("key1", "value1", Duration::from_mins(1));
         assert_eq!(cache.get("key1"), Some("value1".to_string()));
     }
 
@@ -88,9 +88,9 @@ mod tests {
     #[test]
     fn cache_eviction_at_capacity() {
         let cache = MemoryCache::new(2);
-        cache.set("a", "1", Duration::from_secs(60));
-        cache.set("b", "2", Duration::from_secs(60));
-        cache.set("c", "3", Duration::from_secs(60));
+        cache.set("a", "1", Duration::from_mins(1));
+        cache.set("b", "2", Duration::from_mins(1));
+        cache.set("c", "3", Duration::from_mins(1));
         // "a" should be evicted (LRU)
         assert!(cache.get("a").is_none());
         assert_eq!(cache.get("b"), Some("2".to_string()));
@@ -100,8 +100,8 @@ mod tests {
     #[test]
     fn cache_overwrite_key() {
         let cache = MemoryCache::new(10);
-        cache.set("key", "old_value", Duration::from_secs(60));
-        cache.set("key", "new_value", Duration::from_secs(60));
+        cache.set("key", "old_value", Duration::from_mins(1));
+        cache.set("key", "new_value", Duration::from_mins(1));
         assert_eq!(cache.get("key"), Some("new_value".to_string()));
     }
 
@@ -109,7 +109,7 @@ mod tests {
     fn cache_zero_capacity_fallback() {
         // max_entries=0 should fall back to NonZeroUsize(100), not panic
         let cache = MemoryCache::new(0);
-        cache.set("key", "value", Duration::from_secs(60));
+        cache.set("key", "value", Duration::from_mins(1));
         assert_eq!(cache.get("key"), Some("value".to_string()));
     }
 
@@ -122,7 +122,7 @@ mod tests {
             let c = Arc::clone(&cache);
             handles.push(std::thread::spawn(move || {
                 let key = format!("key{i}");
-                c.set(&key, &format!("val{i}"), Duration::from_secs(60));
+                c.set(&key, &format!("val{i}"), Duration::from_mins(1));
                 c.get(&key)
             }));
         }

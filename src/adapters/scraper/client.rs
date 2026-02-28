@@ -119,11 +119,11 @@ impl AirbnbClient for AirbnbScraper {
         params.validate()?;
 
         let cache_key = format!("search:{}", build_search_cache_key(params));
-        if let Some(cached) = self.cache.get(&cache_key) {
+        if let Some(cached) = self.cache.get(&cache_key)
+            && let Ok(result) = serde_json::from_str::<SearchResult>(&cached)
+        {
             debug!("Cache hit for search");
-            if let Ok(result) = serde_json::from_str::<SearchResult>(&cached) {
-                return Ok(result);
-            }
+            return Ok(result);
         }
 
         let url = build_search_url(&self.config.base_url, params);
@@ -143,11 +143,11 @@ impl AirbnbClient for AirbnbScraper {
 
     async fn get_listing_detail(&self, id: &str) -> Result<ListingDetail> {
         let cache_key = format!("detail:{id}");
-        if let Some(cached) = self.cache.get(&cache_key) {
+        if let Some(cached) = self.cache.get(&cache_key)
+            && let Ok(detail) = serde_json::from_str::<ListingDetail>(&cached)
+        {
             debug!(id, "Cache hit for listing detail");
-            if let Ok(detail) = serde_json::from_str::<ListingDetail>(&cached) {
-                return Ok(detail);
-            }
+            return Ok(detail);
         }
 
         let url = format!("{}/rooms/{id}", self.config.base_url);
@@ -167,11 +167,11 @@ impl AirbnbClient for AirbnbScraper {
 
     async fn get_reviews(&self, id: &str, cursor: Option<&str>) -> Result<ReviewsPage> {
         let cache_key = format!("reviews:{id}:{}", cursor.unwrap_or("first"));
-        if let Some(cached) = self.cache.get(&cache_key) {
+        if let Some(cached) = self.cache.get(&cache_key)
+            && let Ok(page) = serde_json::from_str::<ReviewsPage>(&cached)
+        {
             debug!(id, "Cache hit for reviews");
-            if let Ok(page) = serde_json::from_str::<ReviewsPage>(&cached) {
-                return Ok(page);
-            }
+            return Ok(page);
         }
 
         let base = format!("{}/rooms/{id}", self.config.base_url);
@@ -198,11 +198,11 @@ impl AirbnbClient for AirbnbScraper {
 
     async fn get_price_calendar(&self, id: &str, months: u32) -> Result<PriceCalendar> {
         let cache_key = format!("calendar:{id}:m={months}");
-        if let Some(cached) = self.cache.get(&cache_key) {
+        if let Some(cached) = self.cache.get(&cache_key)
+            && let Ok(calendar) = serde_json::from_str::<PriceCalendar>(&cached)
+        {
             debug!(id, "Cache hit for calendar");
-            if let Ok(calendar) = serde_json::from_str::<PriceCalendar>(&cached) {
-                return Ok(calendar);
-            }
+            return Ok(calendar);
         }
 
         let mut parsed = Url::parse(&format!("{}/rooms/{id}", self.config.base_url))?;
@@ -226,11 +226,11 @@ impl AirbnbClient for AirbnbScraper {
 
     async fn get_host_profile(&self, listing_id: &str) -> Result<HostProfile> {
         let cache_key = format!("host:{listing_id}");
-        if let Some(cached) = self.cache.get(&cache_key) {
+        if let Some(cached) = self.cache.get(&cache_key)
+            && let Ok(profile) = serde_json::from_str::<HostProfile>(&cached)
+        {
             debug!(listing_id, "Cache hit for host profile");
-            if let Ok(profile) = serde_json::from_str::<HostProfile>(&cached) {
-                return Ok(profile);
-            }
+            return Ok(profile);
         }
 
         let url = format!("{}/rooms/{listing_id}", self.config.base_url);
