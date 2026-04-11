@@ -40,7 +40,7 @@ anyhow = "1.0.102"
 
 # Logging (stderr only — stdout is reserved for MCP JSON-RPC)
 tracing = "0.1.44"
-tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 
 # Cache
 lru = "0.16.3"
