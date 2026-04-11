@@ -107,11 +107,22 @@ impl std::fmt::Display for SearchResult {
 
 impl std::fmt::Display for Listing {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{} - {} ({}{}/night",
-            self.name, self.location, self.currency, self.price_per_night
-        )?;
+        // Airbnb only exposes nightly prices on search results and listings
+        // fetched with explicit dates; a direct detail fetch without dates
+        // yields `price_per_night == 0.0`, so format accordingly.
+        if self.price_per_night > 0.0 {
+            write!(
+                f,
+                "{} - {} ({}{}/night",
+                self.name, self.location, self.currency, self.price_per_night
+            )?;
+        } else {
+            write!(
+                f,
+                "{} - {} (price unavailable — use search to get dated pricing",
+                self.name, self.location
+            )?;
+        }
         if let Some(rating) = self.rating {
             write!(
                 f,
@@ -139,7 +150,17 @@ impl std::fmt::Display for ListingDetail {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "# {}", self.name)?;
         writeln!(f, "Location: {}", self.location)?;
-        writeln!(f, "Price: {}{}/night", self.currency, self.price_per_night)?;
+        // When the public API doesn't surface a nightly price for a direct
+        // detail fetch, `price_per_night` is 0.0 — flag that explicitly
+        // rather than printing a misleading "$0/night".
+        if self.price_per_night > 0.0 {
+            writeln!(f, "Price: {}{}/night", self.currency, self.price_per_night)?;
+        } else {
+            writeln!(
+                f,
+                "Price: unavailable — fetch via `airbnb search` with --checkin/--checkout for dated pricing"
+            )?;
+        }
         if let Some(rating) = self.rating {
             writeln!(f, "Rating: {rating:.2} ({} reviews)", self.review_count)?;
         }
