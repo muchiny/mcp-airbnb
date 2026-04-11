@@ -1,14 +1,17 @@
 # 🏠 mcp-airbnb
 
 [![Rust](https://img.shields.io/badge/Rust-1.93%2B-orange?logo=rust)](https://www.rust-lang.org/)
-[![MCP](https://img.shields.io/badge/MCP-rmcp%200.16-blue)](https://modelcontextprotocol.io/)
+[![MCP](https://img.shields.io/badge/MCP-rmcp%201.4-blue)](https://modelcontextprotocol.io/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 > **Model Context Protocol server** that enables AI assistants to search and browse Airbnb listings via a dual data source: **GraphQL API** (primary) with **HTML scraping** fallback.
 
 ## 🤔 What is this?
 
-[MCP (Model Context Protocol)](https://modelcontextprotocol.io/) is an open standard that lets AI assistants call external tools. This server gives any MCP-compatible AI (Claude, etc.) **18 tools** to search, analyze, and compare Airbnb listings — no API key required.
+[MCP (Model Context Protocol)](https://modelcontextprotocol.io/) is an open standard that lets AI assistants call external tools. This crate ships **two entry points** sharing the same 18-tool backend (GraphQL API + HTML scraping fallback), no API key required:
+
+- 📡 `mcp-airbnb` — MCP server over stdio for any MCP-compatible AI (Claude, etc.)
+- 🖥️ `airbnb` — standalone CLI binary exposing the same 18 tools as shell subcommands (`airbnb search …`, `airbnb --json listing …`, pipeable into `jq`)
 
 **Who is it for?**
 
@@ -42,11 +45,12 @@
 - 💲 **Optimal pricing** — data-driven pricing recommendation with reasoning
 
 ### 🔧 Infrastructure
+- 🖥️ **Dual entry point** — MCP server (`mcp-airbnb`) + standalone `airbnb` CLI, same backend
 - 🔗 **Dual data source** — GraphQL API (fast, structured) + HTML scraper (fallback)
 - 💾 **In-memory LRU cache** with configurable TTLs per tool
 - ⏱️ **Rate limiting** to respect Airbnb (default: 1 request per 2 seconds)
 - 📦 **MCP Resources** — fetched data cached as reusable resources (18 templates)
-- 🏗️ **Hexagonal architecture** — clean separation of domain, ports, and adapters
+- 🏗️ **Hexagonal architecture** — clean separation of domain, ports, adapters, and application layer
 
 ## 🏗️ Architecture
 
@@ -58,7 +62,7 @@ graph TB
     end
 
     subgraph MCP["📡 MCP Protocol Layer"]
-        Server["AirbnbMcpServer<br/>rmcp 0.16 · stdio · 18 tools"]
+        Server["AirbnbMcpServer<br/>rmcp 1.4 · stdio · 18 tools"]
     end
 
     subgraph Core["💎 Domain & Ports"]
@@ -151,6 +155,66 @@ Data fetched by tools is automatically cached as MCP resources. Clients can refe
 | Competitive Positioning | `airbnb://analysis/positioning/{id}` | `airbnb_competitive_positioning` |
 | Optimal Pricing | `airbnb://analysis/pricing/{id}` | `airbnb_optimal_pricing` |
 
+## 🖥️ CLI
+
+The `airbnb` binary exposes all 18 tools as shell subcommands. It reuses the exact same `AirbnbClient` implementation as the MCP server — same GraphQL-first strategy with HTML scraper fallback, same cache, same config — so parity is guaranteed.
+
+### Data subcommands (7)
+
+```bash
+airbnb search "Paris, France" --adults 2 --max-price 200
+airbnb listing 12345678
+airbnb reviews 12345678 --cursor <next_page_cursor>
+airbnb calendar 12345678 --months 6
+airbnb host 12345678
+airbnb neighborhood "Barcelona, Spain"
+airbnb occupancy 12345678 --months 3
+```
+
+### Analytical subcommands (11)
+
+```bash
+airbnb compare --location "Lisbon, Portugal"
+airbnb compare --ids 12345678,23456789,34567890
+airbnb price-trends 12345678 --months 12
+airbnb gap-finder 12345678 --months 3
+airbnb revenue 12345678 --location "Rome, Italy" --months 12
+airbnb listing-score 12345678
+airbnb amenities 12345678
+airbnb market-comparison "Paris,Lyon,Marseille"
+airbnb host-portfolio 12345678
+airbnb review-sentiment 12345678 --max-pages 5
+airbnb competitive 12345678
+airbnb optimal-pricing 12345678 --months 12
+```
+
+### Global flags
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--json` | `-j` | Output machine-readable JSON (default: human-readable text) |
+| `--config <PATH>` | `-c` | Override config.yaml path (also reads `AIRBNB_CONFIG` env var) |
+| `--verbose` | `-v`, `-vv` | Increase tracing verbosity (`-v` = info, `-vv` = debug) |
+| `--help` | `-h` | Print help — also available per-subcommand (e.g. `airbnb search --help`) |
+| `--version` | `-V` | Print version |
+
+### JSON mode example
+
+```bash
+# Grab prices from the first 5 Tokyo listings
+airbnb --json search "Tokyo" | jq '.listings[:5] | map({id, name, price: .price_per_night})'
+
+# Pretty-print a full listing detail
+airbnb --json listing 12345678 | jq .
+
+# Compare a list of IDs and extract the price percentiles
+airbnb --json compare --ids 1111,2222,3333 | jq '.listings[] | {id, price_percentile}'
+```
+
+### Note on listing prices
+
+When you fetch a listing via `airbnb listing <id>` without dates, Airbnb's public endpoints return the nightly price as `null` — prices are only populated for dated search results. The CLI surfaces this explicitly: the human-readable output shows `Price: unavailable — fetch via 'airbnb search' with --checkin/--checkout for dated pricing` instead of a misleading `$0/night`. JSON mode keeps `price_per_night: 0.0` for schema stability.
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -164,14 +228,22 @@ Data fetched by tools is automatically cached as MCP resources. Clients can refe
 git clone https://github.com/your-username/mcp-airbnb.git
 cd mcp-airbnb
 
-# Build
-cargo build --release
+# Build both binaries
+cargo build --release --bin mcp-airbnb --bin airbnb
 
-# Run the MCP server (stdio transport)
-cargo run
+# --- MCP server (stdio transport, for AI assistants) ---
+./target/release/mcp-airbnb
 
-# Run with debug logging (logs go to stderr)
-RUST_LOG=debug cargo run
+# Or via cargo (same result)
+cargo run --bin mcp-airbnb
+
+# With debug logging (logs go to stderr, stdout reserved for JSON-RPC)
+RUST_LOG=debug cargo run --bin mcp-airbnb
+
+# --- CLI (for terminal, scripts, piping into jq) ---
+./target/release/airbnb --help
+./target/release/airbnb search "Paris, France" --adults 2
+./target/release/airbnb --json optimal-pricing 12345678 | jq .
 ```
 
 ### Integration with Claude Desktop
@@ -287,19 +359,33 @@ mcp-airbnb/
 │   │   ├── cache/           # 💾 In-memory LRU cache
 │   │   ├── composite.rs     # 🔀 GraphQL + Scraper with auto-fallback
 │   │   └── shared.rs        # 🔑 ApiKeyManager (shared auth)
-│   ├── mcp/                 # 📡 MCP server (rmcp 0.16, stdio, 18 tools)
+│   ├── application/         # 🎼 Orchestration shared by both binaries
+│   │   ├── mod.rs           #    build_client(), find_config_path()
+│   │   └── analytical_handlers.rs  # Multi-fetch helpers (compare, revenue, …)
+│   ├── mcp/                 # 📡 MCP server (rmcp 1.4, stdio, 18 tools)
+│   ├── cli/                 # 🖥️ CLI module (clap derive, dispatcher, output)
+│   │   ├── args.rs          #    Cli/Commands structs + parsing unit tests
+│   │   ├── mod.rs           #    run() + testable dispatch()
+│   │   ├── handlers.rs      #    args → domain params conversion
+│   │   └── output.rs        #    render<T: Serialize + Display>
+│   ├── bin/cli.rs           # 🖥️ `airbnb` binary entrypoint (shim)
 │   ├── config/              # ⚙️ YAML configuration
 │   ├── error.rs             # ❌ Error types (thiserror)
 │   ├── lib.rs               # Module re-exports
-│   └── main.rs              # 🚀 Entrypoint & DI wiring
+│   └── main.rs              # 🚀 `mcp-airbnb` binary entrypoint
 ├── tests/                   # 🧪 Integration tests + fixtures
 ├── fuzz/                    # 🎲 Fuzzing targets (8 targets)
+├── claude-resources/        # 📚 Shareable Claude Code rules/skills/agents (committed,
+│   │                        #     copy into ~/.claude/ or symlink as .claude/)
+│   ├── rules/               #    mcp-conventions, scraping-conventions, cli-conventions
+│   ├── skills/              #    /mcp-smoke, /cli-demo, /fixtures
+│   └── agents/              #    mcp-tool-builder, scraper-debugger
 ├── .github/workflows/       # 🔄 CI/CD (check, test, coverage, security, release)
 ├── config.yaml              # Runtime configuration
 ├── justfile                 # Just task runner recipes
 ├── tarpaulin.toml           # Code coverage configuration
 ├── deny.toml                # Dependency security audit config
-├── Cargo.toml               # Rust manifest
+├── Cargo.toml               # Rust manifest (2 [[bin]]: mcp-airbnb + airbnb)
 └── CLAUDE.md                # Development guide
 ```
 

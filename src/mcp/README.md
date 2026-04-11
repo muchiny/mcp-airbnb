@@ -1,6 +1,6 @@
 # 📡 MCP Protocol Layer
 
-The **MCP layer** exposes domain capabilities as [Model Context Protocol](https://modelcontextprotocol.io/) tools over stdio using the `rmcp` 0.16 SDK. It is a thin interface layer — all business logic lives in the adapters and domain.
+The **MCP layer** exposes domain capabilities as [Model Context Protocol](https://modelcontextprotocol.io/) tools over stdio using the `rmcp` 1.4 SDK. It is a thin interface layer — all business logic lives in the adapters and domain.
 
 ## 🛠️ Server
 

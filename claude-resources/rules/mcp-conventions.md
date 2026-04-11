@@ -3,7 +3,7 @@
 Rules specific to the MCP protocol layer in `src/mcp/`. Applies when adding,
 modifying, or debugging MCP tools.
 
-## rmcp 0.16 macros
+## rmcp 1.x macros
 
 Tools are declared via three attribute macros from `rmcp`:
 

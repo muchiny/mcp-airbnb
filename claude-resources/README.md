@@ -10,7 +10,7 @@ own Claude Code setup.
 ```
 claude-resources/
 ├── rules/
-│   ├── mcp-conventions.md         # How to add/modify an MCP tool (rmcp 0.16 macros, ResourceStore, tests)
+│   ├── mcp-conventions.md         # How to add/modify an MCP tool (rmcp 1.x macros, ResourceStore, tests)
 │   ├── scraping-conventions.md    # Rate limiting, fixtures, stdout/stderr, composite client pattern
 │   └── cli-conventions.md         # How to add a new subcommand to the `airbnb` CLI
 ├── skills/

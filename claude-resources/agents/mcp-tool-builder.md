@@ -1,6 +1,6 @@
 ---
 name: mcp-tool-builder
-description: Use this agent to scaffold a new MCP tool in the mcp-airbnb project following the established conventions. The agent knows the rmcp 0.16 macro pattern, the ResourceStore URI scheme, the AirbnbClient trait boundary, the test layout, and where to put business logic versus presentation. Give it a one-paragraph description of the tool you want and the data sources it needs — the agent returns a concrete plan (files to touch, signatures, tests to add) and can optionally implement it.
+description: Use this agent to scaffold a new MCP tool in the mcp-airbnb project following the established conventions. The agent knows the rmcp 1.x macro pattern, the ResourceStore URI scheme, the AirbnbClient trait boundary, the test layout, and where to put business logic versus presentation. Give it a one-paragraph description of the tool you want and the data sources it needs — the agent returns a concrete plan (files to touch, signatures, tests to add) and can optionally implement it.
 model: sonnet
 tools: Read, Write, Edit, Grep, Glob, Bash
 ---
