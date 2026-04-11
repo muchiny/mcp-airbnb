@@ -11,8 +11,10 @@ pre-commit:
   parallel: true
   commands:
     fmt:
+      glob: "*.rs"
       run: cargo fmt --check
       fail_text: "rustfmt failed — run `cargo fmt` and stage the result"
     clippy:
+      glob: "*.rs"
       run: cargo clippy --all-targets --all-features -- -D warnings
       fail_text: "clippy reported warnings — fix them before committing"
