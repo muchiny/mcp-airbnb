@@ -67,14 +67,14 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           cd target/${{ matrix.target }}/release
-          tar czf ../../../mcp-airbnb-${{ matrix.target }}.tar.gz mcp-airbnb
+          tar czf ../../../mcp-airbnb-${{ matrix.target }}.tar.gz mcp-airbnb airbnb
           cd ../../..
 
       - name: Package (windows)
         if: runner.os == 'Windows'
         run: |
           cd target/${{ matrix.target }}/release
-          7z a ../../../mcp-airbnb-${{ matrix.target }}.zip mcp-airbnb.exe
+          7z a ../../../mcp-airbnb-${{ matrix.target }}.zip mcp-airbnb.exe airbnb.exe
           cd ../../..
 
       - uses: actions/upload-artifact@v4
