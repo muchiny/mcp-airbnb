@@ -321,8 +321,7 @@ fn is_success(result: &CallToolResult) -> bool {
 #[allow(clippy::needless_pass_by_value)]
 fn tool_params(name: &str, args: serde_json::Value) -> CallToolRequestParams {
     // rmcp 1.x: CallToolRequestParams is non-exhaustive; use the builder.
-    CallToolRequestParams::new(name.to_string())
-        .with_arguments(args.as_object().unwrap().clone())
+    CallToolRequestParams::new(name.to_string()).with_arguments(args.as_object().unwrap().clone())
 }
 
 async fn setup() -> (

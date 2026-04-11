@@ -1249,10 +1249,7 @@ impl ServerHandler for AirbnbMcpServer {
         // so it captures rmcp's own `CARGO_PKG_NAME`/`_VERSION` at rmcp's
         // compile time (returning "rmcp 1.4.0"). Use `env!()` here so the
         // macros expand in *this* crate's context and report "mcp-airbnb".
-        info.server_info = Implementation::new(
-            env!("CARGO_PKG_NAME"),
-            env!("CARGO_PKG_VERSION"),
-        );
+        info.server_info = Implementation::new(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
         info.instructions = Some(
             "Airbnb MCP server for searching and analyzing short-term rental listings.\n\
                  \n\
