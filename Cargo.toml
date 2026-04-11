@@ -6,6 +6,14 @@ rust-version = "1.93"
 description = "MCP server for searching and browsing Airbnb listings"
 license = "MIT"
 
+[[bin]]
+name = "mcp-airbnb"
+path = "src/main.rs"
+
+[[bin]]
+name = "airbnb"
+path = "src/bin/cli.rs"
+
 [dependencies]
 # MCP Protocol — official Rust SDK v0.16 (latest)
 rmcp = { version = "0.16.0", features = ["server", "macros", "transport-io", "schemars"] }
@@ -36,6 +44,9 @@ tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 
 # Cache
 lru = "0.16.3"
+
+# CLI
+clap = { version = "4.5.24", features = ["derive", "env"] }
 
 # Utils
 chrono = { version = "0.4.43", features = ["serde"] }

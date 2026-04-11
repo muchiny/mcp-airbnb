@@ -88,6 +88,23 @@ pub struct SearchResult {
     pub next_cursor: Option<String>,
 }
 
+impl std::fmt::Display for SearchResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(total) = self.total_count {
+            writeln!(f, "Found {} listings (total: {total})", self.listings.len())?;
+        } else {
+            writeln!(f, "Found {} listings", self.listings.len())?;
+        }
+        for listing in &self.listings {
+            writeln!(f, "- {listing}")?;
+        }
+        if let Some(ref cursor) = self.next_cursor {
+            writeln!(f, "\nNext page cursor: {cursor}")?;
+        }
+        Ok(())
+    }
+}
+
 impl std::fmt::Display for Listing {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
