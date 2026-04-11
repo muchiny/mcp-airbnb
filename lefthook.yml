@@ -1,0 +1,18 @@
+# Lefthook configuration — https://github.com/evilmartians/lefthook
+#
+# Install once per clone:
+#   cargo install lefthook   (or brew install lefthook / scoop install lefthook)
+#   lefthook install
+#
+# Or via the justfile:
+#   just install-hooks
+
+pre-commit:
+  parallel: true
+  commands:
+    fmt:
+      run: cargo fmt --check
+      fail_text: "rustfmt failed — run `cargo fmt` and stage the result"
+    clippy:
+      run: cargo clippy --all-targets --all-features -- -D warnings
+      fail_text: "clippy reported warnings — fix them before committing"

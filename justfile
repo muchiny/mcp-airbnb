@@ -28,5 +28,9 @@ audit:
 fuzz target="fuzz_search_parser" duration="60":
     cd fuzz && cargo +nightly fuzz run {{target}} -- -max_total_time={{duration}}
 
+# Install git pre-commit hooks via lefthook (requires lefthook binary on PATH)
+install-hooks:
+    lefthook install
+
 # Run all checks: format, lint, test, coverage, audit
 all: fmt lint test coverage audit
