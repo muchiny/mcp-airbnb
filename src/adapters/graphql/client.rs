@@ -421,3 +421,122 @@ impl AirbnbClient for AirbnbGraphQLClient {
         Ok(analytics::compute_occupancy_estimate(id, &calendar))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::adapters::cache::memory_cache::MemoryCache;
+    use crate::config::types::CacheConfig;
+    use crate::test_helpers::{
+        make_host_profile, make_listing_detail, make_price_calendar, make_reviews_page,
+        make_search_result,
+    };
+
+    /// Builds a fresh `AirbnbGraphQLClient` backed by a dedicated `MemoryCache`.
+    /// Tests populate the cache with the exact key each method uses before
+    /// calling it — a cache hit short-circuits the HTTP path entirely, so no
+    /// network I/O is attempted in the unit-test environment.
+    fn make_client() -> (AirbnbGraphQLClient, Arc<MemoryCache>) {
+        let cache = Arc::new(MemoryCache::new(64));
+        let scraper = ScraperConfig::default();
+        let api_key_manager = Arc::new(ApiKeyManager::new(
+            Client::new(),
+            scraper.base_url.clone(),
+            scraper.api_key_cache_secs,
+        ));
+        let client = AirbnbGraphQLClient::new(
+            &scraper,
+            CacheConfig::default(),
+            cache.clone() as Arc<dyn ListingCache>,
+            api_key_manager,
+        )
+        .expect("graphql client constructs");
+        (client, cache)
+    }
+
+    #[tokio::test]
+    async fn search_listings_returns_cached_result() {
+        let (client, cache) = make_client();
+        let params = SearchParams {
+            location: "Paris".into(),
+            ..Default::default()
+        };
+        let expected = make_search_result(vec![]);
+        cache.set(
+            "gql:search:paris",
+            &serde_json::to_string(&expected).unwrap(),
+            Duration::from_secs(60),
+        );
+        let result = client.search_listings(&params).await.unwrap();
+        assert_eq!(
+            serde_json::to_string(&result).unwrap(),
+            serde_json::to_string(&expected).unwrap(),
+        );
+    }
+
+    #[tokio::test]
+    async fn get_listing_detail_returns_cached_detail() {
+        let (client, cache) = make_client();
+        let expected = make_listing_detail("12345");
+        cache.set(
+            "gql:detail:12345",
+            &serde_json::to_string(&expected).unwrap(),
+            Duration::from_secs(60),
+        );
+        let result = client.get_listing_detail("12345").await.unwrap();
+        assert_eq!(
+            serde_json::to_string(&result).unwrap(),
+            serde_json::to_string(&expected).unwrap(),
+        );
+    }
+
+    #[tokio::test]
+    async fn get_reviews_returns_cached_page() {
+        let (client, cache) = make_client();
+        let expected = make_reviews_page("12345", vec![]);
+        // `cursor: None` maps to the literal suffix "first" in the cache key
+        // (see `cursor.unwrap_or("first")` in `get_reviews`).
+        cache.set(
+            "gql:reviews:12345:first",
+            &serde_json::to_string(&expected).unwrap(),
+            Duration::from_secs(60),
+        );
+        let result = client.get_reviews("12345", None).await.unwrap();
+        assert_eq!(
+            serde_json::to_string(&result).unwrap(),
+            serde_json::to_string(&expected).unwrap(),
+        );
+    }
+
+    #[tokio::test]
+    async fn get_price_calendar_returns_cached_calendar() {
+        let (client, cache) = make_client();
+        let expected = make_price_calendar("12345", vec![]);
+        cache.set(
+            "gql:calendar:12345:m=3",
+            &serde_json::to_string(&expected).unwrap(),
+            Duration::from_secs(60),
+        );
+        let result = client.get_price_calendar("12345", 3).await.unwrap();
+        assert_eq!(
+            serde_json::to_string(&result).unwrap(),
+            serde_json::to_string(&expected).unwrap(),
+        );
+    }
+
+    #[tokio::test]
+    async fn get_host_profile_returns_cached_profile() {
+        let (client, cache) = make_client();
+        let expected = make_host_profile("Test Host");
+        cache.set(
+            "gql:host:12345",
+            &serde_json::to_string(&expected).unwrap(),
+            Duration::from_secs(60),
+        );
+        let result = client.get_host_profile("12345").await.unwrap();
+        assert_eq!(
+            serde_json::to_string(&result).unwrap(),
+            serde_json::to_string(&expected).unwrap(),
+        );
+    }
+}
