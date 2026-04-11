@@ -150,6 +150,16 @@ mod tests {
     }
 
     #[test]
+    fn min_equal_to_max_is_allowed() {
+        // Boundary: min == max is a valid (degenerate) range, not an error.
+        // This kills the `min > max` -> `min >= max` mutant.
+        let mut p = base_params();
+        p.min_price = Some(150);
+        p.max_price = Some(150);
+        assert!(p.validate().is_ok());
+    }
+
+    #[test]
     fn query_pairs_built_correctly() {
         let mut p = base_params();
         p.checkin = Some("2025-06-01".into());
