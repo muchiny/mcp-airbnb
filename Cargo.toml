@@ -26,7 +26,7 @@ async-trait = "0.1.89"
 reqwest = { version = "0.13.2", features = ["json", "cookies"] }
 
 # HTML parsing (CSS selectors)
-scraper = "0.25.0"
+scraper = "0.26.0"
 
 # Serialization
 serde = { version = "1.0.228", features = ["derive"] }
