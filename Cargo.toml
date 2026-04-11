@@ -57,7 +57,7 @@ base64 = "0.22.1"
 rmcp = { version = "0.16.0", features = ["server", "client", "macros", "transport-io", "schemars"] }
 wiremock = "0.6.5"
 tempfile = "3.25.0"
-insta = { version = "1.46.3", features = ["json"] }
+insta = { version = "1.47.2", features = ["json"] }
 pretty_assertions = "1.4.1"
 tokio-test = "0.4.5"
 proptest = "1.6.0"
