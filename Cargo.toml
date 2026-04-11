@@ -19,7 +19,7 @@ path = "src/bin/cli.rs"
 rmcp = { version = "0.16.0", features = ["server", "macros", "transport-io", "schemars"] }
 
 # Async runtime
-tokio = { version = "1.49.0", features = ["rt-multi-thread", "io-util", "io-std", "macros", "sync", "time"] }
+tokio = { version = "1.51.1", features = ["rt-multi-thread", "io-util", "io-std", "macros", "sync", "time"] }
 async-trait = "0.1.89"
 
 # HTTP client for web scraping
