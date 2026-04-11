@@ -225,7 +225,7 @@ When you fetch a listing via `airbnb listing <id>` without dates, Airbnb's publi
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/mcp-airbnb.git
+git clone https://github.com/muchiny/mcp-airbnb.git
 cd mcp-airbnb
 
 # Build both binaries
