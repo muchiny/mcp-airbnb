@@ -60,7 +60,7 @@ tempfile = "3.25.0"
 insta = { version = "1.47.2", features = ["json"] }
 pretty_assertions = "1.4.1"
 tokio-test = "0.4.5"
-proptest = "1.6.0"
+proptest = "1.11.0"
 
 [profile.release]
 lto = true
