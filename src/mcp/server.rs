@@ -284,6 +284,9 @@ impl std::fmt::Debug for PriceCache {
 #[derive(Clone)]
 pub struct AirbnbMcpServer {
     client: Arc<dyn AirbnbClient>,
+    // rmcp 1.x tool_handler macro no longer reads this field directly,
+    // but it is still required storage for the generated router state.
+    #[allow(dead_code)]
     tool_router: ToolRouter<Self>,
     resources: ResourceStore,
     price_cache: PriceCache,
@@ -1232,15 +1235,19 @@ impl AirbnbMcpServer {
 #[tool_handler]
 impl ServerHandler for AirbnbMcpServer {
     fn get_info(&self) -> ServerInfo {
-        ServerInfo {
-            protocol_version: ProtocolVersion::LATEST,
-            capabilities: ServerCapabilities::builder()
-                .enable_tools()
-                .enable_resources()
-                .build(),
-            server_info: Implementation::from_build_env(),
-            instructions: Some(
-                "Airbnb MCP server for searching and analyzing short-term rental listings.\n\
+        // rmcp 1.x marks `ServerInfo` (alias for `InitializeResult`) as
+        // `#[non_exhaustive]`, so we can't use struct-literal construction
+        // from outside the crate — build from `Default::default()` and
+        // assign each field explicitly.
+        let mut info = ServerInfo::default();
+        info.protocol_version = ProtocolVersion::LATEST;
+        info.capabilities = ServerCapabilities::builder()
+            .enable_tools()
+            .enable_resources()
+            .build();
+        info.server_info = Implementation::from_build_env();
+        info.instructions = Some(
+            "Airbnb MCP server for searching and analyzing short-term rental listings.\n\
                  \n\
                  ## Data Tools\n\
                  Start with airbnb_search to find listings by location. Each result includes a listing ID \
@@ -1274,9 +1281,9 @@ impl ServerHandler for AirbnbMcpServer {
                  - Use airbnb_listing_score + airbnb_amenity_analysis for a complete listing audit.\n\
                  - Use airbnb_revenue_estimate to evaluate investment potential.\n\
                  - Pagination: pass the cursor from a previous response to get the next page."
-                    .into(),
-            ),
-        }
+                .into(),
+        );
+        info
     }
 
     async fn list_resources(
@@ -1437,9 +1444,10 @@ impl ServerHandler for AirbnbMcpServer {
         _context: RequestContext<RoleServer>,
     ) -> Result<ReadResourceResult, McpError> {
         match self.resources.get(&request.uri).await {
-            Some(entry) => Ok(ReadResourceResult {
-                contents: vec![ResourceContents::text(entry.text, request.uri)],
-            }),
+            Some(entry) => Ok(ReadResourceResult::new(vec![ResourceContents::text(
+                entry.text,
+                request.uri,
+            )])),
             None => Err(McpError::resource_not_found(
                 format!("resource not found: {}", request.uri),
                 None,

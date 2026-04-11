@@ -826,12 +826,9 @@ fn extract_text(result: &CallToolResult) -> String {
 
 #[allow(clippy::needless_pass_by_value)]
 fn tool_params(name: &str, args: serde_json::Value) -> CallToolRequestParams {
-    CallToolRequestParams {
-        meta: None,
-        name: std::borrow::Cow::Owned(name.to_string()),
-        arguments: Some(args.as_object().unwrap().clone()),
-        task: None,
-    }
+    // rmcp 1.x: CallToolRequestParams is non-exhaustive; use the builder.
+    CallToolRequestParams::new(name.to_string())
+        .with_arguments(args.as_object().unwrap().clone())
 }
 
 /// Create a client connected to our mock server over an in-memory transport.
@@ -1375,10 +1372,7 @@ async fn read_resource_returns_content() {
     // Read the resource
     let result = client
         .peer()
-        .read_resource(ReadResourceRequestParams {
-            uri: "airbnb://listing/1".into(),
-            meta: None,
-        })
+        .read_resource(ReadResourceRequestParams::new("airbnb://listing/1"))
         .await
         .expect("read_resource should succeed");
 
@@ -1396,10 +1390,9 @@ async fn read_resource_not_found_returns_error() {
 
     let result = client
         .peer()
-        .read_resource(ReadResourceRequestParams {
-            uri: "airbnb://listing/nonexistent".into(),
-            meta: None,
-        })
+        .read_resource(ReadResourceRequestParams::new(
+            "airbnb://listing/nonexistent",
+        ))
         .await;
 
     assert!(
