@@ -277,7 +277,7 @@ async fn scraper_404_returns_listing_not_found() {
     config.max_retries = 0; // no retries for 404
     let scraper = AirbnbScraper::new(config, test_cache_config(), cache, api_key_mgr).unwrap();
 
-    let result = scraper.get_listing_detail("nonexistent").await;
+    let result = scraper.get_listing_detail("99999999").await;
     assert!(result.is_err());
 }
 

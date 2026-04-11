@@ -13,6 +13,7 @@ use crate::config::types::{CacheConfig, GraphQLHashes, ScraperConfig};
 use crate::domain::analytics::{self, HostProfile, NeighborhoodStats, OccupancyEstimate};
 use crate::domain::calendar::PriceCalendar;
 use crate::domain::listing::{ListingDetail, SearchResult};
+use crate::domain::listing_id::validate_listing_id;
 use crate::domain::review::ReviewsPage;
 use crate::domain::search_params::SearchParams;
 use crate::error::{AirbnbError, Result};
@@ -219,6 +220,7 @@ impl AirbnbClient for AirbnbGraphQLClient {
     }
 
     async fn get_listing_detail(&self, id: &str) -> Result<ListingDetail> {
+        validate_listing_id(id)?;
         let cache_key = format!("gql:detail:{id}");
         if let Some(cached) = self.cache.get(&cache_key)
             && let Ok(detail) = serde_json::from_str::<ListingDetail>(&cached)
@@ -272,6 +274,7 @@ impl AirbnbClient for AirbnbGraphQLClient {
     }
 
     async fn get_reviews(&self, id: &str, cursor: Option<&str>) -> Result<ReviewsPage> {
+        validate_listing_id(id)?;
         let cache_key = format!("gql:reviews:{id}:{}", cursor.unwrap_or("first"));
         if let Some(cached) = self.cache.get(&cache_key)
             && let Ok(page) = serde_json::from_str::<ReviewsPage>(&cached)
@@ -320,6 +323,7 @@ impl AirbnbClient for AirbnbGraphQLClient {
     }
 
     async fn get_price_calendar(&self, id: &str, months: u32) -> Result<PriceCalendar> {
+        validate_listing_id(id)?;
         let cache_key = format!("gql:calendar:{id}:m={months}");
         if let Some(cached) = self.cache.get(&cache_key)
             && let Ok(calendar) = serde_json::from_str::<PriceCalendar>(&cached)
@@ -363,6 +367,7 @@ impl AirbnbClient for AirbnbGraphQLClient {
     }
 
     async fn get_host_profile(&self, listing_id: &str) -> Result<HostProfile> {
+        validate_listing_id(listing_id)?;
         let cache_key = format!("gql:host:{listing_id}");
         if let Some(cached) = self.cache.get(&cache_key)
             && let Ok(profile) = serde_json::from_str::<HostProfile>(&cached)
