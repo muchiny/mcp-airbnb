@@ -7,10 +7,10 @@ use rmcp::{
     ErrorData as McpError, RoleServer, ServerHandler,
     handler::server::{router::tool::ToolRouter, wrapper::Parameters},
     model::{
-        CallToolResult, Content, Implementation, ListResourceTemplatesResult, ListResourcesResult,
-        PaginatedRequestParams, ProtocolVersion, RawResource, RawResourceTemplate,
-        ReadResourceRequestParams, ReadResourceResult, Resource, ResourceContents,
-        ResourceTemplate, ServerCapabilities, ServerInfo,
+        CallToolResult, ContentBlock, Implementation, ListResourceTemplatesResult,
+        ListResourcesResult, PaginatedRequestParams, ProtocolVersion, ReadResourceRequestParams,
+        ReadResourceResult, Resource, ResourceContents, ResourceTemplate, ServerCapabilities,
+        ServerInfo,
     },
     schemars,
     service::RequestContext,
@@ -390,9 +390,9 @@ impl AirbnbMcpServer {
                 let uri = format!("airbnb://search/{}", search_params.location);
                 let name = format!("Search: {}", search_params.location);
                 self.resources.insert(uri, name, text.clone()).await;
-                Ok(CallToolResult::success(vec![Content::text(text)]))
+                Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
             }
-            Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+            Err(e) => Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                 "Search failed: {e}. Try broadening your search criteria (remove date/price filters) or check the location spelling."
             ))])),
         }
@@ -415,9 +415,9 @@ impl AirbnbMcpServer {
                 let uri = format!("airbnb://listing/{}", params.id);
                 let name = format!("Listing: {}", detail.name);
                 self.resources.insert(uri, name, text.clone()).await;
-                Ok(CallToolResult::success(vec![Content::text(text)]))
+                Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
             }
-            Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+            Err(e) => Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                 "Failed to get listing details for ID '{}': {e}. Verify the listing ID is correct — use airbnb_search to find valid IDs.",
                 params.id
             ))])),
@@ -444,9 +444,9 @@ impl AirbnbMcpServer {
                 let uri = format!("airbnb://listing/{}/reviews", params.id);
                 let name = format!("Reviews: listing {}", params.id);
                 self.resources.insert(uri, name, text.clone()).await;
-                Ok(CallToolResult::success(vec![Content::text(text)]))
+                Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
             }
-            Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+            Err(e) => Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                 "Failed to get reviews for listing '{}': {e}. The listing may have no reviews yet.",
                 params.id
             ))])),
@@ -471,9 +471,9 @@ impl AirbnbMcpServer {
                 let uri = format!("airbnb://listing/{}/calendar", params.id);
                 let name = format!("Calendar: listing {}", params.id);
                 self.resources.insert(uri, name, text.clone()).await;
-                Ok(CallToolResult::success(vec![Content::text(text)]))
+                Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
             }
-            Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+            Err(e) => Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                 "Failed to get price calendar for listing '{}': {e}. The listing may be unlisted or the calendar unavailable.",
                 params.id
             ))])),
@@ -496,9 +496,9 @@ impl AirbnbMcpServer {
                 let uri = format!("airbnb://listing/{}/host", params.id);
                 let name = format!("Host: listing {}", params.id);
                 self.resources.insert(uri, name, text.clone()).await;
-                Ok(CallToolResult::success(vec![Content::text(text)]))
+                Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
             }
-            Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+            Err(e) => Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                 "Failed to get host profile for listing '{}': {e}. Try airbnb_listing_details instead for basic host info.",
                 params.id
             ))])),
@@ -536,9 +536,9 @@ impl AirbnbMcpServer {
                 let uri = format!("airbnb://neighborhood/{location}");
                 let name = format!("Neighborhood: {location}");
                 self.resources.insert(uri, name, text.clone()).await;
-                Ok(CallToolResult::success(vec![Content::text(text)]))
+                Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
             }
-            Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+            Err(e) => Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                 "Failed to get neighborhood stats for '{location}': {e}. Try a broader location name or check spelling."
             ))])),
         }
@@ -562,9 +562,9 @@ impl AirbnbMcpServer {
                 let uri = format!("airbnb://listing/{}/occupancy", params.id);
                 let name = format!("Occupancy: listing {}", params.id);
                 self.resources.insert(uri, name, text.clone()).await;
-                Ok(CallToolResult::success(vec![Content::text(text)]))
+                Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
             }
-            Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+            Err(e) => Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                 "Failed to get occupancy estimate for listing '{}': {e}. This requires calendar data — verify the listing ID.",
                 params.id
             ))])),
@@ -585,7 +585,7 @@ impl AirbnbMcpServer {
         Parameters(params): Parameters<CompareListingsToolParams>,
     ) -> Result<CallToolResult, McpError> {
         if params.ids.is_none() && params.location.is_none() {
-            return Ok(CallToolResult::error(vec![Content::text(
+            return Ok(CallToolResult::error(vec![ContentBlock::text(
                 "Provide either `ids` (list of listing IDs) or `location` for market-scale comparison.",
             )]));
         }
@@ -618,7 +618,7 @@ impl AirbnbMcpServer {
                         longitude: d.longitude,
                     }),
                     Err(e) => {
-                        return Ok(CallToolResult::error(vec![Content::text(format!(
+                        return Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                             "Failed to fetch listing '{id}': {e}"
                         ))]));
                     }
@@ -657,7 +657,7 @@ impl AirbnbMcpServer {
                         }
                     }
                     Err(e) => {
-                        return Ok(CallToolResult::error(vec![Content::text(format!(
+                        return Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                             "Search failed for '{location}': {e}"
                         ))]));
                     }
@@ -668,7 +668,7 @@ impl AirbnbMcpServer {
         };
 
         if listings.len() < 2 {
-            return Ok(CallToolResult::error(vec![Content::text(
+            return Ok(CallToolResult::error(vec![ContentBlock::text(
                 "Need at least 2 listings to compare. Try a different location or provide more IDs.",
             )]));
         }
@@ -695,7 +695,7 @@ impl AirbnbMcpServer {
         } else {
             text
         };
-        Ok(CallToolResult::success(vec![Content::text(output)]))
+        Ok(CallToolResult::success(vec![ContentBlock::text(output)]))
     }
 
     /// Analyze seasonal price trends for a listing.
@@ -717,9 +717,9 @@ impl AirbnbMcpServer {
                 let uri = format!("airbnb://analysis/price-trends/{}", params.id);
                 let name = format!("Price Trends: listing {}", params.id);
                 self.resources.insert(uri, name, text.clone()).await;
-                Ok(CallToolResult::success(vec![Content::text(text)]))
+                Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
             }
-            Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+            Err(e) => Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                 "Failed to get price data for listing '{}': {e}",
                 params.id
             ))])),
@@ -745,9 +745,9 @@ impl AirbnbMcpServer {
                 let uri = format!("airbnb://analysis/gaps/{}", params.id);
                 let name = format!("Gap Finder: listing {}", params.id);
                 self.resources.insert(uri, name, text.clone()).await;
-                Ok(CallToolResult::success(vec![Content::text(text)]))
+                Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
             }
-            Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+            Err(e) => Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                 "Failed to get calendar for listing '{}': {e}",
                 params.id
             ))])),
@@ -765,7 +765,7 @@ impl AirbnbMcpServer {
         Parameters(params): Parameters<RevenueEstimateToolParams>,
     ) -> Result<CallToolResult, McpError> {
         if params.id.is_none() && params.location.is_none() {
-            return Ok(CallToolResult::error(vec![Content::text(
+            return Ok(CallToolResult::error(vec![ContentBlock::text(
                 "Provide either `id` (listing ID) or `location` for revenue estimation.",
             )]));
         }
@@ -813,7 +813,7 @@ impl AirbnbMcpServer {
         let uri = format!("airbnb://analysis/revenue/{key}");
         let name = format!("Revenue Estimate: {key}");
         self.resources.insert(uri, name, text.clone()).await;
-        Ok(CallToolResult::success(vec![Content::text(text)]))
+        Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
     }
 
     /// Score a listing's quality and optimization level.
@@ -839,9 +839,9 @@ impl AirbnbMcpServer {
                 let uri = format!("airbnb://analysis/score/{}", params.id);
                 let name = format!("Listing Score: listing {}", params.id);
                 self.resources.insert(uri, name, text.clone()).await;
-                Ok(CallToolResult::success(vec![Content::text(text)]))
+                Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
             }
-            Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
+            Err(e) => Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                 "Failed to get listing '{}': {e}",
                 params.id
             ))])),
@@ -861,7 +861,7 @@ impl AirbnbMcpServer {
         let detail = match self.get_detail_with_price(&params.id).await {
             Ok(d) => d,
             Err(e) => {
-                return Ok(CallToolResult::error(vec![Content::text(format!(
+                return Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                     "Failed to get listing '{}': {e}",
                     params.id
                 ))]));
@@ -898,7 +898,7 @@ impl AirbnbMcpServer {
         let uri = format!("airbnb://analysis/amenities/{}", params.id);
         let name = format!("Amenity Analysis: listing {}", params.id);
         self.resources.insert(uri, name, text.clone()).await;
-        Ok(CallToolResult::success(vec![Content::text(text)]))
+        Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
     }
 
     /// Compare multiple locations/neighborhoods side-by-side.
@@ -912,7 +912,7 @@ impl AirbnbMcpServer {
         Parameters(params): Parameters<MarketComparisonToolParams>,
     ) -> Result<CallToolResult, McpError> {
         if params.locations.len() < 2 {
-            return Ok(CallToolResult::error(vec![Content::text(
+            return Ok(CallToolResult::error(vec![ContentBlock::text(
                 "Provide at least 2 locations to compare.",
             )]));
         }
@@ -929,7 +929,7 @@ impl AirbnbMcpServer {
             match self.client.get_neighborhood_stats(&sp).await {
                 Ok(s) => stats.push(s),
                 Err(e) => {
-                    return Ok(CallToolResult::error(vec![Content::text(format!(
+                    return Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                         "Failed to get stats for '{location}': {e}"
                     ))]));
                 }
@@ -942,7 +942,7 @@ impl AirbnbMcpServer {
         let uri = format!("airbnb://analysis/market/{key}");
         let name = format!("Market Comparison: {key}");
         self.resources.insert(uri, name, text.clone()).await;
-        Ok(CallToolResult::success(vec![Content::text(text)]))
+        Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
     }
 
     /// Analyze a host's full property portfolio.
@@ -959,7 +959,7 @@ impl AirbnbMcpServer {
         let detail = match self.get_detail_with_price(&params.id).await {
             Ok(d) => d,
             Err(e) => {
-                return Ok(CallToolResult::error(vec![Content::text(format!(
+                return Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                     "Failed to get listing '{}': {e}",
                     params.id
                 ))]));
@@ -1045,7 +1045,7 @@ impl AirbnbMcpServer {
         let uri = format!("airbnb://analysis/portfolio/{}", params.id);
         let name = format!("Host Portfolio: listing {}", params.id);
         self.resources.insert(uri, name, text.clone()).await;
-        Ok(CallToolResult::success(vec![Content::text(text)]))
+        Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
     }
 
     /// Analyze review sentiment for a listing.
@@ -1073,7 +1073,7 @@ impl AirbnbMcpServer {
                 }
                 Err(e) => {
                     if all_reviews.is_empty() {
-                        return Ok(CallToolResult::error(vec![Content::text(format!(
+                        return Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                             "Failed to get reviews for listing '{}': {e}",
                             params.id
                         ))]));
@@ -1088,7 +1088,7 @@ impl AirbnbMcpServer {
         let uri = format!("airbnb://analysis/sentiment/{}", params.id);
         let name = format!("Review Sentiment: listing {}", params.id);
         self.resources.insert(uri, name, text.clone()).await;
-        Ok(CallToolResult::success(vec![Content::text(text)]))
+        Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
     }
 
     /// Analyze a listing's competitive positioning vs its market.
@@ -1104,7 +1104,7 @@ impl AirbnbMcpServer {
         let detail = match self.get_detail_with_price(&params.id).await {
             Ok(d) => d,
             Err(e) => {
-                return Ok(CallToolResult::error(vec![Content::text(format!(
+                return Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                     "Failed to get listing '{}': {e}",
                     params.id
                 ))]));
@@ -1120,7 +1120,7 @@ impl AirbnbMcpServer {
         let neighborhood = match self.client.get_neighborhood_stats(&sp).await {
             Ok(n) => n,
             Err(e) => {
-                return Ok(CallToolResult::error(vec![Content::text(format!(
+                return Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                     "Failed to get neighborhood stats for '{location}': {e}",
                 ))]));
             }
@@ -1160,7 +1160,7 @@ impl AirbnbMcpServer {
         let uri = format!("airbnb://analysis/positioning/{}", params.id);
         let name = format!("Competitive Positioning: listing {}", params.id);
         self.resources.insert(uri, name, text.clone()).await;
-        Ok(CallToolResult::success(vec![Content::text(text)]))
+        Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
     }
 
     /// Suggest optimal pricing for a listing based on market data.
@@ -1176,7 +1176,7 @@ impl AirbnbMcpServer {
         let detail = match self.get_detail_with_price(&params.id).await {
             Ok(d) => d,
             Err(e) => {
-                return Ok(CallToolResult::error(vec![Content::text(format!(
+                return Ok(CallToolResult::error(vec![ContentBlock::text(format!(
                     "Failed to get listing '{}': {e}",
                     params.id
                 ))]));
@@ -1228,7 +1228,7 @@ impl AirbnbMcpServer {
         let uri = format!("airbnb://analysis/pricing/{}", params.id);
         let name = format!("Optimal Pricing: listing {}", params.id);
         self.resources.insert(uri, name, text.clone()).await;
-        Ok(CallToolResult::success(vec![Content::text(text)]))
+        Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
     }
 }
 
@@ -1298,19 +1298,7 @@ impl ServerHandler for AirbnbMcpServer {
         let entries = self.resources.list().await;
         let resources: Vec<Resource> = entries
             .into_iter()
-            .map(|(uri, name)| Resource {
-                annotations: None,
-                raw: RawResource {
-                    uri,
-                    name,
-                    title: None,
-                    description: None,
-                    mime_type: Some("text/plain".into()),
-                    size: None,
-                    icons: None,
-                    meta: None,
-                },
-            })
+            .map(|(uri, name)| Resource::new(uri, name).with_mime_type("text/plain"))
             .collect();
         Ok(ListResourcesResult {
             resources,
@@ -1326,114 +1314,48 @@ impl ServerHandler for AirbnbMcpServer {
         _context: RequestContext<RoleServer>,
     ) -> Result<ListResourceTemplatesResult, McpError> {
         let templates = vec![
-            ResourceTemplate {
-                annotations: None,
-                raw: RawResourceTemplate {
-                    uri_template: "airbnb://listing/{id}".into(),
-                    name: "Airbnb Listing".into(),
-                    title: Some("Listing details".into()),
-                    description: Some(
-                        "Full listing details (fetched via airbnb_listing_details)".into(),
-                    ),
-                    mime_type: Some("text/plain".into()),
-                    icons: None,
-                },
-            },
-            ResourceTemplate {
-                annotations: None,
-                raw: RawResourceTemplate {
-                    uri_template: "airbnb://listing/{id}/calendar".into(),
-                    name: "Price Calendar".into(),
-                    title: Some("Price & availability calendar".into()),
-                    description: Some(
-                        "Daily prices and availability (fetched via airbnb_price_calendar)".into(),
-                    ),
-                    mime_type: Some("text/plain".into()),
-                    icons: None,
-                },
-            },
-            ResourceTemplate {
-                annotations: None,
-                raw: RawResourceTemplate {
-                    uri_template: "airbnb://listing/{id}/reviews".into(),
-                    name: "Reviews".into(),
-                    title: Some("Guest reviews".into()),
-                    description: Some(
-                        "Guest reviews and ratings (fetched via airbnb_reviews)".into(),
-                    ),
-                    mime_type: Some("text/plain".into()),
-                    icons: None,
-                },
-            },
-            ResourceTemplate {
-                annotations: None,
-                raw: RawResourceTemplate {
-                    uri_template: "airbnb://listing/{id}/host".into(),
-                    name: "Host Profile".into(),
-                    title: Some("Host profile".into()),
-                    description: Some(
-                        "Host bio, superhost status, response rate (fetched via airbnb_host_profile)"
-                            .into(),
-                    ),
-                    mime_type: Some("text/plain".into()),
-                    icons: None,
-                },
-            },
-            ResourceTemplate {
-                annotations: None,
-                raw: RawResourceTemplate {
-                    uri_template: "airbnb://listing/{id}/occupancy".into(),
-                    name: "Occupancy Estimate".into(),
-                    title: Some("Occupancy estimate".into()),
-                    description: Some(
-                        "Occupancy rate and revenue breakdown (fetched via airbnb_occupancy_estimate)"
-                            .into(),
-                    ),
-                    mime_type: Some("text/plain".into()),
-                    icons: None,
-                },
-            },
-            ResourceTemplate {
-                annotations: None,
-                raw: RawResourceTemplate {
-                    uri_template: "airbnb://search/{location}".into(),
-                    name: "Search Results".into(),
-                    title: Some("Search results".into()),
-                    description: Some(
-                        "Listings found for a location (fetched via airbnb_search)".into(),
-                    ),
-                    mime_type: Some("text/plain".into()),
-                    icons: None,
-                },
-            },
-            ResourceTemplate {
-                annotations: None,
-                raw: RawResourceTemplate {
-                    uri_template: "airbnb://neighborhood/{location}".into(),
-                    name: "Neighborhood Stats".into(),
-                    title: Some("Neighborhood statistics".into()),
-                    description: Some(
-                        "Area-level price/rating stats (fetched via airbnb_neighborhood_stats)"
-                            .into(),
-                    ),
-                    mime_type: Some("text/plain".into()),
-                    icons: None,
-                },
-            },
-            ResourceTemplate {
-                annotations: None,
-                raw: RawResourceTemplate {
-                    uri_template: "airbnb://analysis/{type}/{id}".into(),
-                    name: "Analysis Result".into(),
-                    title: Some("Analytical tool result".into()),
-                    description: Some(
-                        "Cached result from analytical tools (compare, trends, gaps, revenue, score, amenities, market, portfolio)"
-                            .into(),
-                    ),
-                    mime_type: Some("text/plain".into()),
-                    icons: None,
-                },
-            },
+            ResourceTemplate::new("airbnb://listing/{id}", "Airbnb Listing")
+                .with_title("Listing details")
+                .with_description("Full listing details (fetched via airbnb_listing_details)")
+                .with_mime_type("text/plain"),
+            ResourceTemplate::new("airbnb://listing/{id}/calendar", "Price Calendar")
+                .with_title("Price & availability calendar")
+                .with_description(
+                    "Daily prices and availability (fetched via airbnb_price_calendar)",
+                )
+                .with_mime_type("text/plain"),
+            ResourceTemplate::new("airbnb://listing/{id}/reviews", "Reviews")
+                .with_title("Guest reviews")
+                .with_description("Guest reviews and ratings (fetched via airbnb_reviews)")
+                .with_mime_type("text/plain"),
+            ResourceTemplate::new("airbnb://listing/{id}/host", "Host Profile")
+                .with_title("Host profile")
+                .with_description(
+                    "Host bio, superhost status, response rate (fetched via airbnb_host_profile)",
+                )
+                .with_mime_type("text/plain"),
+            ResourceTemplate::new("airbnb://listing/{id}/occupancy", "Occupancy Estimate")
+                .with_title("Occupancy estimate")
+                .with_description(
+                    "Occupancy rate and revenue breakdown (fetched via airbnb_occupancy_estimate)",
+                )
+                .with_mime_type("text/plain"),
+            ResourceTemplate::new("airbnb://search/{location}", "Search Results")
+                .with_title("Search results")
+                .with_description("Listings found for a location (fetched via airbnb_search)")
+                .with_mime_type("text/plain"),
+            ResourceTemplate::new("airbnb://neighborhood/{location}", "Neighborhood Stats")
+                .with_title("Neighborhood statistics")
+                .with_description(
+                    "Area-level price/rating stats (fetched via airbnb_neighborhood_stats)",
+                )
+                .with_mime_type("text/plain"),
+            ResourceTemplate::new("airbnb://analysis/{type}/{id}", "Analysis Result")
+                .with_title("Analytical tool result")
+                .with_description(
+                    "Cached result from analytical tools (compare, trends, gaps, revenue, score, amenities, market, portfolio)",
+                )
+                .with_mime_type("text/plain"),
         ];
         Ok(ListResourceTemplatesResult {
             resource_templates: templates,
@@ -1469,7 +1391,6 @@ mod tests {
 
     fn extract_text(result: &CallToolResult) -> &str {
         result.content[0]
-            .raw
             .as_text()
             .expect("expected text content")
             .text

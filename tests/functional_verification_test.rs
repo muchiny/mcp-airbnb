@@ -309,7 +309,7 @@ fn extract_text(result: &CallToolResult) -> String {
     result
         .content
         .first()
-        .and_then(|c| c.raw.as_text())
+        .and_then(|c| c.as_text())
         .map(|t| t.text.clone())
         .unwrap_or_default()
 }

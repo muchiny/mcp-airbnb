@@ -819,7 +819,7 @@ fn extract_text(result: &CallToolResult) -> String {
     result
         .content
         .first()
-        .and_then(|c| c.raw.as_text())
+        .and_then(|c| c.as_text())
         .map(|t| t.text.clone())
         .unwrap_or_default()
 }
@@ -1291,10 +1291,7 @@ async fn list_resource_templates_returns_expected_templates() {
         templates.len()
     );
 
-    let uris: Vec<String> = templates
-        .iter()
-        .map(|t| t.raw.uri_template.clone())
-        .collect();
+    let uris: Vec<String> = templates.iter().map(|t| t.uri_template.clone()).collect();
     assert!(uris.iter().any(|u| u.contains("listing/{id}")));
     assert!(uris.iter().any(|u| u.contains("calendar")));
     assert!(uris.iter().any(|u| u.contains("reviews")));
@@ -1346,7 +1343,7 @@ async fn list_resources_populated_after_tool_call() {
         "Resources should be populated after tool call"
     );
 
-    let uris: Vec<String> = result.resources.iter().map(|r| r.raw.uri.clone()).collect();
+    let uris: Vec<String> = result.resources.iter().map(|r| r.uri.clone()).collect();
     assert!(
         uris.iter().any(|u| u.contains("listing/1")),
         "Should contain listing/1 resource, got: {uris:?}"
