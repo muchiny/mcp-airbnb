@@ -20,6 +20,9 @@ pub fn load_config(path: &Path) -> Result<Config> {
             path.display()
         ))
     })?;
+    if content.trim().is_empty() {
+        return Ok(Config::default());
+    }
     let config: Config = serde_yml::from_str(&content)?;
     Ok(config)
 }
