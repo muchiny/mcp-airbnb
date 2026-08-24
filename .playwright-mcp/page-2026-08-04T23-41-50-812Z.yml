@@ -1,0 +1,1399 @@
+- generic [ref=f15e1]:
+  - link "Aller directement au contenu" [ref=f15e2] [cursor=pointer]:
+    - /url: "#site-content"
+  - alert
+  - generic [ref=f15e8]:
+    - generic [ref=f15e11]:
+      - generic [ref=f15e14]:
+        - banner [ref=f15e15]:
+          - generic [ref=f15e19]:
+            - link "Page d'accueil Airbnb" [ref=f15e20] [cursor=pointer]:
+              - /url: /
+            - search [ref=f15e24]:
+              - generic:
+                - generic:
+                  - generic:
+                    - tablist:
+                      - tab "Logements" [selected]
+                      - tab "Expériences, nouveautés":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - text: NOUVEAU
+                              - generic: NOUVEAU
+                        - generic: Expériences
+                      - tab "Services, nouveautés":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - text: NOUVEAU
+                              - generic: NOUVEAU
+                        - generic: Services
+                  - search "Commencez votre recherche" [ref=f15e26] [cursor=pointer]:
+                    - generic [ref=f15e28]:
+                      - button "Destination Porto Vecchio · Logements" [ref=f15e29]:
+                        - generic [ref=f15e30]: Destination
+                        - generic [ref=f15e32]: Porto Vecchio · Logements
+                      - button "Arrivée/Départ 24–30 août" [ref=f15e34]:
+                        - generic [ref=f15e35]: Arrivée/Départ
+                        - generic [ref=f15e36]: 24–30 août
+                      - button "Voyageurs 5 voyageurs" [ref=f15e38]:
+                        - generic [ref=f15e39]: Voyageurs
+                        - generic [ref=f15e40]: 5 voyageurs
+            - navigation "Profil" [ref=f15e48]:
+              - generic [ref=f15e49]:
+                - button "Devenir hôte" [ref=f15e50] [cursor=pointer]
+                - button "Choisissez une langue et une devise" [ref=f15e53] [cursor=pointer]
+              - button "Menu de navigation principal" [ref=f15e59] [cursor=pointer]
+          - group "filtres" [ref=f15e68]:
+            - generic [ref=f15e71]:
+              - button "Filtres" [ref=f15e74] [cursor=pointer]
+              - generic [ref=f15e80]:
+                - checkbox "Animaux de compagnie autorisés" [ref=f15e83] [cursor=pointer]
+                - checkbox "Parking gratuit" [ref=f15e86] [cursor=pointer]
+                - checkbox "2 salles de bain et plus" [ref=f15e89] [cursor=pointer]
+                - checkbox "Piscine" [ref=f15e92] [cursor=pointer]
+                - checkbox "Climatisation" [ref=f15e95] [cursor=pointer]
+                - checkbox "Lave-linge" [ref=f15e98] [cursor=pointer]
+                - checkbox "3 chambres et plus" [ref=f15e101] [cursor=pointer]
+                - checkbox "Wifi" [ref=f15e104] [cursor=pointer]
+                - checkbox "Cuisine" [ref=f15e107] [cursor=pointer]
+                - checkbox "Annulation gratuite" [ref=f15e110] [cursor=pointer]
+        - main [ref=f15e111]:
+          - generic [ref=f15e112]:
+            - generic [ref=f15e117]:
+              - 'heading "Résultats de recherche; Porto-Vecchio : 678 logements" [level=1] [ref=f15e119]': "Porto-Vecchio : 678 logements"
+              - generic [ref=f15e122]:
+                - text: Classement des résultats
+                - button "En savoir plus" [ref=f15e125] [cursor=pointer]
+            - generic [ref=f15e134]:
+              - group [ref=f15e140]:
+                - link "Appartement ⋅ Porto-Vecchio" [ref=f15e141] [cursor=pointer]:
+                  - /url: /rooms/646074770891898222?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3AniDFNwlJc7yBr&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e142]:
+                  - group [ref=f15e145]:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Coup de cœur voyageurs
+                              - generic: Coup de cœur voyageurs
+                          - 'button "Ajouter aux favoris : Appartement ⋅ Porto-Vecchio" [ref=f15e147] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e151] [cursor=pointer]
+                          - 'button "Photo suivante : Appartement ⋅ Porto-Vecchio" [ref=f15e156] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e164]:
+                      - link [ref=f15e165] [cursor=pointer]:
+                        - /url: /rooms/646074770891898222?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3AniDFNwlJc7yBr&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e169] [cursor=pointer]:
+                        - /url: /rooms/646074770891898222?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3AniDFNwlJc7yBr&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e170] [cursor=pointer]:
+                        - /url: /rooms/646074770891898222?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3AniDFNwlJc7yBr&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e171] [cursor=pointer]:
+                        - /url: /rooms/646074770891898222?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3AniDFNwlJc7yBr&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e172] [cursor=pointer]:
+                        - /url: /rooms/646074770891898222?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3AniDFNwlJc7yBr&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e173] [cursor=pointer]:
+                        - /url: /rooms/646074770891898222?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3AniDFNwlJc7yBr&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e174]:
+                    - generic [ref=f15e175]: Appartement ⋅ Porto-Vecchio
+                    - generic [ref=f15e176]: Porto-Vecchio Centre Animé | Vue Port | 3Ch
+                    - generic [ref=f15e178]:
+                      - generic [ref=f15e179]:
+                        - generic [ref=f15e180]: 3 chambres
+                        - generic [ref=f15e181]: 3 chambres
+                      - generic [ref=f15e182]:
+                        - generic [ref=f15e183]: ","
+                        - generic [ref=f15e184]: ·
+                        - generic [ref=f15e185]: 3 lits
+                        - generic [ref=f15e186]: 3 lits
+                      - generic [ref=f15e187]:
+                        - generic [ref=f15e188]: ","
+                        - generic [ref=f15e189]: ·
+                        - generic [ref=f15e190]: 2 salles de bain
+                        - generic [ref=f15e191]: 2 salles de bain
+                    - generic [ref=f15e193]:
+                      - generic [ref=f15e194]: Particulier
+                      - generic [ref=f15e195]: Particulier
+                    - 'generic "1 147 € au total. Prix initial : 1 320 €" [ref=f15e200]':
+                      - generic [ref=f15e202]:
+                        - generic [ref=f15e203]: 1 320 €
+                        - button [ref=f15e206] [cursor=pointer]:
+                          - text: 1 147 €
+                          - generic [ref=f15e207]: au total
+                          - generic [ref=f15e208]: Afficher le détail du prix
+                    - generic [ref=f15e209]:
+                      - generic:
+                        - generic: "Évaluation moyenne sur la base de 26 commentaires : 4,92 sur 5"
+                        - generic: 4,92 (26)
+              - group [ref=f15e215]:
+                - link "Appartement en résidence ⋅ Porto-Vecchio" [ref=f15e216] [cursor=pointer]:
+                  - /url: /rooms/48627348?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3Yxb5-SFsOQUnoz&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e217]:
+                  - group [ref=f15e220]:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Coup de cœur voyageurs
+                              - generic: Coup de cœur voyageurs
+                          - 'button "Ajouter aux favoris : Appartement en résidence ⋅ Porto-Vecchio" [ref=f15e222] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e226] [cursor=pointer]
+                          - 'button "Photo suivante : Appartement en résidence ⋅ Porto-Vecchio" [ref=f15e231] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e239]:
+                      - link [ref=f15e240] [cursor=pointer]:
+                        - /url: /rooms/48627348?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3Yxb5-SFsOQUnoz&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e244] [cursor=pointer]:
+                        - /url: /rooms/48627348?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3Yxb5-SFsOQUnoz&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e245] [cursor=pointer]:
+                        - /url: /rooms/48627348?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3Yxb5-SFsOQUnoz&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e246] [cursor=pointer]:
+                        - /url: /rooms/48627348?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3Yxb5-SFsOQUnoz&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e247] [cursor=pointer]:
+                        - /url: /rooms/48627348?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3Yxb5-SFsOQUnoz&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e248] [cursor=pointer]:
+                        - /url: /rooms/48627348?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3Yxb5-SFsOQUnoz&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e249]:
+                    - generic [ref=f15e250]: Appartement en résidence ⋅ Porto-Vecchio
+                    - generic [ref=f15e251]: Appartement Résidence Sole d’Oro de Santa Giulia
+                    - generic [ref=f15e253]:
+                      - generic [ref=f15e254]:
+                        - generic [ref=f15e255]: 2 chambres
+                        - generic [ref=f15e256]: 2 chambres
+                      - generic [ref=f15e257]:
+                        - generic [ref=f15e258]: ","
+                        - generic [ref=f15e259]: ·
+                        - generic [ref=f15e260]: 3 lits
+                        - generic [ref=f15e261]: 3 lits
+                      - generic [ref=f15e262]:
+                        - generic [ref=f15e263]: ","
+                        - generic [ref=f15e264]: ·
+                        - generic [ref=f15e265]: 1 salle de bain
+                        - generic [ref=f15e266]: 1 salle de bain
+                    - generic [ref=f15e268]:
+                      - generic [ref=f15e269]: Professionnel
+                      - generic [ref=f15e270]: Professionnel
+                    - generic [ref=f15e271]:
+                      - 'generic "1 252 € au total. Prix initial : 1 362 €" [ref=f15e275]':
+                        - generic [ref=f15e277]:
+                          - generic [ref=f15e278]: 1 362 €
+                          - button [ref=f15e281] [cursor=pointer]:
+                            - text: 1 252 €
+                            - generic [ref=f15e282]: au total
+                            - generic [ref=f15e283]: Afficher le détail du prix
+                      - generic [ref=f15e284]:
+                        - generic [ref=f15e285]: Payez 0 € aujourd'hui
+                        - generic [ref=f15e286]: Annulation gratuite
+                    - generic [ref=f15e287]:
+                      - generic:
+                        - generic: "Évaluation moyenne sur la base de 36 commentaires : 4,81 sur 5"
+                        - generic: 4,81 (36)
+              - group [ref=f15e293]:
+                - link "Appartement ⋅ Porto-Vecchio" [ref=f15e294] [cursor=pointer]:
+                  - /url: /rooms/49329881?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P33gppExMXg3Rsee&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e295]:
+                  - group [ref=f15e298]:
+                    - generic:
+                      - generic:
+                        - 'button "Ajouter aux favoris : Appartement ⋅ Porto-Vecchio" [ref=f15e300] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e304] [cursor=pointer]
+                          - 'button "Photo suivante : Appartement ⋅ Porto-Vecchio" [ref=f15e309] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e317]:
+                      - link [ref=f15e318] [cursor=pointer]:
+                        - /url: /rooms/49329881?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P33gppExMXg3Rsee&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e322] [cursor=pointer]:
+                        - /url: /rooms/49329881?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P33gppExMXg3Rsee&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e323] [cursor=pointer]:
+                        - /url: /rooms/49329881?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P33gppExMXg3Rsee&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e324] [cursor=pointer]:
+                        - /url: /rooms/49329881?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P33gppExMXg3Rsee&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e325] [cursor=pointer]:
+                        - /url: /rooms/49329881?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P33gppExMXg3Rsee&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e326] [cursor=pointer]:
+                        - /url: /rooms/49329881?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P33gppExMXg3Rsee&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e327]:
+                    - generic [ref=f15e328]: Appartement ⋅ Porto-Vecchio
+                    - generic [ref=f15e329]: Bastion par Interhome
+                    - generic [ref=f15e331]:
+                      - generic [ref=f15e332]:
+                        - generic [ref=f15e333]: 2 chambres
+                        - generic [ref=f15e334]: 2 chambres
+                      - generic [ref=f15e335]:
+                        - generic [ref=f15e336]: ","
+                        - generic [ref=f15e337]: ·
+                        - generic [ref=f15e338]: 3 lits
+                        - generic [ref=f15e339]: 3 lits
+                      - generic [ref=f15e340]:
+                        - generic [ref=f15e341]: ","
+                        - generic [ref=f15e342]: ·
+                        - generic [ref=f15e343]: 2 salles de bain
+                        - generic [ref=f15e344]: 2 salles de bain
+                    - generic [ref=f15e346]:
+                      - generic [ref=f15e347]: Professionnel
+                      - generic [ref=f15e348]: Professionnel
+                    - generic [ref=f15e352]:
+                      - button [ref=f15e357] [cursor=pointer]:
+                        - text: 1 277 €
+                        - generic [ref=f15e358]: au total
+                        - generic [ref=f15e359]: Afficher le détail du prix
+                      - generic [ref=f15e360]: 1 277 € au total
+                    - generic [ref=f15e361]:
+                      - generic:
+                        - generic: "Évaluation moyenne sur la base de 13 commentaires : 4,38 sur 5"
+                        - generic: 4,38 (13)
+              - group [ref=f15e367]:
+                - link "Appartement ⋅ Porto-Vecchio" [ref=f15e368] [cursor=pointer]:
+                  - /url: /rooms/47572425?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3wziPonxy-BEJ84&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e369]:
+                  - group [ref=f15e372]:
+                    - generic:
+                      - generic:
+                        - 'button "Ajouter aux favoris : Appartement ⋅ Porto-Vecchio" [ref=f15e374] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e378] [cursor=pointer]
+                          - 'button "Photo suivante : Appartement ⋅ Porto-Vecchio" [ref=f15e383] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e391]:
+                      - link [ref=f15e392] [cursor=pointer]:
+                        - /url: /rooms/47572425?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3wziPonxy-BEJ84&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e396] [cursor=pointer]:
+                        - /url: /rooms/47572425?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3wziPonxy-BEJ84&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e397] [cursor=pointer]:
+                        - /url: /rooms/47572425?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3wziPonxy-BEJ84&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e398] [cursor=pointer]:
+                        - /url: /rooms/47572425?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3wziPonxy-BEJ84&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e399] [cursor=pointer]:
+                        - /url: /rooms/47572425?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3wziPonxy-BEJ84&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e400] [cursor=pointer]:
+                        - /url: /rooms/47572425?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3wziPonxy-BEJ84&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e401]:
+                    - generic [ref=f15e402]: Appartement ⋅ Porto-Vecchio
+                    - generic [ref=f15e403]: Appartement pour 4/6 pers au cœur de Porto-Vecchio
+                    - generic [ref=f15e405]:
+                      - generic [ref=f15e406]:
+                        - generic [ref=f15e407]: 2 chambres
+                        - generic [ref=f15e408]: 2 chambres
+                      - generic [ref=f15e409]:
+                        - generic [ref=f15e410]: ","
+                        - generic [ref=f15e411]: ·
+                        - generic [ref=f15e412]: 4 lits
+                        - generic [ref=f15e413]: 4 lits
+                      - generic [ref=f15e414]:
+                        - generic [ref=f15e415]: ","
+                        - generic [ref=f15e416]: ·
+                        - generic [ref=f15e417]: 1 salle de bain
+                        - generic [ref=f15e418]: 1 salle de bain
+                    - generic [ref=f15e420]:
+                      - generic [ref=f15e421]: Professionnel
+                      - generic [ref=f15e422]: Professionnel
+                    - generic [ref=f15e426]:
+                      - button [ref=f15e431] [cursor=pointer]:
+                        - text: 1 341 €
+                        - generic [ref=f15e432]: au total
+                        - generic [ref=f15e433]: Afficher le détail du prix
+                      - generic [ref=f15e434]: 1 341 € au total
+                    - generic [ref=f15e435]:
+                      - generic:
+                        - generic: "Évaluation moyenne sur la base de 29 commentaires : 4,9 sur 5"
+                        - generic: 4,9 (29)
+              - group [ref=f15e441]:
+                - link "Hébergement ⋅ Porto-Vecchio" [ref=f15e442] [cursor=pointer]:
+                  - /url: /rooms/38816696?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3X4T1nD7lKsceYZ&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e443]:
+                  - group [ref=f15e446]:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Coups de cœur voyageurs les plus appréciés
+                              - generic: Coup de cœur voyageurs
+                          - 'button "Ajouter aux favoris : Hébergement ⋅ Porto-Vecchio" [ref=f15e448] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e452] [cursor=pointer]
+                          - 'button "Photo suivante : Hébergement ⋅ Porto-Vecchio" [ref=f15e457] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e465]:
+                      - link [ref=f15e466] [cursor=pointer]:
+                        - /url: /rooms/38816696?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3X4T1nD7lKsceYZ&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e470] [cursor=pointer]:
+                        - /url: /rooms/38816696?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3X4T1nD7lKsceYZ&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e471] [cursor=pointer]:
+                        - /url: /rooms/38816696?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3X4T1nD7lKsceYZ&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e472] [cursor=pointer]:
+                        - /url: /rooms/38816696?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3X4T1nD7lKsceYZ&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e473] [cursor=pointer]:
+                        - /url: /rooms/38816696?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3X4T1nD7lKsceYZ&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e474] [cursor=pointer]:
+                        - /url: /rooms/38816696?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3X4T1nD7lKsceYZ&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e475]:
+                    - generic [ref=f15e476]: Hébergement ⋅ Porto-Vecchio
+                    - generic [ref=f15e477]: Centre ville porto vecchio
+                    - generic [ref=f15e479]:
+                      - generic [ref=f15e480]:
+                        - generic [ref=f15e481]: 3 chambres
+                        - generic [ref=f15e482]: 3 chambres
+                      - generic [ref=f15e483]:
+                        - generic [ref=f15e484]: ","
+                        - generic [ref=f15e485]: ·
+                        - generic [ref=f15e486]: 4 lits
+                        - generic [ref=f15e487]: 4 lits
+                      - generic [ref=f15e488]:
+                        - generic [ref=f15e489]: ","
+                        - generic [ref=f15e490]: ·
+                        - generic [ref=f15e491]: 2 salles de bain et 1 toilette
+                        - generic [ref=f15e492]: 2 salles de bain et 1 toilette
+                    - generic [ref=f15e494]:
+                      - generic [ref=f15e495]: Particulier
+                      - generic [ref=f15e496]: Particulier
+                    - generic [ref=f15e497]:
+                      - 'generic "2 152 € au total. Prix initial : 2 408 €" [ref=f15e501]':
+                        - generic [ref=f15e503]:
+                          - generic [ref=f15e504]: 2 408 €
+                          - button [ref=f15e507] [cursor=pointer]:
+                            - text: 2 152 €
+                            - generic [ref=f15e508]: au total
+                            - generic [ref=f15e509]: Afficher le détail du prix
+                      - generic [ref=f15e510]:
+                        - generic [ref=f15e511]: Payez 0 € aujourd'hui
+                        - generic [ref=f15e512]: Annulation gratuite
+                    - generic [ref=f15e513]:
+                      - generic:
+                        - generic: "Évaluation moyenne sur la base de 92 commentaires : 5,0 sur 5"
+                        - generic: 5,0 (92)
+              - group [ref=f15e519]:
+                - link "Villa ⋅ Lecci" [ref=f15e520] [cursor=pointer]:
+                  - /url: /rooms/48458975?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3Foc6Jf3TLiv1AC&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e521]:
+                  - group [ref=f15e524]:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Coups de cœur voyageurs les plus appréciés
+                              - generic: Coup de cœur voyageurs
+                          - 'button "Ajouter aux favoris : Villa ⋅ Lecci" [ref=f15e526] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e530] [cursor=pointer]
+                          - 'button "Photo suivante : Villa ⋅ Lecci" [ref=f15e535] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e543]:
+                      - link [ref=f15e544] [cursor=pointer]:
+                        - /url: /rooms/48458975?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3Foc6Jf3TLiv1AC&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e548] [cursor=pointer]:
+                        - /url: /rooms/48458975?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3Foc6Jf3TLiv1AC&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e549] [cursor=pointer]:
+                        - /url: /rooms/48458975?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3Foc6Jf3TLiv1AC&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e550] [cursor=pointer]:
+                        - /url: /rooms/48458975?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3Foc6Jf3TLiv1AC&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e551] [cursor=pointer]:
+                        - /url: /rooms/48458975?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3Foc6Jf3TLiv1AC&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e552] [cursor=pointer]:
+                        - /url: /rooms/48458975?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3Foc6Jf3TLiv1AC&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e553]:
+                    - generic [ref=f15e554]: Villa ⋅ Lecci
+                    - generic [ref=f15e555]: "Corsica Suttana Vacances : Villa Léa"
+                    - generic [ref=f15e557]:
+                      - generic [ref=f15e558]:
+                        - generic [ref=f15e559]: 3 chambres
+                        - generic [ref=f15e560]: 3 chambres
+                      - generic [ref=f15e561]:
+                        - generic [ref=f15e562]: ","
+                        - generic [ref=f15e563]: ·
+                        - generic [ref=f15e564]: 3 lits doubles
+                        - generic [ref=f15e565]: 3 lits doubles
+                      - generic [ref=f15e566]:
+                        - generic [ref=f15e567]: ","
+                        - generic [ref=f15e568]: ·
+                        - generic [ref=f15e569]: 2 salles de bain
+                        - generic [ref=f15e570]: 2 salles de bain
+                    - generic [ref=f15e572]:
+                      - generic [ref=f15e573]: Particulier
+                      - generic [ref=f15e574]: Particulier
+                    - generic [ref=f15e575]:
+                      - 'generic "2 081 € au total. Prix initial : 3 603 €" [ref=f15e579]':
+                        - generic [ref=f15e581]:
+                          - generic [ref=f15e582]: 3 603 €
+                          - button [ref=f15e585] [cursor=pointer]:
+                            - text: 2 081 €
+                            - generic [ref=f15e586]: au total
+                            - generic [ref=f15e587]: Afficher le détail du prix
+                      - generic [ref=f15e588]:
+                        - generic [ref=f15e589]: Payez 0 € aujourd'hui
+                        - generic [ref=f15e590]: Annulation gratuite
+                    - generic [ref=f15e591]:
+                      - generic:
+                        - generic: "Évaluation moyenne sur la base de 65 commentaires : 4,98 sur 5"
+                        - generic: 4,98 (65)
+              - group [ref=f15e597]:
+                - link "Hébergement ⋅ Porto-Vecchio" [ref=f15e598] [cursor=pointer]:
+                  - /url: /rooms/1280345672840944738?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3YlkXDzVK3-vOfx&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e599]:
+                  - group [ref=f15e602]:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Superhôte
+                              - generic: Superhôte
+                          - 'button "Ajouter aux favoris : Hébergement ⋅ Porto-Vecchio" [ref=f15e604] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e608] [cursor=pointer]
+                          - 'button "Photo suivante : Hébergement ⋅ Porto-Vecchio" [ref=f15e613] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e621]:
+                      - link [ref=f15e622] [cursor=pointer]:
+                        - /url: /rooms/1280345672840944738?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3YlkXDzVK3-vOfx&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e626] [cursor=pointer]:
+                        - /url: /rooms/1280345672840944738?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3YlkXDzVK3-vOfx&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e627] [cursor=pointer]:
+                        - /url: /rooms/1280345672840944738?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3YlkXDzVK3-vOfx&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e628] [cursor=pointer]:
+                        - /url: /rooms/1280345672840944738?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3YlkXDzVK3-vOfx&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e629] [cursor=pointer]:
+                        - /url: /rooms/1280345672840944738?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3YlkXDzVK3-vOfx&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e630] [cursor=pointer]:
+                        - /url: /rooms/1280345672840944738?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3YlkXDzVK3-vOfx&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e631]:
+                    - generic [ref=f15e632]: Hébergement ⋅ Porto-Vecchio
+                    - generic [ref=f15e633]: Maison Petra Longue Porto-Vecchio
+                    - generic [ref=f15e635]:
+                      - generic [ref=f15e636]:
+                        - generic [ref=f15e637]: 2 chambres
+                        - generic [ref=f15e638]: 2 chambres
+                      - generic [ref=f15e639]:
+                        - generic [ref=f15e640]: ","
+                        - generic [ref=f15e641]: ·
+                        - generic [ref=f15e642]: 4 lits
+                        - generic [ref=f15e643]: 4 lits
+                      - generic [ref=f15e644]:
+                        - generic [ref=f15e645]: ","
+                        - generic [ref=f15e646]: ·
+                        - generic [ref=f15e647]: 1 salle de bain
+                        - generic [ref=f15e648]: 1 salle de bain
+                    - generic [ref=f15e650]:
+                      - generic [ref=f15e651]: Professionnel
+                      - generic [ref=f15e652]: Professionnel
+                    - generic [ref=f15e656]:
+                      - button [ref=f15e661] [cursor=pointer]:
+                        - text: 1 617 €
+                        - generic [ref=f15e662]: au total
+                        - generic [ref=f15e663]: Afficher le détail du prix
+                      - generic [ref=f15e664]: 1 617 € au total
+                    - generic [ref=f15e665]:
+                      - generic:
+                        - generic: "Évaluation moyenne sur la base de 3 commentaires : 5,0 sur 5"
+                        - generic: 5,0 (3)
+              - group [ref=f15e671]:
+                - link "Villa ⋅ Porto-Vecchio" [ref=f15e672] [cursor=pointer]:
+                  - /url: /rooms/21708002?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3enUIJ4n5lXtJw9&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e673]:
+                  - group [ref=f15e676]:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Superhôte
+                              - generic: Superhôte
+                          - 'button "Ajouter aux favoris : Villa ⋅ Porto-Vecchio" [ref=f15e678] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e682] [cursor=pointer]
+                          - 'button "Photo suivante : Villa ⋅ Porto-Vecchio" [ref=f15e687] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e695]:
+                      - link [ref=f15e696] [cursor=pointer]:
+                        - /url: /rooms/21708002?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3enUIJ4n5lXtJw9&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e700] [cursor=pointer]:
+                        - /url: /rooms/21708002?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3enUIJ4n5lXtJw9&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e701] [cursor=pointer]:
+                        - /url: /rooms/21708002?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3enUIJ4n5lXtJw9&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e702] [cursor=pointer]:
+                        - /url: /rooms/21708002?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3enUIJ4n5lXtJw9&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e703] [cursor=pointer]:
+                        - /url: /rooms/21708002?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3enUIJ4n5lXtJw9&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e704] [cursor=pointer]:
+                        - /url: /rooms/21708002?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3enUIJ4n5lXtJw9&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e705]:
+                    - generic [ref=f15e706]: Villa ⋅ Porto-Vecchio
+                    - generic [ref=f15e707]: Villa vue MER 3 chambres PISCINE PRIVEE
+                    - generic [ref=f15e709]:
+                      - generic [ref=f15e710]:
+                        - generic [ref=f15e711]: 3 chambres
+                        - generic [ref=f15e712]: 3 chambres
+                      - generic [ref=f15e713]:
+                        - generic [ref=f15e714]: ","
+                        - generic [ref=f15e715]: ·
+                        - generic [ref=f15e716]: 4 lits
+                        - generic [ref=f15e717]: 4 lits
+                      - generic [ref=f15e718]:
+                        - generic [ref=f15e719]: ","
+                        - generic [ref=f15e720]: ·
+                        - generic [ref=f15e721]: 2 salles de bain
+                        - generic [ref=f15e722]: 2 salles de bain
+                    - generic [ref=f15e724]:
+                      - generic [ref=f15e725]: Professionnel
+                      - generic [ref=f15e726]: Professionnel
+                    - 'generic "2 945 € au total. Prix initial : 3 886 €" [ref=f15e731]':
+                      - generic [ref=f15e733]:
+                        - generic [ref=f15e734]: 3 886 €
+                        - button [ref=f15e737] [cursor=pointer]:
+                          - text: 2 945 €
+                          - generic [ref=f15e738]: au total
+                          - generic [ref=f15e739]: Afficher le détail du prix
+                    - generic [ref=f15e740]:
+                      - generic:
+                        - generic: "Évaluation moyenne sur la base de 47 commentaires : 4,91 sur 5"
+                        - generic: 4,91 (47)
+              - group [ref=f15e746]:
+                - link "Hébergement ⋅ Lecci" [ref=f15e747] [cursor=pointer]:
+                  - /url: /rooms/1383280040580571694?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3DPDmskI4UuEg2w&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e748]:
+                  - group [ref=f15e751]:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Coup de cœur voyageurs
+                              - generic: Coup de cœur voyageurs
+                          - 'button "Ajouter aux favoris : Hébergement ⋅ Lecci" [ref=f15e753] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e757] [cursor=pointer]
+                          - 'button "Photo suivante : Hébergement ⋅ Lecci" [ref=f15e762] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e770]:
+                      - link [ref=f15e771] [cursor=pointer]:
+                        - /url: /rooms/1383280040580571694?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3DPDmskI4UuEg2w&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e775] [cursor=pointer]:
+                        - /url: /rooms/1383280040580571694?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3DPDmskI4UuEg2w&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e776] [cursor=pointer]:
+                        - /url: /rooms/1383280040580571694?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3DPDmskI4UuEg2w&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e777] [cursor=pointer]:
+                        - /url: /rooms/1383280040580571694?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3DPDmskI4UuEg2w&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e778] [cursor=pointer]:
+                        - /url: /rooms/1383280040580571694?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3DPDmskI4UuEg2w&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e779] [cursor=pointer]:
+                        - /url: /rooms/1383280040580571694?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3DPDmskI4UuEg2w&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e780]:
+                    - generic [ref=f15e781]: Hébergement ⋅ Lecci
+                    - generic [ref=f15e782]: Maison bord de mer
+                    - generic [ref=f15e784]:
+                      - generic [ref=f15e785]:
+                        - generic [ref=f15e786]: 3 chambres
+                        - generic [ref=f15e787]: 3 chambres
+                      - generic [ref=f15e788]:
+                        - generic [ref=f15e789]: ","
+                        - generic [ref=f15e790]: ·
+                        - generic [ref=f15e791]: 3 lits
+                        - generic [ref=f15e792]: 3 lits
+                      - generic [ref=f15e793]:
+                        - generic [ref=f15e794]: ","
+                        - generic [ref=f15e795]: ·
+                        - generic [ref=f15e796]: 3 salles de bain
+                        - generic [ref=f15e797]: 3 salles de bain
+                    - generic [ref=f15e799]:
+                      - generic [ref=f15e800]: Professionnel
+                      - generic [ref=f15e801]: Professionnel
+                    - 'generic "1 785 € au total. Prix initial : 2 223 €" [ref=f15e806]':
+                      - generic [ref=f15e808]:
+                        - generic [ref=f15e809]: 2 223 €
+                        - button [ref=f15e812] [cursor=pointer]:
+                          - text: 1 785 €
+                          - generic [ref=f15e813]: au total
+                          - generic [ref=f15e814]: Afficher le détail du prix
+                    - generic [ref=f15e815]:
+                      - generic:
+                        - generic: "Évaluation moyenne sur la base de 11 commentaires : 4,91 sur 5"
+                        - generic: 4,91 (11)
+              - group [ref=f15e838]:
+                - link "Villa ⋅ Conca" [ref=f15e839] [cursor=pointer]:
+                  - /url: /rooms/1636300191654574456?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3REkJomyKRsEIee&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e840]:
+                  - group [ref=f15e843]:
+                    - generic:
+                      - generic:
+                        - 'button "Ajouter aux favoris : Villa ⋅ Conca" [ref=f15e845] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e849] [cursor=pointer]
+                          - 'button "Photo suivante : Villa ⋅ Conca" [ref=f15e854] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e862]:
+                      - link [ref=f15e863] [cursor=pointer]:
+                        - /url: /rooms/1636300191654574456?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3REkJomyKRsEIee&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e867] [cursor=pointer]:
+                        - /url: /rooms/1636300191654574456?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3REkJomyKRsEIee&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e868] [cursor=pointer]:
+                        - /url: /rooms/1636300191654574456?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3REkJomyKRsEIee&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e869] [cursor=pointer]:
+                        - /url: /rooms/1636300191654574456?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3REkJomyKRsEIee&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e870] [cursor=pointer]:
+                        - /url: /rooms/1636300191654574456?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3REkJomyKRsEIee&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e871] [cursor=pointer]:
+                        - /url: /rooms/1636300191654574456?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3REkJomyKRsEIee&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e872]:
+                    - generic [ref=f15e873]: Villa ⋅ Conca
+                    - generic [ref=f15e874]: Villa Maison Soleil Et Mer
+                    - generic [ref=f15e876]:
+                      - generic [ref=f15e877]:
+                        - generic [ref=f15e878]: 3 chambres
+                        - generic [ref=f15e879]: 3 chambres
+                      - generic [ref=f15e880]:
+                        - generic [ref=f15e881]: ","
+                        - generic [ref=f15e882]: ·
+                        - generic [ref=f15e883]: 3 lits doubles
+                        - generic [ref=f15e884]: 3 lits doubles
+                      - generic [ref=f15e885]:
+                        - generic [ref=f15e886]: ","
+                        - generic [ref=f15e887]: ·
+                        - generic [ref=f15e888]: 1 salle de bain
+                        - generic [ref=f15e889]: 1 salle de bain
+                    - generic [ref=f15e891]:
+                      - generic [ref=f15e892]: Particulier
+                      - generic [ref=f15e893]: Particulier
+                    - generic [ref=f15e897]:
+                      - button [ref=f15e902] [cursor=pointer]:
+                        - text: 1 552 €
+                        - generic [ref=f15e903]: au total
+                        - generic [ref=f15e904]: Afficher le détail du prix
+                      - generic [ref=f15e905]: 1 552 € au total
+              - group [ref=f15e928]:
+                - link "Hébergement ⋅ Porto-Vecchio" [ref=f15e929] [cursor=pointer]:
+                  - /url: /rooms/1137537837533094298?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3VBakt_Q0So8Bby&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e930]:
+                  - group [ref=f15e933]:
+                    - generic:
+                      - generic:
+                        - 'button "Ajouter aux favoris : Hébergement ⋅ Porto-Vecchio" [ref=f15e935] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e939] [cursor=pointer]
+                          - 'button "Photo suivante : Hébergement ⋅ Porto-Vecchio" [ref=f15e944] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e952]:
+                      - link [ref=f15e953] [cursor=pointer]:
+                        - /url: /rooms/1137537837533094298?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3VBakt_Q0So8Bby&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e957] [cursor=pointer]:
+                        - /url: /rooms/1137537837533094298?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3VBakt_Q0So8Bby&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e958] [cursor=pointer]:
+                        - /url: /rooms/1137537837533094298?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3VBakt_Q0So8Bby&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e959] [cursor=pointer]:
+                        - /url: /rooms/1137537837533094298?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3VBakt_Q0So8Bby&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e960] [cursor=pointer]:
+                        - /url: /rooms/1137537837533094298?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3VBakt_Q0So8Bby&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e961] [cursor=pointer]:
+                        - /url: /rooms/1137537837533094298?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3VBakt_Q0So8Bby&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e962]:
+                    - generic [ref=f15e963]: Hébergement ⋅ Porto-Vecchio
+                    - generic [ref=f15e964]: Maison deux chambres accès mer Porto-Vecchio N2
+                    - generic [ref=f15e966]:
+                      - generic [ref=f15e967]:
+                        - generic [ref=f15e968]: 2 chambres
+                        - generic [ref=f15e969]: 2 chambres
+                      - generic [ref=f15e970]:
+                        - generic [ref=f15e971]: ","
+                        - generic [ref=f15e972]: ·
+                        - generic [ref=f15e973]: 4 lits
+                        - generic [ref=f15e974]: 4 lits
+                      - generic [ref=f15e975]:
+                        - generic [ref=f15e976]: ","
+                        - generic [ref=f15e977]: ·
+                        - generic [ref=f15e978]: 2 salles de bain
+                        - generic [ref=f15e979]: 2 salles de bain
+                    - generic [ref=f15e981]:
+                      - generic [ref=f15e982]: Particulier
+                      - generic [ref=f15e983]: Particulier
+                    - generic [ref=f15e987]:
+                      - button [ref=f15e992] [cursor=pointer]:
+                        - text: 1 360 €
+                        - generic [ref=f15e993]: au total
+                        - generic [ref=f15e994]: Afficher le détail du prix
+                      - generic [ref=f15e995]: 1 360 € au total
+                    - generic [ref=f15e996]:
+                      - generic:
+                        - generic: "Évaluation moyenne sur la base de 9 commentaires : 4,44 sur 5"
+                        - generic: 4,44 (9)
+              - group [ref=f15e1019]:
+                - link "Hébergement ⋅ Lecci" [ref=f15e1020] [cursor=pointer]:
+                  - /url: /rooms/945716311183739735?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3HI-PjTKEAKmkIv&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e1021]:
+                  - group [ref=f15e1024]:
+                    - generic:
+                      - generic:
+                        - 'button "Ajouter aux favoris : Hébergement ⋅ Lecci" [ref=f15e1026] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e1030] [cursor=pointer]
+                          - 'button "Photo suivante : Hébergement ⋅ Lecci" [ref=f15e1035] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e1043]:
+                      - link [ref=f15e1044] [cursor=pointer]:
+                        - /url: /rooms/945716311183739735?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3HI-PjTKEAKmkIv&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1048] [cursor=pointer]:
+                        - /url: /rooms/945716311183739735?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3HI-PjTKEAKmkIv&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1049] [cursor=pointer]:
+                        - /url: /rooms/945716311183739735?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3HI-PjTKEAKmkIv&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1050] [cursor=pointer]:
+                        - /url: /rooms/945716311183739735?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3HI-PjTKEAKmkIv&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1051] [cursor=pointer]:
+                        - /url: /rooms/945716311183739735?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3HI-PjTKEAKmkIv&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1052] [cursor=pointer]:
+                        - /url: /rooms/945716311183739735?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3HI-PjTKEAKmkIv&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e1053]:
+                    - generic [ref=f15e1054]: Hébergement ⋅ Lecci
+                    - generic [ref=f15e1055]: Appartement agréable.
+                    - generic [ref=f15e1057]:
+                      - generic [ref=f15e1058]:
+                        - generic [ref=f15e1059]: 2 chambres
+                        - generic [ref=f15e1060]: 2 chambres
+                      - generic [ref=f15e1061]:
+                        - generic [ref=f15e1062]: ","
+                        - generic [ref=f15e1063]: ·
+                        - generic [ref=f15e1064]: 4 lits
+                        - generic [ref=f15e1065]: 4 lits
+                      - generic [ref=f15e1066]:
+                        - generic [ref=f15e1067]: ","
+                        - generic [ref=f15e1068]: ·
+                        - generic [ref=f15e1069]: 1 salle de bain
+                        - generic [ref=f15e1070]: 1 salle de bain
+                    - generic [ref=f15e1072]:
+                      - generic [ref=f15e1073]: Particulier
+                      - generic [ref=f15e1074]: Particulier
+                    - 'generic "1 208 € au total. Prix initial : 1 493 €" [ref=f15e1079]':
+                      - generic [ref=f15e1081]:
+                        - generic [ref=f15e1082]: 1 493 €
+                        - button [ref=f15e1085] [cursor=pointer]:
+                          - text: 1 208 €
+                          - generic [ref=f15e1086]: au total
+                          - generic [ref=f15e1087]: Afficher le détail du prix
+                    - generic [ref=f15e1088]:
+                      - generic:
+                        - generic: "Évaluation moyenne sur la base de 34 commentaires : 4,85 sur 5"
+                        - generic: 4,85 (34)
+              - group [ref=f15e1111]:
+                - link "Hébergement ⋅ Porto-Vecchio" [ref=f15e1112] [cursor=pointer]:
+                  - /url: /rooms/1087499017312347125?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3NZDVxjtz-omTBe&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e1113]:
+                  - group [ref=f15e1116]:
+                    - generic:
+                      - generic:
+                        - 'button "Ajouter aux favoris : Hébergement ⋅ Porto-Vecchio" [ref=f15e1118] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e1122] [cursor=pointer]
+                          - 'button "Photo suivante : Hébergement ⋅ Porto-Vecchio" [ref=f15e1127] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e1135]:
+                      - link [ref=f15e1136] [cursor=pointer]:
+                        - /url: /rooms/1087499017312347125?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3NZDVxjtz-omTBe&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1140] [cursor=pointer]:
+                        - /url: /rooms/1087499017312347125?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3NZDVxjtz-omTBe&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1141] [cursor=pointer]:
+                        - /url: /rooms/1087499017312347125?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3NZDVxjtz-omTBe&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1142] [cursor=pointer]:
+                        - /url: /rooms/1087499017312347125?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3NZDVxjtz-omTBe&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1143] [cursor=pointer]:
+                        - /url: /rooms/1087499017312347125?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3NZDVxjtz-omTBe&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1144] [cursor=pointer]:
+                        - /url: /rooms/1087499017312347125?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3NZDVxjtz-omTBe&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e1145]:
+                    - generic [ref=f15e1146]: Hébergement ⋅ Porto-Vecchio
+                    - generic [ref=f15e1147]: Villa 3 Ch. 6 Personnes Piscine
+                    - generic [ref=f15e1149]:
+                      - generic [ref=f15e1150]:
+                        - generic [ref=f15e1151]: 3 chambres
+                        - generic [ref=f15e1152]: 3 chambres
+                      - generic [ref=f15e1153]:
+                        - generic [ref=f15e1154]: ","
+                        - generic [ref=f15e1155]: ·
+                        - generic [ref=f15e1156]: 3 lits
+                        - generic [ref=f15e1157]: 3 lits
+                      - generic [ref=f15e1158]:
+                        - generic [ref=f15e1159]: ","
+                        - generic [ref=f15e1160]: ·
+                        - generic [ref=f15e1161]: 1 salle de bain
+                        - generic [ref=f15e1162]: 1 salle de bain
+                    - generic [ref=f15e1164]:
+                      - generic [ref=f15e1165]: Particulier
+                      - generic [ref=f15e1166]: Particulier
+                    - 'generic "1 825 € au total. Prix initial : 2 344 €" [ref=f15e1171]':
+                      - generic [ref=f15e1173]:
+                        - generic [ref=f15e1174]: 2 344 €
+                        - button [ref=f15e1177] [cursor=pointer]:
+                          - text: 1 825 €
+                          - generic [ref=f15e1178]: au total
+                          - generic [ref=f15e1179]: Afficher le détail du prix
+                    - generic [ref=f15e1180]:
+                      - generic:
+                        - generic: "Évaluation moyenne sur la base de 3 commentaires : 5,0 sur 5"
+                        - generic: 5,0 (3)
+              - group [ref=f15e1203]:
+                - link "Hébergement ⋅ Porto-Vecchio" [ref=f15e1204] [cursor=pointer]:
+                  - /url: /rooms/1354017006534567909?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3PcwN28tFnq1ah3&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e1205]:
+                  - group [ref=f15e1208]:
+                    - generic:
+                      - generic:
+                        - 'button "Ajouter aux favoris : Hébergement ⋅ Porto-Vecchio" [ref=f15e1210] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e1214] [cursor=pointer]
+                          - 'button "Photo suivante : Hébergement ⋅ Porto-Vecchio" [ref=f15e1219] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e1227]:
+                      - link [ref=f15e1228] [cursor=pointer]:
+                        - /url: /rooms/1354017006534567909?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3PcwN28tFnq1ah3&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1231] [cursor=pointer]:
+                        - /url: /rooms/1354017006534567909?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3PcwN28tFnq1ah3&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1232] [cursor=pointer]:
+                        - /url: /rooms/1354017006534567909?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3PcwN28tFnq1ah3&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1233] [cursor=pointer]:
+                        - /url: /rooms/1354017006534567909?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3PcwN28tFnq1ah3&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1234] [cursor=pointer]:
+                        - /url: /rooms/1354017006534567909?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3PcwN28tFnq1ah3&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1235] [cursor=pointer]:
+                        - /url: /rooms/1354017006534567909?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3PcwN28tFnq1ah3&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e1236]:
+                    - generic [ref=f15e1237]: Hébergement ⋅ Porto-Vecchio
+                    - generic [ref=f15e1238]: Casa Caminu par Interhome
+                    - generic [ref=f15e1240]:
+                      - generic [ref=f15e1241]:
+                        - generic [ref=f15e1242]: 3 chambres
+                        - generic [ref=f15e1243]: 3 chambres
+                      - generic [ref=f15e1244]:
+                        - generic [ref=f15e1245]: ","
+                        - generic [ref=f15e1246]: ·
+                        - generic [ref=f15e1247]: 3 lits queen size
+                        - generic [ref=f15e1248]: 3 lits queen size
+                      - generic [ref=f15e1249]:
+                        - generic [ref=f15e1250]: ","
+                        - generic [ref=f15e1251]: ·
+                        - generic [ref=f15e1252]: 2 salles de bain
+                        - generic [ref=f15e1253]: 2 salles de bain
+                    - generic [ref=f15e1255]:
+                      - generic [ref=f15e1256]: Professionnel
+                      - generic [ref=f15e1257]: Professionnel
+                    - generic [ref=f15e1261]:
+                      - button [ref=f15e1266] [cursor=pointer]:
+                        - text: 1 633 €
+                        - generic [ref=f15e1267]: au total
+                        - generic [ref=f15e1268]: Afficher le détail du prix
+                      - generic [ref=f15e1269]: 1 633 € au total
+                    - generic [ref=f15e1270]:
+                      - generic:
+                        - generic: "Évaluation moyenne sur la base de 5 commentaires : 4,6 sur 5"
+                        - generic: 4,6 (5)
+              - group [ref=f15e1293]:
+                - link "Appartement ⋅ Porto-Vecchio" [ref=f15e1294] [cursor=pointer]:
+                  - /url: /rooms/1635561095183804793?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3ZESYaQ4hSO_x7d&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e1295]:
+                  - group [ref=f15e1298]:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Superhôte
+                              - generic: Superhôte
+                          - 'button "Ajouter aux favoris : Appartement ⋅ Porto-Vecchio" [ref=f15e1300] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e1304] [cursor=pointer]
+                          - 'button "Photo suivante : Appartement ⋅ Porto-Vecchio" [ref=f15e1309] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e1317]:
+                      - link [ref=f15e1318] [cursor=pointer]:
+                        - /url: /rooms/1635561095183804793?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3ZESYaQ4hSO_x7d&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1321] [cursor=pointer]:
+                        - /url: /rooms/1635561095183804793?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3ZESYaQ4hSO_x7d&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1322] [cursor=pointer]:
+                        - /url: /rooms/1635561095183804793?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3ZESYaQ4hSO_x7d&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1323] [cursor=pointer]:
+                        - /url: /rooms/1635561095183804793?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3ZESYaQ4hSO_x7d&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1324] [cursor=pointer]:
+                        - /url: /rooms/1635561095183804793?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3ZESYaQ4hSO_x7d&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1325] [cursor=pointer]:
+                        - /url: /rooms/1635561095183804793?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3ZESYaQ4hSO_x7d&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e1326]:
+                    - generic [ref=f15e1327]: Appartement ⋅ Porto-Vecchio
+                    - generic [ref=f15e1328]: Aux portes de Porto-Vecchio, appartement 6 pers
+                    - generic [ref=f15e1330]:
+                      - generic [ref=f15e1331]:
+                        - generic [ref=f15e1332]: 2 chambres
+                        - generic [ref=f15e1333]: 2 chambres
+                      - generic [ref=f15e1334]:
+                        - generic [ref=f15e1335]: ","
+                        - generic [ref=f15e1336]: ·
+                        - generic [ref=f15e1337]: 4 lits
+                        - generic [ref=f15e1338]: 4 lits
+                      - generic [ref=f15e1339]:
+                        - generic [ref=f15e1340]: ","
+                        - generic [ref=f15e1341]: ·
+                        - generic [ref=f15e1342]: 1 salle de bain
+                        - generic [ref=f15e1343]: 1 salle de bain
+                    - generic [ref=f15e1345]:
+                      - generic [ref=f15e1346]: Professionnel
+                      - generic [ref=f15e1347]: Professionnel
+                    - generic [ref=f15e1348]:
+                      - generic [ref=f15e1351]:
+                        - button [ref=f15e1356] [cursor=pointer]:
+                          - text: 1 505 €
+                          - generic [ref=f15e1357]: au total
+                          - generic [ref=f15e1358]: Afficher le détail du prix
+                        - generic [ref=f15e1359]: 1 505 € au total
+                      - generic [ref=f15e1360]:
+                        - generic [ref=f15e1361]: Payez 0 € aujourd'hui
+                        - generic [ref=f15e1362]: Annulation gratuite
+                    - generic [ref=f15e1363]:
+                      - generic:
+                        - generic: "Évaluation moyenne sur la base de 3 commentaires : 5,0 sur 5"
+                        - generic: 5,0 (3)
+              - group [ref=f15e1386]:
+                - link "Appartement ⋅ Lecci" [ref=f15e1387] [cursor=pointer]:
+                  - /url: /rooms/1110112205891405443?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3lfNuSOJU-WBZuf&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e1388]:
+                  - group [ref=f15e1391]:
+                    - generic:
+                      - generic:
+                        - 'button "Ajouter aux favoris : Appartement ⋅ Lecci" [ref=f15e1393] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e1397] [cursor=pointer]
+                          - 'button "Photo suivante : Appartement ⋅ Lecci" [ref=f15e1402] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e1410]:
+                      - link [ref=f15e1411] [cursor=pointer]:
+                        - /url: /rooms/1110112205891405443?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3lfNuSOJU-WBZuf&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1414] [cursor=pointer]:
+                        - /url: /rooms/1110112205891405443?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3lfNuSOJU-WBZuf&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1415] [cursor=pointer]:
+                        - /url: /rooms/1110112205891405443?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3lfNuSOJU-WBZuf&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1416] [cursor=pointer]:
+                        - /url: /rooms/1110112205891405443?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3lfNuSOJU-WBZuf&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1417] [cursor=pointer]:
+                        - /url: /rooms/1110112205891405443?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3lfNuSOJU-WBZuf&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1418] [cursor=pointer]:
+                        - /url: /rooms/1110112205891405443?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3lfNuSOJU-WBZuf&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e1419]:
+                    - generic [ref=f15e1420]: Appartement ⋅ Lecci
+                    - generic [ref=f15e1421]: appartement 6 personnes N° 35 Hameaux de Saint Cyp
+                    - generic [ref=f15e1423]:
+                      - generic [ref=f15e1424]:
+                        - generic [ref=f15e1425]: 2 chambres
+                        - generic [ref=f15e1426]: 2 chambres
+                      - generic [ref=f15e1427]:
+                        - generic [ref=f15e1428]: ","
+                        - generic [ref=f15e1429]: ·
+                        - generic [ref=f15e1430]: 4 lits
+                        - generic [ref=f15e1431]: 4 lits
+                      - generic [ref=f15e1432]:
+                        - generic [ref=f15e1433]: ","
+                        - generic [ref=f15e1434]: ·
+                        - generic [ref=f15e1435]: 1 salle de bain
+                        - generic [ref=f15e1436]: 1 salle de bain
+                    - generic [ref=f15e1438]:
+                      - generic [ref=f15e1439]: Professionnel
+                      - generic [ref=f15e1440]: Professionnel
+                    - generic [ref=f15e1444]:
+                      - button [ref=f15e1449] [cursor=pointer]:
+                        - text: 1 451 €
+                        - generic [ref=f15e1450]: au total
+                        - generic [ref=f15e1451]: Afficher le détail du prix
+                      - generic [ref=f15e1452]: 1 451 € au total
+              - group [ref=f15e1475]:
+                - link "Appartement ⋅ Porto-Vecchio" [ref=f15e1476] [cursor=pointer]:
+                  - /url: /rooms/815783800164972501?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3rn527jEq5qIs08&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e1477]:
+                  - group [ref=f15e1480]:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Coup de cœur voyageurs
+                              - generic: Coup de cœur voyageurs
+                          - 'button "Ajouter aux favoris : Appartement ⋅ Porto-Vecchio" [ref=f15e1482] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e1486] [cursor=pointer]
+                          - 'button "Photo suivante : Appartement ⋅ Porto-Vecchio" [ref=f15e1491] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e1499]:
+                      - link [ref=f15e1500] [cursor=pointer]:
+                        - /url: /rooms/815783800164972501?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3rn527jEq5qIs08&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1503] [cursor=pointer]:
+                        - /url: /rooms/815783800164972501?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3rn527jEq5qIs08&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1504] [cursor=pointer]:
+                        - /url: /rooms/815783800164972501?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3rn527jEq5qIs08&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1505] [cursor=pointer]:
+                        - /url: /rooms/815783800164972501?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3rn527jEq5qIs08&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1506] [cursor=pointer]:
+                        - /url: /rooms/815783800164972501?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3rn527jEq5qIs08&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1507] [cursor=pointer]:
+                        - /url: /rooms/815783800164972501?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P3rn527jEq5qIs08&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e1508]:
+                    - generic [ref=f15e1509]: Appartement ⋅ Porto-Vecchio
+                    - generic [ref=f15e1510]: Villa 3 chambres dans résidence avec piscine
+                    - generic [ref=f15e1512]:
+                      - generic [ref=f15e1513]:
+                        - generic [ref=f15e1514]: 3 chambres
+                        - generic [ref=f15e1515]: 3 chambres
+                      - generic [ref=f15e1516]:
+                        - generic [ref=f15e1517]: ","
+                        - generic [ref=f15e1518]: ·
+                        - generic [ref=f15e1519]: 4 lits
+                        - generic [ref=f15e1520]: 4 lits
+                      - generic [ref=f15e1521]:
+                        - generic [ref=f15e1522]: ","
+                        - generic [ref=f15e1523]: ·
+                        - generic [ref=f15e1524]: 1 salle de bain
+                        - generic [ref=f15e1525]: 1 salle de bain
+                    - generic [ref=f15e1527]:
+                      - generic [ref=f15e1528]: Professionnel
+                      - generic [ref=f15e1529]: Professionnel
+                    - generic [ref=f15e1533]:
+                      - button [ref=f15e1538] [cursor=pointer]:
+                        - text: 2 153 €
+                        - generic [ref=f15e1539]: au total
+                        - generic [ref=f15e1540]: Afficher le détail du prix
+                      - generic [ref=f15e1541]: 2 153 € au total
+                    - generic [ref=f15e1542]:
+                      - generic:
+                        - generic: "Évaluation moyenne sur la base de 11 commentaires : 4,91 sur 5"
+                        - generic: 4,91 (11)
+              - group [ref=f15e1565]:
+                - link "Villa ⋅ Bonifacio" [ref=f15e1566] [cursor=pointer]:
+                  - /url: /rooms/38574036?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P31B4Pp9iLDptW63&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                - generic [ref=f15e1567]:
+                  - group [ref=f15e1570]:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic: Coup de cœur voyageurs
+                              - generic: Coup de cœur voyageurs
+                          - 'button "Ajouter aux favoris : Villa ⋅ Bonifacio" [ref=f15e1572] [cursor=pointer]'
+                        - generic:
+                          - button [disabled] [ref=f15e1576] [cursor=pointer]
+                          - 'button "Photo suivante : Villa ⋅ Bonifacio" [ref=f15e1581] [cursor=pointer]'
+                        - generic:
+                          - generic:
+                            - img "Photo 1 sur 6"
+                    - generic [ref=f15e1589]:
+                      - link [ref=f15e1590] [cursor=pointer]:
+                        - /url: /rooms/38574036?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P31B4Pp9iLDptW63&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1593] [cursor=pointer]:
+                        - /url: /rooms/38574036?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P31B4Pp9iLDptW63&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1594] [cursor=pointer]:
+                        - /url: /rooms/38574036?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P31B4Pp9iLDptW63&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1595] [cursor=pointer]:
+                        - /url: /rooms/38574036?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P31B4Pp9iLDptW63&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1596] [cursor=pointer]:
+                        - /url: /rooms/38574036?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P31B4Pp9iLDptW63&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                      - link [ref=f15e1597] [cursor=pointer]:
+                        - /url: /rooms/38574036?adults=5&check_in=2026-08-24&check_out=2026-08-30&search_mode=regular_search&source_impression_id=p3_1785886909_P31B4Pp9iLDptW63&previous_page_section_name=1000&federated_search_id=c5af386f-6e95-4832-b775-d69483eea77f
+                  - generic [ref=f15e1598]:
+                    - generic [ref=f15e1599]: Villa ⋅ Bonifacio
+                    - generic [ref=f15e1600]: Charmante villa T4, 4*,clim, 6 p, piscine chauffée
+                    - generic [ref=f15e1602]:
+                      - generic [ref=f15e1603]:
+                        - generic [ref=f15e1604]: 3 chambres
+                        - generic [ref=f15e1605]: 3 chambres
+                      - generic [ref=f15e1606]:
+                        - generic [ref=f15e1607]: ","
+                        - generic [ref=f15e1608]: ·
+                        - generic [ref=f15e1609]: 6 lits
+                        - generic [ref=f15e1610]: 6 lits
+                      - generic [ref=f15e1611]:
+                        - generic [ref=f15e1612]: ","
+                        - generic [ref=f15e1613]: ·
+                        - generic [ref=f15e1614]: 1 salle de bain
+                        - generic [ref=f15e1615]: 1 salle de bain
+                    - generic [ref=f15e1617]:
+                      - generic [ref=f15e1618]: Particulier
+                      - generic [ref=f15e1619]: Particulier
+                    - 'generic "1 579 € au total. Prix initial : 1 780 €" [ref=f15e1624]':
+                      - generic [ref=f15e1626]:
+                        - generic [ref=f15e1627]: 1 780 €
+                        - button [ref=f15e1630] [cursor=pointer]:
+                          - text: 1 579 €
+                          - generic [ref=f15e1631]: au total
+                          - generic [ref=f15e1632]: Afficher le détail du prix
+                    - generic [ref=f15e1633]:
+                      - generic:
+                        - generic: "Évaluation moyenne sur la base de 79 commentaires : 4,97 sur 5"
+                        - generic: 4,97 (79)
+          - region "Google Map" [ref=f15e1639]:
+            - generic [ref=f15e1640]: Centré sur Corse-du-Sud
+            - heading "Carte Google 20 séjours affichés." [level=2] [ref=f15e1642]
+            - button "Paramètres de la carte" [ref=f15e1643] [cursor=pointer]
+            - generic [ref=f15e1646]:
+              - button "Afficher la carte en plein écran" [ref=f15e1649] [cursor=pointer]
+              - generic [ref=f15e1659]:
+                - button "Dézoomer" [ref=f15e1660] [cursor=pointer]
+                - button "Dézoomer" [ref=f15e1665] [cursor=pointer]
+            - generic [ref=f15e1669]:
+              - generic "Carte" [ref=f15e1670]
+              - generic [ref=f15e1671]:
+                - generic [ref=f15e1758]:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - button "Appartement ⋅ Porto-Vecchio, 1 147 €":
+                          - generic [ref=f15e1766] [cursor=pointer]:
+                            - generic [ref=f15e1767]: Appartement ⋅ Porto-Vecchio, 1 147 €
+                            - text: 1 147 €
+                        - button "Appartement en résidence ⋅ Porto-Vecchio, 1 252 €":
+                          - generic [ref=f15e1774] [cursor=pointer]:
+                            - generic [ref=f15e1775]: Appartement en résidence ⋅ Porto-Vecchio, 1 252 €
+                            - text: 1 252 €
+                        - button "Appartement ⋅ Porto-Vecchio, 1 277 €":
+                          - generic [ref=f15e1782] [cursor=pointer]:
+                            - generic [ref=f15e1783]: Appartement ⋅ Porto-Vecchio, 1 277 €
+                            - text: 1 277 €
+                        - button "Appartement ⋅ Porto-Vecchio, 1 341 €":
+                          - generic [ref=f15e1790] [cursor=pointer]:
+                            - generic [ref=f15e1791]: Appartement ⋅ Porto-Vecchio, 1 341 €
+                            - text: 1 341 €
+                        - button "Hébergement ⋅ Porto-Vecchio, 2 152 €":
+                          - generic [ref=f15e1798] [cursor=pointer]:
+                            - generic [ref=f15e1799]: Hébergement ⋅ Porto-Vecchio, 2 152 €
+                            - text: 2 152 €
+                        - button "Villa ⋅ Lecci, 2 081 €":
+                          - generic [ref=f15e1806] [cursor=pointer]:
+                            - generic [ref=f15e1807]: Villa ⋅ Lecci, 2 081 €
+                            - text: 2 081 €
+                        - button "Hébergement ⋅ Porto-Vecchio, 1 617 €":
+                          - generic [ref=f15e1814] [cursor=pointer]:
+                            - generic [ref=f15e1815]: Hébergement ⋅ Porto-Vecchio, 1 617 €
+                            - text: 1 617 €
+                        - button "Villa ⋅ Porto-Vecchio, 2 945 €":
+                          - generic [ref=f15e1822] [cursor=pointer]:
+                            - generic [ref=f15e1823]: Villa ⋅ Porto-Vecchio, 2 945 €
+                            - text: 2 945 €
+                        - button "Hébergement ⋅ Lecci, 1 785 €":
+                          - generic [ref=f15e1830] [cursor=pointer]:
+                            - generic [ref=f15e1831]: Hébergement ⋅ Lecci, 1 785 €
+                            - text: 1 785 €
+                        - button "Villa ⋅ Conca, 1 552 €":
+                          - generic [ref=f15e1838] [cursor=pointer]:
+                            - generic [ref=f15e1839]: Villa ⋅ Conca, 1 552 €
+                            - text: 1 552 €
+                        - button "Hébergement ⋅ Porto-Vecchio, 1 360 €":
+                          - generic [ref=f15e1846] [cursor=pointer]:
+                            - generic [ref=f15e1847]: Hébergement ⋅ Porto-Vecchio, 1 360 €
+                            - text: 1 360 €
+                        - button "Hébergement ⋅ Lecci, 1 208 €":
+                          - generic [ref=f15e1854] [cursor=pointer]:
+                            - generic [ref=f15e1855]: Hébergement ⋅ Lecci, 1 208 €
+                            - text: 1 208 €
+                        - button "Hébergement ⋅ Porto-Vecchio, 1 825 €":
+                          - generic [ref=f15e1862] [cursor=pointer]:
+                            - generic [ref=f15e1863]: Hébergement ⋅ Porto-Vecchio, 1 825 €
+                            - text: 1 825 €
+                        - button "Hébergement ⋅ Porto-Vecchio, 1 633 €":
+                          - generic [ref=f15e1870] [cursor=pointer]:
+                            - generic [ref=f15e1871]: Hébergement ⋅ Porto-Vecchio, 1 633 €
+                            - text: 1 633 €
+                        - button "Appartement ⋅ Porto-Vecchio, 1 505 €":
+                          - generic [ref=f15e1878] [cursor=pointer]:
+                            - generic [ref=f15e1879]: Appartement ⋅ Porto-Vecchio, 1 505 €
+                            - text: 1 505 €
+                        - button "Appartement ⋅ Lecci, 1 451 €":
+                          - generic [ref=f15e1886] [cursor=pointer]:
+                            - generic [ref=f15e1887]: Appartement ⋅ Lecci, 1 451 €
+                            - text: 1 451 €
+                        - button "Appartement ⋅ Porto-Vecchio, 2 153 €":
+                          - generic [ref=f15e1894] [cursor=pointer]:
+                            - generic [ref=f15e1895]: Appartement ⋅ Porto-Vecchio, 2 153 €
+                            - text: 2 153 €
+                        - button "Villa ⋅ Bonifacio, 1 579 €":
+                          - generic [ref=f15e1902] [cursor=pointer]:
+                            - generic [ref=f15e1903]: Villa ⋅ Bonifacio, 1 579 €
+                            - text: 1 579 €
+                        - button "Villa ⋅ Lecci, 2 323 €":
+                          - generic [ref=f15e1910] [cursor=pointer]:
+                            - generic [ref=f15e1911]: Villa ⋅ Lecci, 2 323 €
+                            - text: 2 323 €
+                        - button "Appartement ⋅ Porto-Vecchio, 1 521 €":
+                          - generic [ref=f15e1918] [cursor=pointer]:
+                            - generic [ref=f15e1919]: Appartement ⋅ Porto-Vecchio, 1 521 €
+                            - text: 1 521 €
+                        - button "Porto-Vecchio":
+                          - generic "Porto-Vecchio" [ref=f15e1921] [cursor=pointer]
+                        - button
+                - iframe [ref=f15e1934]:
+                  
+        - contentinfo [ref=f15e1940]:
+          - generic [ref=f15e1941]:
+            - heading "Pied de page du site" [level=2] [ref=f15e1943]
+            - generic [ref=f15e1944]:
+              - generic [ref=f15e1945]:
+                - heading "Assistance" [level=3] [ref=f15e1946]
+                - list [ref=f15e1947]:
+                  - listitem [ref=f15e1948]:
+                    - link "Centre d'aide" [ref=f15e1949] [cursor=pointer]:
+                      - /url: /help/home?from=footer
+                  - listitem [ref=f15e1950]:
+                    - link "Assistance sécurité" [ref=f15e1951] [cursor=pointer]:
+                      - /url: /help/contact-us?entry=DESKTOP_FOOTER_SAFETY
+                  - listitem [ref=f15e1952]:
+                    - link "AirCover" [ref=f15e1953] [cursor=pointer]:
+                      - /url: /aircover
+                  - listitem [ref=f15e1954]:
+                    - link "Lutte contre la discrimination" [ref=f15e1955] [cursor=pointer]:
+                      - /url: /against-discrimination
+                  - listitem [ref=f15e1956]:
+                    - link "Assistance handicap" [ref=f15e1957] [cursor=pointer]:
+                      - /url: /accessibility
+                  - listitem [ref=f15e1958]:
+                    - link "Options d'annulation" [ref=f15e1959] [cursor=pointer]:
+                      - /url: /help/article/2701/extenuating-circumstances-policy-and-the-coronavirus-covid19
+                  - listitem [ref=f15e1960]:
+                    - link "J'ai un problème de voisinage" [ref=f15e1961] [cursor=pointer]:
+                      - /url: /neighbors
+              - generic [ref=f15e1962]:
+                - heading "Accueil de voyageurs" [level=3] [ref=f15e1963]
+                - list [ref=f15e1964]:
+                  - listitem [ref=f15e1965]:
+                    - link "Mettez votre logement sur Airbnb" [ref=f15e1966] [cursor=pointer]:
+                      - /url: /host/homes?from_footer=1
+                  - listitem [ref=f15e1967]:
+                    - link "Proposez votre expérience sur Airbnb" [ref=f15e1968] [cursor=pointer]:
+                      - /url: /host/experiences
+                  - listitem [ref=f15e1969]:
+                    - link "Proposez votre service sur Airbnb" [ref=f15e1970] [cursor=pointer]:
+                      - /url: /host/services
+                  - listitem [ref=f15e1971]:
+                    - link "AirCover pour les hôtes" [ref=f15e1972] [cursor=pointer]:
+                      - /url: /aircover-for-hosts
+                  - listitem [ref=f15e1973]:
+                    - link "Ressources pour les hôtes" [ref=f15e1974] [cursor=pointer]:
+                      - /url: /resources
+                  - listitem [ref=f15e1975]:
+                    - link "Forum de la communauté" [ref=f15e1976] [cursor=pointer]:
+                      - /url: https://community.withairbnb.com/t5/Community-Center-FR/ct-p/community-center-fr
+                  - listitem [ref=f15e1977]:
+                    - link "Hébergement responsable" [ref=f15e1978] [cursor=pointer]:
+                      - /url: /help/responsible-hosting
+                  - listitem [ref=f15e1979]:
+                    - link "Participez à un cours gratuit pour les hôtes" [ref=f15e1980] [cursor=pointer]:
+                      - /url: /e/intro-to-hosting
+                  - listitem [ref=f15e1981]:
+                    - link "Trouver un co‑hôte" [ref=f15e1982] [cursor=pointer]:
+                      - /url: /host/co-hosts
+                  - listitem [ref=f15e1983]:
+                    - link "Parrainer un hôte" [ref=f15e1984] [cursor=pointer]:
+                      - /url: /refer
+              - generic [ref=f15e1985]:
+                - heading "Airbnb" [level=3] [ref=f15e1986]
+                - list [ref=f15e1987]:
+                  - listitem [ref=f15e1988]:
+                    - link "Édition été 2026" [ref=f15e1989] [cursor=pointer]:
+                      - /url: /release
+                  - listitem [ref=f15e1990]:
+                    - link "Newsroom" [ref=f15e1991] [cursor=pointer]:
+                      - /url: /press/news
+                  - listitem [ref=f15e1992]:
+                    - link "Carrières" [ref=f15e1993] [cursor=pointer]:
+                      - /url: /careers
+                  - listitem [ref=f15e1994]:
+                    - link "Investisseurs" [ref=f15e1995] [cursor=pointer]:
+                      - /url: https://investors.airbnb.com
+                  - listitem [ref=f15e1996]:
+                    - link "Cartes cadeaux" [ref=f15e1997] [cursor=pointer]:
+                      - /url: /giftcards
+                  - listitem [ref=f15e1998]:
+                    - link "Séjours d'urgence Airbnb.org" [ref=f15e1999] [cursor=pointer]:
+                      - /url: https://www.airbnb.org?locale=fr
+            - generic [ref=f15e2000]:
+              - generic [ref=f15e2001]: Section de pied de page
+              - generic [ref=f15e2003]:
+                - generic [ref=f15e2005]:
+                  - generic [ref=f15e2006]: © 2026 Airbnb, Inc.
+                  - generic [ref=f15e2007]:
+                    - generic [ref=f15e2008]: ·
+                    - list [ref=f15e2011]:
+                      - listitem [ref=f15e2012]:
+                        - link "Confidentialité" [ref=f15e2013] [cursor=pointer]:
+                          - /url: /terms/privacy_policy
+                        - generic [ref=f15e2014]: ·
+                      - listitem [ref=f15e2015]:
+                        - link "Conditions générales" [ref=f15e2016] [cursor=pointer]:
+                          - /url: /terms
+                        - generic [ref=f15e2017]: ·
+                      - listitem [ref=f15e2018]:
+                        - link "Fonctionnement du site" [ref=f15e2019] [cursor=pointer]:
+                          - /url: /fonctionnement_du_site
+                        - generic [ref=f15e2020]: ·
+                      - listitem [ref=f15e2021]:
+                        - link "Infos sur l'entreprise" [ref=f15e2022] [cursor=pointer]:
+                          - /url: /about/company-details
+                - generic [ref=f15e2023]:
+                  - generic [ref=f15e2025]:
+                    - button "Sélectionnez une langue" [ref=f15e2027] [cursor=pointer]:
+                      - generic [ref=f15e2028]: Français (FR)
+                    - button "Sélectionnez une devise" [ref=f15e2030] [cursor=pointer]:
+                      - generic [ref=f15e2032]:
+                        - generic [ref=f15e2033]: €
+                        - generic [ref=f15e2034]: EUR
+                  - list [ref=f15e2036]:
+                    - listitem [ref=f15e2037]:
+                      - link "Accéder à Facebook" [ref=f15e2038] [cursor=pointer]:
+                        - /url: https://www.facebook.com/AirbnbFrance
+                    - listitem [ref=f15e2042]:
+                      - link "Accéder à Twitter" [ref=f15e2043] [cursor=pointer]:
+                        - /url: https://twitter.com/airbnb_fr
+                    - listitem [ref=f15e2047]:
+                      - link "Accéder à Instagram" [ref=f15e2048] [cursor=pointer]:
+                        - /url: https://instagram.com/airbnb
+      - generic [ref=f15e2054]:
+        - generic [ref=f15e2055]:
+          - heading "Aidez-nous à améliorer votre expérience" [level=1] [ref=f15e2057]
+          - paragraph [ref=f15e2059]:
+            - text: Nous utilisons des cookies et d'autres technologies pour personnaliser notre contenu, mesurer l'efficacité de nos publicités et vous offrir une expérience optimisée. Certains cookies sont nécessaires au fonctionnement du site et ne peuvent pas être désactivés. En acceptant, vous acceptez la
+            - link "Politique d'Airbnb en matière de cookies" [ref=f15e2060] [cursor=pointer]:
+              - /url: /terms/cookie_policy
+            - text: . Vous pouvez mettre à jour vos préférences à tout moment.
+        - generic [ref=f15e2061]:
+          - button "Accepter tout" [active] [ref=f15e2063] [cursor=pointer]
+          - button "Uniquement les cookies nécessaires" [ref=f15e2065] [cursor=pointer]
+          - button "Gérer les préférences" [ref=f15e2067] [cursor=pointer]
+    - generic [ref=f15e2068]: Chargement

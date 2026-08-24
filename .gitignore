@@ -22,3 +22,4 @@ proptest-regressions/
 # Mutation testing
 mutants.out/
 mutants.out.old/
+.gitnexus

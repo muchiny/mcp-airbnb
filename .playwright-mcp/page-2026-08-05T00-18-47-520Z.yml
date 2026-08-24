@@ -1,0 +1,171 @@
+- generic [ref=e1]:
+  - link "Aller directement au contenu" [ref=e2] [cursor=pointer]:
+    - /url: "#site-content"
+  - alert
+  - generic [ref=e14]:
+    - banner [ref=e15]:
+      - generic [ref=e19]:
+        - link "Page d'accueil Airbnb" [ref=e20] [cursor=pointer]:
+          - /url: /
+        - search [ref=e24]:
+          - generic:
+            - generic:
+              - generic:
+                - tablist:
+                  - tab "Logements" [selected]
+                  - tab "Expériences, nouveautés":
+                    - generic:
+                      - generic:
+                        - generic:
+                          - text: NOUVEAU
+                          - generic: NOUVEAU
+                  - tab "Services, nouveautés":
+                    - generic:
+                      - generic:
+                        - generic:
+                          - text: NOUVEAU
+                          - generic: NOUVEAU
+              - search "Commencez votre recherche" [ref=e26] [cursor=pointer]:
+                - generic [ref=e28]:
+                  - button "Destination" [disabled] [ref=e29]
+                  - button "Arrivée/Départ" [disabled] [ref=e35]
+                  - button "Voyageurs" [disabled] [ref=e40]
+        - navigation "Profil" [ref=e53]:
+          - generic [ref=e54]:
+            - link "Devenir hôte" [ref=e55] [cursor=pointer]:
+              - /url: "#guest-header-become-a-host-menu"
+            - link "Choisissez une langue et une devise" [ref=e58] [cursor=pointer]:
+              - /url: "#simple-header-locale-menu-combined"
+          - generic [ref=e63]:
+            - link "Menu de navigation principal" [ref=e64] [cursor=pointer]:
+              - /url: "#guest-header-dropdownmenu"
+            - link "Fermer":
+              - /url: "#"
+    - main [ref=e70]:
+      - generic [ref=e71]:
+        - heading "Résultats de recherche; Over 1,000 stays" [active] [level=1] [ref=e78]
+        - generic "Chargement" [ref=e87]
+      - application "Google Map" [ref=e454]
+    - contentinfo [ref=e461]:
+      - generic [ref=e462]:
+        - heading "Pied de page du site" [level=2] [ref=e464]
+        - generic [ref=e465]:
+          - generic [ref=e466]:
+            - heading "Assistance" [level=3] [ref=e467]
+            - list [ref=e468]:
+              - listitem [ref=e469]:
+                - link "Centre d'aide" [ref=e470] [cursor=pointer]:
+                  - /url: /help/home?from=footer
+              - listitem [ref=e471]:
+                - link "Assistance sécurité" [ref=e472] [cursor=pointer]:
+                  - /url: /help/contact-us?entry=DESKTOP_FOOTER_SAFETY
+              - listitem [ref=e473]:
+                - link "AirCover" [ref=e474] [cursor=pointer]:
+                  - /url: /aircover
+              - listitem [ref=e475]:
+                - link "Lutte contre la discrimination" [ref=e476] [cursor=pointer]:
+                  - /url: /against-discrimination
+              - listitem [ref=e477]:
+                - link "Assistance handicap" [ref=e478] [cursor=pointer]:
+                  - /url: /accessibility
+              - listitem [ref=e479]:
+                - link "Options d'annulation" [ref=e480] [cursor=pointer]:
+                  - /url: /help/article/2701/extenuating-circumstances-policy-and-the-coronavirus-covid19
+              - listitem [ref=e481]:
+                - link "J'ai un problème de voisinage" [ref=e482] [cursor=pointer]:
+                  - /url: /neighbors
+          - generic [ref=e483]:
+            - heading "Accueil de voyageurs" [level=3] [ref=e484]
+            - list [ref=e485]:
+              - listitem [ref=e486]:
+                - link "Mettez votre logement sur Airbnb" [ref=e487] [cursor=pointer]:
+                  - /url: /host/homes?from_footer=1
+              - listitem [ref=e488]:
+                - link "Proposez votre expérience sur Airbnb" [ref=e489] [cursor=pointer]:
+                  - /url: /host/experiences
+              - listitem [ref=e490]:
+                - link "Proposez votre service sur Airbnb" [ref=e491] [cursor=pointer]:
+                  - /url: /host/services
+              - listitem [ref=e492]:
+                - link "AirCover pour les hôtes" [ref=e493] [cursor=pointer]:
+                  - /url: /aircover-for-hosts
+              - listitem [ref=e494]:
+                - link "Ressources pour les hôtes" [ref=e495] [cursor=pointer]:
+                  - /url: /resources
+              - listitem [ref=e496]:
+                - link "Forum de la communauté" [ref=e497] [cursor=pointer]:
+                  - /url: https://community.withairbnb.com/t5/Community-Center-FR/ct-p/community-center-fr
+              - listitem [ref=e498]:
+                - link "Hébergement responsable" [ref=e499] [cursor=pointer]:
+                  - /url: /help/responsible-hosting
+              - listitem [ref=e500]:
+                - link "Participez à un cours gratuit pour les hôtes" [ref=e501] [cursor=pointer]:
+                  - /url: /e/intro-to-hosting
+              - listitem [ref=e502]:
+                - link "Trouver un co‑hôte" [ref=e503] [cursor=pointer]:
+                  - /url: /host/co-hosts
+              - listitem [ref=e504]:
+                - link "Parrainer un hôte" [ref=e505] [cursor=pointer]:
+                  - /url: /refer
+          - generic [ref=e506]:
+            - heading "Airbnb" [level=3] [ref=e507]
+            - list [ref=e508]:
+              - listitem [ref=e509]:
+                - link "Édition été 2026" [ref=e510] [cursor=pointer]:
+                  - /url: /release
+              - listitem [ref=e511]:
+                - link "Newsroom" [ref=e512] [cursor=pointer]:
+                  - /url: /press/news
+              - listitem [ref=e513]:
+                - link "Carrières" [ref=e514] [cursor=pointer]:
+                  - /url: /careers
+              - listitem [ref=e515]:
+                - link "Investisseurs" [ref=e516] [cursor=pointer]:
+                  - /url: https://investors.airbnb.com
+              - listitem [ref=e517]:
+                - link "Cartes cadeaux" [ref=e518] [cursor=pointer]:
+                  - /url: /giftcards
+              - listitem [ref=e519]:
+                - link "Séjours d'urgence Airbnb.org" [ref=e520] [cursor=pointer]:
+                  - /url: https://www.airbnb.org?locale=fr
+        - generic [ref=e521]:
+          - generic [ref=e522]: Section de pied de page
+          - generic [ref=e524]:
+            - generic [ref=e526]:
+              - generic [ref=e527]: © 2026 Airbnb, Inc.
+              - generic [ref=e528]:
+                - generic [ref=e529]: ·
+                - list [ref=e532]:
+                  - listitem [ref=e533]:
+                    - link "Confidentialité" [ref=e534] [cursor=pointer]:
+                      - /url: /terms/privacy_policy
+                    - generic [ref=e535]: ·
+                  - listitem [ref=e536]:
+                    - link "Conditions générales" [ref=e537] [cursor=pointer]:
+                      - /url: /terms
+                    - generic [ref=e538]: ·
+                  - listitem [ref=e539]:
+                    - link "Fonctionnement du site" [ref=e540] [cursor=pointer]:
+                      - /url: /fonctionnement_du_site
+                    - generic [ref=e541]: ·
+                  - listitem [ref=e542]:
+                    - link "Infos sur l'entreprise" [ref=e543] [cursor=pointer]:
+                      - /url: /about/company-details
+            - generic [ref=e544]:
+              - generic [ref=e546]:
+                - button "Sélectionnez une langue" [ref=e548] [cursor=pointer]:
+                  - generic [ref=e549]: Français (FR)
+                - button "Sélectionnez une devise" [ref=e551] [cursor=pointer]:
+                  - generic [ref=e553]:
+                    - generic [ref=e554]: €
+                    - generic [ref=e555]: EUR
+              - list [ref=e557]:
+                - listitem [ref=e558]:
+                  - link "Accéder à Facebook" [ref=e559] [cursor=pointer]:
+                    - /url: https://www.facebook.com/AirbnbFrance
+                - listitem [ref=e563]:
+                  - link "Accéder à Twitter" [ref=e564] [cursor=pointer]:
+                    - /url: https://twitter.com/airbnb_fr
+                - listitem [ref=e568]:
+                  - link "Accéder à Instagram" [ref=e569] [cursor=pointer]:
+                    - /url: https://instagram.com/airbnb

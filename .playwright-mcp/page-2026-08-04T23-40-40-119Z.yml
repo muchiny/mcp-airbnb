@@ -1,0 +1,43 @@
+- generic [active] [ref=f4e1]:
+  - link "Aller directement au contenu" [ref=f4e2] [cursor=pointer]:
+    - /url: "#site-content"
+  - alert
+  - generic [ref=f4e18]:
+    - generic [ref=f4e24]:
+      - link "Page d'accueil Airbnb" [ref=f4e26] [cursor=pointer]:
+        - /url: /
+      - search [ref=f4e30]:
+        - generic:
+          - generic:
+            - generic:
+              - tablist:
+                - tab "Logements" [selected]
+                - tab "Expériences, nouveautés":
+                  - generic:
+                    - generic:
+                      - generic:
+                        - text: NOUVEAU
+                        - generic: NOUVEAU
+                - tab "Services, nouveautés":
+                  - generic:
+                    - generic:
+                      - generic:
+                        - text: NOUVEAU
+                        - generic: NOUVEAU
+            - search "Commencez votre recherche" [ref=f4e32] [cursor=pointer]:
+              - generic [ref=f4e34]:
+                - button "Destination" [disabled] [ref=f4e35]
+                - button "Arrivée/Départ" [disabled] [ref=f4e41]
+                - button "Voyageurs" [disabled] [ref=f4e46]
+      - navigation "Profil" [ref=f4e58]:
+        - generic [ref=f4e59]:
+          - link "Devenir hôte" [ref=f4e60] [cursor=pointer]:
+            - /url: "#guest-header-become-a-host-menu"
+          - link "Choisissez une langue et une devise" [ref=f4e63] [cursor=pointer]:
+            - /url: "#simple-header-locale-menu-combined"
+        - generic [ref=f4e68]:
+          - link "Menu de navigation principal" [ref=f4e69] [cursor=pointer]:
+            - /url: "#guest-header-dropdownmenu"
+          - link "Fermer":
+            - /url: "#"
+    - main [ref=f4e74]
