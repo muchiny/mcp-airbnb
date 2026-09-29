@@ -311,6 +311,8 @@ pub fn make_neighborhood_stats(location: &str) -> NeighborhoodStats {
         average_rating: None,
         property_type_distribution: vec![],
         superhost_percentage: None,
+        currency: None,
+        priced_listings: 0,
     }
 }
 
@@ -323,9 +325,260 @@ pub fn make_occupancy_estimate(listing_id: &str) -> OccupancyEstimate {
         occupied_days: 0,
         available_days: 0,
         occupancy_rate: 0.0,
+        past_days_excluded: 0,
+        blocked_days_excluded: 0,
+        currency: "$".into(),
         average_available_price: None,
         weekend_avg_price: None,
         weekday_avg_price: None,
         monthly_breakdown: vec![],
+    }
+}
+
+/// Root of the anonymized Airbnb captures committed for tests
+/// (see `tests/fixtures/airbnb/2026-09/README.md`).
+pub const FIXTURE_DIR: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/tests/fixtures/airbnb/2026-09/"
+);
+
+/// Load a committed, anonymized Airbnb capture as JSON.
+///
+/// `rel` is relative to `FIXTURE_DIR`, e.g. `"graphql/StaysSearch.response.json"`.
+/// Panics with the offending path when the file is missing or is not JSON
+/// (this module only exists in test builds).
+pub fn fixture_json(rel: &str) -> serde_json::Value {
+    let path = format!("{FIXTURE_DIR}{rel}");
+    let text = std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("cannot read fixture {path}: {e}"));
+    serde_json::from_str(&text).unwrap_or_else(|e| panic!("fixture {path} is not valid JSON: {e}"))
+}
+
+/// Wrap query payloads the way Airbnb embeds them in a page:
+/// `<script id="data-deferred-state-0">{"<wrapper_key>": [[key, payload], ...]}</script>`.
+/// `wrapper_key` is `niobeClientData` or `niobeMinimalClientData`.
+pub fn niobe_page(wrapper_key: &str, entries: &[(&str, &serde_json::Value)]) -> String {
+    let pairs: Vec<serde_json::Value> = entries
+        .iter()
+        .map(|(key, payload)| {
+            serde_json::Value::Array(vec![
+                serde_json::Value::String((*key).to_string()),
+                (*payload).clone(),
+            ])
+        })
+        .collect();
+    let mut state = serde_json::Map::new();
+    state.insert(wrapper_key.to_string(), serde_json::Value::Array(pairs));
+    format!(
+        r#"<html><head><script id="data-deferred-state-0" type="application/json">{}</script></head><body></body></html>"#,
+        serde_json::Value::Object(state)
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const COMMITTED_FIXTURES: [&str; 8] = [
+        "graphql/StaysSearch.request.json",
+        "graphql/StaysSearch.response.json",
+        "graphql/StaysSearch.validation_error.json",
+        "graphql/StaysPdpReviewsQuery.response.json",
+        "graphql/PdpAvailabilityCalendar.response.json",
+        "graphql/StaysPdpSections.request.json",
+        "graphql/StaysPdpSections.apartment.response.json",
+        "graphql/StaysPdpSections.hotel.response.json",
+    ];
+
+    #[test]
+    fn every_committed_fixture_loads_as_json() {
+        for rel in COMMITTED_FIXTURES {
+            assert!(fixture_json(rel).is_object(), "{rel} is not a JSON object");
+        }
+    }
+
+    #[test]
+    fn fixtures_are_anonymized() {
+        for rel in COMMITTED_FIXTURES {
+            let text = std::fs::read_to_string(format!("{FIXTURE_DIR}{rel}")).unwrap();
+            assert!(
+                !text.contains("a0.muscache.com"),
+                "{rel} still contains Airbnb image URLs"
+            );
+            assert!(
+                !text.contains("/users/show/"),
+                "{rel} still contains profile links"
+            );
+            let real_uuids: Vec<&str> = uuids_in(&text)
+                .into_iter()
+                .filter(|uuid| *uuid != ZERO_UUID)
+                .collect();
+            assert!(
+                real_uuids.is_empty(),
+                "{rel} still contains {} non-zero UUID(s) (session, share or trace ids)",
+                real_uuids.len()
+            );
+            let json: serde_json::Value = serde_json::from_str(&text).unwrap();
+            let mut host_ids = Vec::new();
+            collect_string_values(&json, "hostId", &mut host_ids);
+            for host_id in host_ids {
+                assert!(
+                    is_fake_user_id(&host_id),
+                    "{rel} still contains a real numeric hostId"
+                );
+            }
+        }
+    }
+
+    const ZERO_UUID: &str = "00000000-0000-0000-0000-000000000000";
+
+    /// Every substring shaped like a UUID (8-4-4-4-12 hex digits).
+    fn uuids_in(text: &str) -> Vec<&str> {
+        const GROUPS: [usize; 5] = [8, 4, 4, 4, 12];
+        let bytes = text.as_bytes();
+        let is_uuid_at = |start: usize| {
+            let mut i = start;
+            for (n, len) in GROUPS.iter().enumerate() {
+                if n > 0 {
+                    if bytes.get(i) != Some(&b'-') {
+                        return false;
+                    }
+                    i += 1;
+                }
+                for _ in 0..*len {
+                    if !bytes.get(i).is_some_and(u8::is_ascii_hexdigit) {
+                        return false;
+                    }
+                    i += 1;
+                }
+            }
+            true
+        };
+        (0..bytes.len().saturating_sub(35))
+            .filter(|&start| text.is_char_boundary(start) && is_uuid_at(start))
+            .map(|start| &text[start..start + 36])
+            .collect()
+    }
+
+    /// Collect every string value stored under `key`, at any depth.
+    fn collect_string_values(value: &serde_json::Value, key: &str, out: &mut Vec<String>) {
+        match value {
+            serde_json::Value::Object(map) => {
+                for (k, v) in map {
+                    if k == key
+                        && let Some(s) = v.as_str()
+                    {
+                        out.push(s.to_string());
+                    }
+                    collect_string_values(v, key, out);
+                }
+            }
+            serde_json::Value::Array(items) => {
+                for item in items {
+                    collect_string_values(item, key, out);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// `scripts/anonymize_fixtures.py` maps real user ids to 1000001, 1000002, ...
+    fn is_fake_user_id(id: &str) -> bool {
+        id.parse::<u64>()
+            .is_ok_and(|n| (1_000_001..2_000_000).contains(&n))
+    }
+
+    #[test]
+    fn uuids_in_finds_every_uuid_shape() {
+        let text = "a=12345678-9abc-def0-1234-56789abcdef0&b=00000000-0000-0000-0000-000000000000 \
+                    not-a-uuid 12345678-9abc-def0-1234";
+        assert_eq!(
+            uuids_in(text),
+            vec!["12345678-9abc-def0-1234-56789abcdef0", ZERO_UUID]
+        );
+        assert!(uuids_in("é00000000-0000-0000-0000-00000000000").is_empty());
+    }
+
+    #[test]
+    fn collect_string_values_walks_nested_objects_and_arrays() {
+        let json = serde_json::json!({
+            "hostId": "1",
+            "a": [{"hostId": "2"}, {"b": {"hostId": "3", "other": "4"}}],
+            "c": {"hostId": 5}
+        });
+        let mut found = Vec::new();
+        collect_string_values(&json, "hostId", &mut found);
+        found.sort();
+        assert_eq!(found, vec!["1", "2", "3"]);
+    }
+
+    #[test]
+    fn is_fake_user_id_accepts_only_the_anonymizer_range() {
+        assert!(is_fake_user_id("1000001"));
+        assert!(is_fake_user_id("1000074"));
+        assert!(!is_fake_user_id("7654321"));
+        assert!(!is_fake_user_id("1000000"));
+        assert!(!is_fake_user_id("RGVtYW5kVXNlcjoxMDAwMDAy"));
+    }
+
+    #[test]
+    #[should_panic(expected = "cannot read fixture")]
+    fn missing_fixture_panics_with_its_path() {
+        let _ = fixture_json("graphql/does-not-exist.json");
+    }
+}
+
+#[cfg(test)]
+mod p1b_fixture_tests {
+    use super::{fixture_json, niobe_page};
+    use serde_json::Value;
+
+    #[test]
+    fn p1b_pdp_fixtures_keep_the_real_shape() {
+        for (file, pdp_type) in [
+            ("p1b/pdp_hotel.json", "HOTEL"),
+            ("p1b/pdp_apartment.json", "MARKETPLACE"),
+        ] {
+            let json = fixture_json(file);
+            let sections = json
+                .pointer("/data/presentation/stayProductDetailPage/sections/sections")
+                .and_then(Value::as_array)
+                .expect("sections array");
+            assert!(sections.len() >= 10, "{file}: {} sections", sections.len());
+            assert_eq!(
+                json.pointer("/data/presentation/stayProductDetailPage/sections/metadata/pdpType")
+                    .and_then(Value::as_str),
+                Some(pdp_type)
+            );
+        }
+        let apartment = fixture_json("p1b/pdp_apartment.json").to_string();
+        assert!(apartment.contains("\"Host A\""));
+        assert!(apartment.contains("Host bio redacted."));
+    }
+
+    #[test]
+    fn p1b_search_and_calendar_fixtures_keep_the_real_shape() {
+        let search = fixture_json("p1b/stays_search.json");
+        let results = search
+            .pointer("/data/presentation/staysSearch/results/searchResults")
+            .and_then(Value::as_array)
+            .expect("searchResults");
+        assert_eq!(results.len(), 3);
+        let calendar = fixture_json("p1b/calendar.json");
+        let months = calendar
+            .pointer("/data/merlin/pdpAvailabilityCalendar/calendarMonths")
+            .and_then(Value::as_array)
+            .expect("calendarMonths");
+        assert_eq!(months.len(), 2);
+    }
+
+    #[test]
+    fn niobe_page_wraps_payloads_like_airbnb() {
+        let payload = serde_json::json!({"data": {"x": 1}});
+        let html = niobe_page("niobeMinimalClientData", &[("StaysSearch:{}", &payload)]);
+        assert!(html.contains(r#"<script id="data-deferred-state-0" type="application/json">"#));
+        assert!(
+            html.contains(r#"{"niobeMinimalClientData":[["StaysSearch:{}",{"data":{"x":1}}]]}"#)
+        );
     }
 }

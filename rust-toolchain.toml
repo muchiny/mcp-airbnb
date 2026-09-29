@@ -1,2 +1,7 @@
 [toolchain]
-channel = "stable"
+# Pinned to the MSRV declared in Cargo.toml (`rust-version`). CI and local
+# builds therefore test the version we promise. Preview newer lints with
+# `cargo +stable clippy`. Fuzzing uses `cargo +nightly fuzz`.
+channel = "1.93"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

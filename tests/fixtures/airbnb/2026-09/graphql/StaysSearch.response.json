@@ -1,0 +1,3470 @@
+{
+ "data": {
+  "presentation": {
+   "__typename": "RootPresentationContainer",
+   "staysSearch": {
+    "__typename": "StaysSearchPresentation",
+    "results": {
+     "__typename": "StaysSearchResponse",
+     "searchResults": [
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.95 out of 5 average rating,  74 reviews",
+       "avgRatingLocalized": "4.95 (74)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-11-06",
+        "checkout": "2026-11-11",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": null,
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$2,245 total",
+         "price": "$2,245",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $446.94",
+             "priceString": "$2,234.69",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$10.01",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$2,244.70",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$2,244.70 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [
+        {
+         "__typename": "ExploreFormattedBadge",
+         "icon": null,
+         "loggingContext": {
+          "__typename": "ExploreFormattedBadgeLoggingContext",
+          "badgeType": "GUEST_FAVORITE"
+         },
+         "style": "LOUD_ROUNDED_PILL",
+         "text": "Guest favorite",
+         "textAccessibilityLabel": "Guest favorite",
+         "textColor": "#000000"
+        }
+       ],
+       "coverPhotoIds": null,
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2221677460",
+         "picture": "https://example.com/fixture-image/1.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2221678190",
+         "picture": "https://example.com/fixture-image/2.jpg"
+        }
+       ],
+       "paymentMessages": [
+        {
+         "__typename": "PaymentMessage",
+         "text": "Free cancellation",
+         "type": "FREE_CANCELLATION_HIGHLIGHT",
+         "displayType": "GREY_PILL"
+        }
+       ],
+       "title": "Apartment in 1st Arrondissement",
+       "subtitle": "La Suite - Terreaux IV - 2 bedrooms",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "La Suite - Terreaux IV - 2 bedrooms"
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Nov 6 – 11",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Business host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Nov 6 – 11",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6MTM0NDAxNjA3NDU3NjYxMTk1NQ==",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.7677,
+          "longitude": 4.8325
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "La Suite - Terreaux IV - 2 bedrooms"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": []
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.85 out of 5 average rating,  155 reviews",
+       "avgRatingLocalized": "4.85 (155)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-10-08",
+        "checkout": "2026-10-13",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": null,
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$797 total",
+         "price": "$797",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $158.39",
+             "priceString": "$791.93",
+             "explanationData": null
+            },
+            {
+             "__typename": "DiscountedExplanationLineItem",
+             "description": "Long stay discount",
+             "priceString": "-$34.70",
+             "originalPriceString": null,
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$39.39",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$796.62",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$796.62 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [
+        {
+         "__typename": "ExploreFormattedBadge",
+         "icon": null,
+         "loggingContext": {
+          "__typename": "ExploreFormattedBadgeLoggingContext",
+          "badgeType": "GUEST_FAVORITE"
+         },
+         "style": "LOUD_ROUNDED_PILL",
+         "text": "Guest favorite",
+         "textAccessibilityLabel": "Guest favorite",
+         "textColor": "#000000"
+        }
+       ],
+       "coverPhotoIds": null,
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2094738050",
+         "picture": "https://example.com/fixture-image/3.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2094738047",
+         "picture": "https://example.com/fixture-image/4.jpg"
+        }
+       ],
+       "paymentMessages": [
+        {
+         "__typename": "PaymentMessage",
+         "text": "Free cancellation",
+         "type": "FREE_CANCELLATION_HIGHLIGHT",
+         "displayType": "GREY_PILL"
+        }
+       ],
+       "title": "Apartment in 6th Arrondissement",
+       "subtitle": "Le Nid Designer Loft 80m² · Air-conditioned · Home Cinema",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "Le Nid Designer Loft 80m² · Air-conditioned · Home Cinema"
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 8 – 13",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Individual host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 8 – 13",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6OTY4NzM0MTAxMjEzMjkwODY1",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.7654,
+          "longitude": 4.8566
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "Le Nid Designer Loft 80m² · Air-conditioned · Home Cinema"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": []
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.89 out of 5 average rating,  423 reviews",
+       "avgRatingLocalized": "4.89 (423)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-12-13",
+        "checkout": "2026-12-18",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": null,
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$815 total",
+         "price": "$815",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $158.62",
+             "priceString": "$793.08",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$21.27",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$814.35",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$814.35 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [
+        {
+         "__typename": "ExploreFormattedBadge",
+         "icon": null,
+         "loggingContext": {
+          "__typename": "ExploreFormattedBadgeLoggingContext",
+          "badgeType": "GUEST_FAVORITE"
+         },
+         "style": "LOUD_ROUNDED_PILL",
+         "text": "Guest favorite",
+         "textAccessibilityLabel": "Guest favorite",
+         "textColor": "#000000"
+        }
+       ],
+       "coverPhotoIds": null,
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "17112860",
+         "picture": "https://example.com/fixture-image/5.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "17112861",
+         "picture": "https://example.com/fixture-image/6.jpg"
+        }
+       ],
+       "paymentMessages": [
+        {
+         "__typename": "PaymentMessage",
+         "text": "Free cancellation",
+         "type": "FREE_CANCELLATION_HIGHLIGHT",
+         "displayType": "GREY_PILL"
+        }
+       ],
+       "title": "Apartment in 2nd Arrondissement",
+       "subtitle": "Modern flat in the center of Lyon",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "Modern flat in the center of Lyon"
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Dec 13 – 18",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Individual host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Dec 13 – 18",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6MTkxNzU2MA==",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.75734,
+          "longitude": 4.83178
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "Modern flat in the center of Lyon"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": []
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.95 out of 5 average rating,  146 reviews",
+       "avgRatingLocalized": "4.95 (146)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-10-25",
+        "checkout": "2026-10-30",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": null,
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$553 total",
+         "price": "$553",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $105.36",
+             "priceString": "$526.81",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$25.22",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$552.03",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$552.03 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [
+        {
+         "__typename": "ExploreFormattedBadge",
+         "icon": null,
+         "loggingContext": {
+          "__typename": "ExploreFormattedBadgeLoggingContext",
+          "badgeType": "GUEST_FAVORITE"
+         },
+         "style": "LOUD_ROUNDED_PILL",
+         "text": "Guest favorite",
+         "textAccessibilityLabel": "Guest favorite",
+         "textColor": "#000000"
+        }
+       ],
+       "coverPhotoIds": null,
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "1352061102",
+         "picture": "https://example.com/fixture-image/7.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "1365886984",
+         "picture": "https://example.com/fixture-image/8.jpg"
+        }
+       ],
+       "paymentMessages": [
+        {
+         "__typename": "PaymentMessage",
+         "text": "Free cancellation",
+         "type": "FREE_CANCELLATION_HIGHLIGHT",
+         "displayType": "GREY_PILL"
+        }
+       ],
+       "title": "Condo in 6th Arrondissement",
+       "subtitle": "Studio BEL-MOD BUGEY – Modern Belvedere",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "Studio BEL-MOD BUGEY – Modern Belvedere"
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 25 – 30",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Individual host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 25 – 30",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6NTU2NTk4MjQ5MjkwMTY5MDEx",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.76255,
+          "longitude": 4.86168
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "Studio BEL-MOD BUGEY – Modern Belvedere"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": []
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.87 out of 5 average rating,  97 reviews",
+       "avgRatingLocalized": "4.87 (97)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-10-26",
+        "checkout": "2026-10-31",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": "2108254649",
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$829 total",
+         "price": "$829",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $157.20",
+             "priceString": "$786.02",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$42.35",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$828.37",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$828.37 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [
+        {
+         "__typename": "ExploreFormattedBadge",
+         "icon": null,
+         "loggingContext": {
+          "__typename": "ExploreFormattedBadgeLoggingContext",
+          "badgeType": "GUEST_FAVORITE"
+         },
+         "style": "LOUD_ROUNDED_PILL",
+         "text": "Guest favorite",
+         "textAccessibilityLabel": "Guest favorite",
+         "textColor": "#000000"
+        }
+       ],
+       "coverPhotoIds": [
+        "2108254649"
+       ],
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2108254649",
+         "picture": "https://example.com/fixture-image/9.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2105120126",
+         "picture": "https://example.com/fixture-image/10.jpg"
+        }
+       ],
+       "paymentMessages": [],
+       "title": "Room in 2nd Arrondissement",
+       "subtitle": "Luxury Independent Suite • Breathtaking View •Lyon",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "Luxury Independent Suite • Breathtaking View •Lyon"
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 26 – 31",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Business host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 26 – 31",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6MTM3NDA2Mzk1NzE5NDEzNzIyOQ==",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.76365,
+          "longitude": 4.83808
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "Luxury Independent Suite • Breathtaking View •Lyon"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en-gb"
+       },
+       "priceBreakdownMessages": []
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.92 out of 5 average rating,  354 reviews",
+       "avgRatingLocalized": "4.92 (354)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-11-08",
+        "checkout": "2026-11-13",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": null,
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$685 total",
+         "price": "$685",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $129.71",
+             "priceString": "$648.55",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$35.67",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$684.22",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$684.22 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [
+        {
+         "__typename": "ExploreFormattedBadge",
+         "icon": {
+          "__typename": "ExploreFormattedBadgeIconAsset",
+          "localKey": "SYSTEM_GOLDEN_TROPHY",
+          "remoteUrl": null
+         },
+         "loggingContext": {
+          "__typename": "ExploreFormattedBadgeLoggingContext",
+          "badgeType": "TOP_X_GUEST_FAVORITE"
+         },
+         "style": "LOUD_ROUNDED_PILL",
+         "text": "Guest favorite",
+         "textAccessibilityLabel": "Top guest favorite",
+         "textColor": "#000000"
+        }
+       ],
+       "coverPhotoIds": null,
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2593559374",
+         "picture": "https://example.com/fixture-image/11.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "1881427954",
+         "picture": "https://example.com/fixture-image/12.jpg"
+        }
+       ],
+       "paymentMessages": [
+        {
+         "__typename": "PaymentMessage",
+         "text": "Free cancellation",
+         "type": "FREE_CANCELLATION_HIGHLIGHT",
+         "displayType": "GREY_PILL"
+        }
+       ],
+       "title": "Apartment in 6th Arrondissement",
+       "subtitle": "Charming 2-room apartment Les Halles de Lyon and Part-Dieu train station",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "Charming 2-room apartment Les Halles de Lyon and Part-Dieu train station"
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Nov 8 – 13",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Individual host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Nov 8 – 13",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6MTA3NDAxMjUwODY4ODc0MzMwMg==",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.7635,
+          "longitude": 4.852
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "Charming 2-room apartment Les Halles de Lyon and Part-Dieu train station"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": []
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.97 out of 5 average rating,  216 reviews",
+       "avgRatingLocalized": "4.97 (216)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-11-26",
+        "checkout": "2026-12-01",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": null,
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$2,511 total",
+         "price": "$2,511",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $489.74",
+             "priceString": "$2,448.68",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$61.33",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$2,510.01",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$2,510.01 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [
+        {
+         "__typename": "ExploreFormattedBadge",
+         "icon": {
+          "__typename": "ExploreFormattedBadgeIconAsset",
+          "localKey": "SYSTEM_GOLDEN_TROPHY",
+          "remoteUrl": null
+         },
+         "loggingContext": {
+          "__typename": "ExploreFormattedBadgeLoggingContext",
+          "badgeType": "TOP_X_GUEST_FAVORITE"
+         },
+         "style": "LOUD_ROUNDED_PILL",
+         "text": "Guest favorite",
+         "textAccessibilityLabel": "Top guest favorite",
+         "textColor": "#000000"
+        }
+       ],
+       "coverPhotoIds": null,
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "776170356",
+         "picture": "https://example.com/fixture-image/13.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "80002597",
+         "picture": "https://example.com/fixture-image/14.jpg"
+        }
+       ],
+       "paymentMessages": [
+        {
+         "__typename": "PaymentMessage",
+         "text": "Free cancellation",
+         "type": "FREE_CANCELLATION_HIGHLIGHT",
+         "displayType": "GREY_PILL"
+        }
+       ],
+       "title": "Apartment in 2nd Arrondissement",
+       "subtitle": "Haussmann-style, air-conditioned – top floor, elevator",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "Haussmann-style, air-conditioned – top floor, elevator"
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Nov 26 – Dec 1",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Business host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Nov 26 – Dec 1",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6NTMwMzc3Nw==",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.76098,
+          "longitude": 4.83727
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "Haussmann-style, air-conditioned – top floor, elevator"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": []
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.9 out of 5 average rating,  548 reviews",
+       "avgRatingLocalized": "4.9 (548)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-10-13",
+        "checkout": "2026-10-18",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": "1920402202",
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$501 total",
+         "price": "$501",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $94.90",
+             "priceString": "$474.48",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$25.72",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$500.20",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$500.20 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [
+        {
+         "__typename": "ExploreFormattedBadge",
+         "icon": null,
+         "loggingContext": {
+          "__typename": "ExploreFormattedBadgeLoggingContext",
+          "badgeType": "SUPERHOST"
+         },
+         "style": "MUTED_ROUNDED_PILL",
+         "text": "Superhost",
+         "textAccessibilityLabel": "Superhost",
+         "textColor": "#FFFFFF"
+        }
+       ],
+       "coverPhotoIds": [
+        "1920402202"
+       ],
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "1920402202",
+         "picture": "https://example.com/fixture-image/15.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2130611501",
+         "picture": "https://example.com/fixture-image/16.jpg"
+        }
+       ],
+       "paymentMessages": [
+        {
+         "__typename": "PaymentMessage",
+         "text": "Free cancellation",
+         "type": "FREE_CANCELLATION_HIGHLIGHT",
+         "displayType": "GREY_PILL"
+        }
+       ],
+       "title": "Room in 7th Arrondissement",
+       "subtitle": "Quiet studio with private entrance",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "Quiet studio with private entrance"
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 13 – 18",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Individual host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 13 – 18",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6MzE3Mzc1ODM=",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.7341,
+          "longitude": 4.8295
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "Quiet studio with private entrance"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": []
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.76 out of 5 average rating,  265 reviews",
+       "avgRatingLocalized": "4.76 (265)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-10-24",
+        "checkout": "2026-10-29",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": null,
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$571 total",
+         "price": "$571",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $108.77",
+             "priceString": "$543.87",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$27.09",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$570.96",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$570.96 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [
+        {
+         "__typename": "ExploreFormattedBadge",
+         "icon": null,
+         "loggingContext": {
+          "__typename": "ExploreFormattedBadgeLoggingContext",
+          "badgeType": "SUPERHOST"
+         },
+         "style": "MUTED_ROUNDED_PILL",
+         "text": "Superhost",
+         "textAccessibilityLabel": "Superhost",
+         "textColor": "#FFFFFF"
+        }
+       ],
+       "coverPhotoIds": null,
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2564702534",
+         "picture": "https://example.com/fixture-image/17.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2564702384",
+         "picture": "https://example.com/fixture-image/18.jpg"
+        }
+       ],
+       "paymentMessages": [
+        {
+         "__typename": "PaymentMessage",
+         "text": "Free cancellation",
+         "type": "FREE_CANCELLATION_HIGHLIGHT",
+         "displayType": "GREY_PILL"
+        }
+       ],
+       "title": "Apartment in 2nd Arrondissement",
+       "subtitle": "Charm & Comfort • Heart of the Presqu'Île • Metro 2 min",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "Charm & Comfort • Heart of the Presqu'Île • Metro 2 min"
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 24 – 29",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Business host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 24 – 29",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6Njg5NzMwOTgxODc5MTI0Mjk0",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.7618,
+          "longitude": 4.8361
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "Charm & Comfort • Heart of the Presqu'Île • Metro 2 min"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": []
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.83 out of 5 average rating,  874 reviews",
+       "avgRatingLocalized": "4.83 (874)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-10-23",
+        "checkout": "2026-10-28",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": "1632303937",
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$429 total",
+         "price": "$429",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $81.24",
+             "priceString": "$406.21",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$22.34",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$428.55",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$428.55 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [
+        {
+         "__typename": "ExploreFormattedBadge",
+         "icon": {
+          "__typename": "ExploreFormattedBadgeIconAsset",
+          "localKey": "SYSTEM_GOLDEN_TROPHY",
+          "remoteUrl": null
+         },
+         "loggingContext": {
+          "__typename": "ExploreFormattedBadgeLoggingContext",
+          "badgeType": "TOP_X_GUEST_FAVORITE"
+         },
+         "style": "LOUD_ROUNDED_PILL",
+         "text": "Guest favorite",
+         "textAccessibilityLabel": "Top guest favorite",
+         "textColor": "#000000"
+        }
+       ],
+       "coverPhotoIds": [
+        "1632303937"
+       ],
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "1632303937",
+         "picture": "https://example.com/fixture-image/19.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "1633266860",
+         "picture": "https://example.com/fixture-image/20.jpg"
+        }
+       ],
+       "paymentMessages": [
+        {
+         "__typename": "PaymentMessage",
+         "text": "Free cancellation",
+         "type": "FREE_CANCELLATION_HIGHLIGHT",
+         "displayType": "GREY_PILL"
+        }
+       ],
+       "title": "Room in 7th Arrondissement",
+       "subtitle": "Charming room Lyon center",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "Charming room Lyon center"
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 23 – 28",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Individual host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 23 – 28",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6MTkzMzM5Mg==",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.75409,
+          "longitude": 4.83912
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "Charming room Lyon center"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": []
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.96 out of 5 average rating,  96 reviews",
+       "avgRatingLocalized": "4.96 (96)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-10-17",
+        "checkout": "2026-10-22",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": null,
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$1,329 total",
+         "price": "$1,329",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $263.75",
+             "priceString": "$1,318.73",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$10.01",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$1,328.74",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$1,328.74 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [
+        {
+         "__typename": "ExploreFormattedBadge",
+         "icon": null,
+         "loggingContext": {
+          "__typename": "ExploreFormattedBadgeLoggingContext",
+          "badgeType": "GUEST_FAVORITE"
+         },
+         "style": "LOUD_ROUNDED_PILL",
+         "text": "Guest favorite",
+         "textAccessibilityLabel": "Guest favorite",
+         "textColor": "#000000"
+        }
+       ],
+       "coverPhotoIds": null,
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2138502966",
+         "picture": "https://example.com/fixture-image/21.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2138502949",
+         "picture": "https://example.com/fixture-image/22.jpg"
+        }
+       ],
+       "paymentMessages": [
+        {
+         "__typename": "PaymentMessage",
+         "text": "Free cancellation",
+         "type": "FREE_CANCELLATION_HIGHLIGHT",
+         "displayType": "GREY_PILL"
+        }
+       ],
+       "title": "Apartment in 1st Arrondissement",
+       "subtitle": "La Suite - Constantine II - 1 bedroom",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "La Suite - Constantine II - 1 bedroom"
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 17 – 22",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Business host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 17 – 22",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6MTM0NDAyMDkyNTM4MjM4MzkxNw==",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.7672,
+          "longitude": 4.8322
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "La Suite - Constantine II - 1 bedroom"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": []
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.77 out of 5 average rating, 64 reviews",
+       "avgRatingLocalized": "4.77 (64)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-10-01",
+        "checkout": "2026-10-06",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": null,
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "OrderedDisplayPriceLine",
+         "accessibilityLabel": "$810 total",
+         "orderedComponents": [
+          {
+           "__typename": "DiscountedPriceDisplayPriceLineComponent",
+           "discountedPrice": "$810"
+          },
+          {
+           "__typename": "QualifierDisplayPriceLineComponent",
+           "qualifier": "total"
+          }
+         ],
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": "Price may vary by room type",
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $147.24",
+             "priceString": "$736.19",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationDisclaimer",
+           "content": "Classic studio"
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes and fees",
+             "priceString": "$40.49",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Resort fee",
+             "priceString": "$32.55",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [
+        {
+         "__typename": "ExploreFormattedBadge",
+         "icon": {
+          "__typename": "ExploreFormattedBadgeIconAsset",
+          "localKey": null,
+          "remoteUrl": "https://example.com/fixture-image/23.jpg"
+         },
+         "loggingContext": {
+          "__typename": "ExploreFormattedBadgeLoggingContext",
+          "badgeType": "FEATURED_HOTEL"
+         },
+         "style": "DEFAULT_ROUNDED_PILL",
+         "text": "Featured hotel",
+         "textAccessibilityLabel": "Featured hotel",
+         "textColor": "#222222"
+        }
+       ],
+       "coverPhotoIds": null,
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2573927031",
+         "picture": "https://example.com/fixture-image/24.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2573927161",
+         "picture": "https://example.com/fixture-image/25.jpg"
+        }
+       ],
+       "paymentMessages": [
+        {
+         "__typename": "PaymentMessage",
+         "text": "+$110 Airbnb credit",
+         "type": "HOTEL_CREDIT_HIGHLIGHT",
+         "displayType": "GREEN_PILL"
+        }
+       ],
+       "title": "Bikube Lyon",
+       "subtitle": "Hotel in 3rd Arrondissement",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "Bikube Lyon"
+       },
+       "propertyId": "1654363474444013494",
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": null,
+        "primaryLine": null,
+        "secondaryLine": null,
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6MTUzMjU4OTgwMTgzOTU1MjkyNQ==",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.7489,
+          "longitude": 4.8637
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "Bikube Lyon, Classic studio"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": [
+        {
+         "__typename": "PriceBreakdownMessage",
+         "text": "Get $110 in Airbnb credit. <a href='https://www.airbnb.com/help/article/4132' target='_blank'>See terms</a>",
+         "type": "HOTEL_CREDIT_HIGHLIGHT"
+        }
+       ]
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.89 out of 5 average rating,  469 reviews",
+       "avgRatingLocalized": "4.89 (469)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-10-10",
+        "checkout": "2026-10-15",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": null,
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$607 total",
+         "price": "$607",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $116.97",
+             "priceString": "$584.83",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$21.27",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$606.10",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$606.10 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [
+        {
+         "__typename": "ExploreFormattedBadge",
+         "icon": null,
+         "loggingContext": {
+          "__typename": "ExploreFormattedBadgeLoggingContext",
+          "badgeType": "GUEST_FAVORITE"
+         },
+         "style": "LOUD_ROUNDED_PILL",
+         "text": "Guest favorite",
+         "textAccessibilityLabel": "Guest favorite",
+         "textColor": "#000000"
+        }
+       ],
+       "coverPhotoIds": null,
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "1244624994",
+         "picture": "https://example.com/fixture-image/26.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "1244624841",
+         "picture": "https://example.com/fixture-image/27.jpg"
+        }
+       ],
+       "paymentMessages": [
+        {
+         "__typename": "PaymentMessage",
+         "text": "Free cancellation",
+         "type": "FREE_CANCELLATION_HIGHLIGHT",
+         "displayType": "GREY_PILL"
+        }
+       ],
+       "title": "Apartment in 4th Arrondissement",
+       "subtitle": "Beautiful renovated \"canut\", very comfortable.",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "Beautiful renovated \"canut\", very comfortable."
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 10 – 15",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Individual host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 10 – 15",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6NDUwOTUwOTU=",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.77741,
+          "longitude": 4.83458
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "Beautiful renovated \"canut\", very comfortable."
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": []
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.75 out of 5 average rating,  8 reviews",
+       "avgRatingLocalized": "4.75 (8)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-11-08",
+        "checkout": "2026-11-13",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": null,
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$954 total",
+         "price": "$954",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $181.60",
+             "priceString": "$907.99",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$45.50",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$953.49",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$953.49 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [],
+       "coverPhotoIds": null,
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2701004300",
+         "picture": "https://example.com/fixture-image/28.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2701003709",
+         "picture": "https://example.com/fixture-image/29.jpg"
+        }
+       ],
+       "paymentMessages": [
+        {
+         "__typename": "PaymentMessage",
+         "text": "Free cancellation",
+         "type": "FREE_CANCELLATION_HIGHLIGHT",
+         "displayType": "GREY_PILL"
+        }
+       ],
+       "title": "Apartment in 2nd Arrondissement",
+       "subtitle": " Presqu'île Coeur de Lyon Cozy & Central 2-bedroom",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": " Presqu'île Coeur de Lyon Cozy & Central 2-bedroom"
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Nov 8 – 13",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Individual host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Nov 8 – 13",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6MTcxODA0NDk4OTM3NTI1NTI2Nw==",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.76345,
+          "longitude": 4.83297
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": " Presqu'île Coeur de Lyon Cozy & Central 2-bedroom"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": []
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.97 out of 5 average rating,  435 reviews",
+       "avgRatingLocalized": "4.97 (435)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-12-12",
+        "checkout": "2026-12-17",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": null,
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$535 total",
+         "price": "$535",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $101.27",
+             "priceString": "$506.35",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$27.85",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$534.20",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$534.20 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [
+        {
+         "__typename": "ExploreFormattedBadge",
+         "icon": {
+          "__typename": "ExploreFormattedBadgeIconAsset",
+          "localKey": "SYSTEM_GOLDEN_TROPHY",
+          "remoteUrl": null
+         },
+         "loggingContext": {
+          "__typename": "ExploreFormattedBadgeLoggingContext",
+          "badgeType": "TOP_X_GUEST_FAVORITE"
+         },
+         "style": "LOUD_ROUNDED_PILL",
+         "text": "Guest favorite",
+         "textAccessibilityLabel": "Top guest favorite",
+         "textColor": "#000000"
+        }
+       ],
+       "coverPhotoIds": null,
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "1377939129",
+         "picture": "https://example.com/fixture-image/30.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "1377941034",
+         "picture": "https://example.com/fixture-image/31.jpg"
+        }
+       ],
+       "paymentMessages": [
+        {
+         "__typename": "PaymentMessage",
+         "text": "Free cancellation",
+         "type": "FREE_CANCELLATION_HIGHLIGHT",
+         "displayType": "GREY_PILL"
+        }
+       ],
+       "title": "Condo in 3rd Arrondissement",
+       "subtitle": "Lyon: little nest at Part/Dieu",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "Lyon: little nest at Part/Dieu"
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Dec 12 – 17",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Individual host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Dec 12 – 17",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6NTk2ODczMTIwNjcxMDYyNzM4",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.75858,
+          "longitude": 4.86317
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "Lyon: little nest at Part/Dieu"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": []
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.84 out of 5 average rating,  235 reviews",
+       "avgRatingLocalized": "4.84 (235)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-10-16",
+        "checkout": "2026-10-21",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": null,
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$823 total",
+         "price": "$823",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $157.02",
+             "priceString": "$785.10",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$37.54",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$822.64",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$822.64 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [],
+       "coverPhotoIds": null,
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2701163341",
+         "picture": "https://example.com/fixture-image/32.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2039528689",
+         "picture": "https://example.com/fixture-image/33.jpg"
+        }
+       ],
+       "paymentMessages": [
+        {
+         "__typename": "PaymentMessage",
+         "text": "Free cancellation",
+         "type": "FREE_CANCELLATION_HIGHLIGHT",
+         "displayType": "GREY_PILL"
+        }
+       ],
+       "title": "Apartment in 2nd Arrondissement",
+       "subtitle": "Cordeliers-Jacobins style apartment",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "Cordeliers-Jacobins style apartment"
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 16 – 21",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Business host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 16 – 21",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6NzA4OTg0MjgxMTkwNzE5Nzcw",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.7619,
+          "longitude": 4.8324
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "Cordeliers-Jacobins style apartment"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": []
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.93 out of 5 average rating,  120 reviews",
+       "avgRatingLocalized": "4.93 (120)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-10-30",
+        "checkout": "2026-11-04",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": null,
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$1,616 total",
+         "price": "$1,616",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $321.10",
+             "priceString": "$1,605.48",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$10.01",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$1,615.49",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$1,615.49 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [
+        {
+         "__typename": "ExploreFormattedBadge",
+         "icon": null,
+         "loggingContext": {
+          "__typename": "ExploreFormattedBadgeLoggingContext",
+          "badgeType": "SUPERHOST"
+         },
+         "style": "MUTED_ROUNDED_PILL",
+         "text": "Superhost",
+         "textAccessibilityLabel": "Superhost",
+         "textColor": "#FFFFFF"
+        }
+       ],
+       "coverPhotoIds": null,
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2138472150",
+         "picture": "https://example.com/fixture-image/34.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2138472023",
+         "picture": "https://example.com/fixture-image/35.jpg"
+        }
+       ],
+       "paymentMessages": [
+        {
+         "__typename": "PaymentMessage",
+         "text": "Free cancellation",
+         "type": "FREE_CANCELLATION_HIGHLIGHT",
+         "displayType": "GREY_PILL"
+        }
+       ],
+       "title": "Apartment in 1st Arrondissement",
+       "subtitle": "La Suite - Constantine I - 2 bedrooms",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "La Suite - Constantine I - 2 bedrooms"
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 30 – Nov 4",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Business host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Oct 30 – Nov 4",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6MTM0NDAxNzQ2Mzk2Nzk3MjIzMA==",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.7672,
+          "longitude": 4.8322
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "La Suite - Constantine I - 2 bedrooms"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": []
+      },
+      {
+       "__typename": "StaySearchResult",
+       "avgRatingA11yLabel": "4.78 out of 5 average rating,  248 reviews",
+       "avgRatingLocalized": "4.78 (248)",
+       "listingParamOverrides": {
+        "__typename": "ExploreListingParamOverrides",
+        "adults": 2,
+        "categoryTag": null,
+        "causeId": null,
+        "checkin": "2026-11-04",
+        "checkout": "2026-11-09",
+        "children": 0,
+        "distanceInKm": null,
+        "highlightType": null,
+        "infants": 0,
+        "pets": 0,
+        "photoId": null,
+        "relaxedAmenityIds": [],
+        "splitStaysLocationPrecisions": [],
+        "splitStaysLocationsAcpIds": [],
+        "splitStaysUuid": null,
+        "amenities": null
+       },
+       "structuredDisplayPrice": {
+        "__typename": "StructuredDisplayPrice",
+        "primaryLine": {
+         "__typename": "QualifiedDisplayPriceLine",
+         "accessibilityLabel": "$810 total",
+         "price": "$810",
+         "qualifier": "total",
+         "concatQualifierLeft": false,
+         "trailing": null
+        },
+        "secondaryLine": null,
+        "explanationData": {
+         "__typename": "DisplayPriceExplanationData",
+         "title": "Price details",
+         "subtitle": null,
+         "priceDetails": [
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "5 nights x $153.38",
+             "priceString": "$766.89",
+             "explanationData": null
+            },
+            {
+             "__typename": "DefaultExplanationLineItem",
+             "description": "Taxes",
+             "priceString": "$42.17",
+             "explanationData": null
+            }
+           ],
+           "renderBorderTop": false,
+           "collapsable": null
+          },
+          {
+           "__typename": "DisplayPriceExplanationLineGroup",
+           "items": [
+            {
+             "__typename": "HighlightExplanationLineItem",
+             "description": "Total",
+             "priceString": "$809.06",
+             "explanationData": null,
+             "originalPriceString": null,
+             "accessibilityLabel": "$809.06 total"
+            }
+           ],
+           "renderBorderTop": true,
+           "collapsable": null
+          }
+         ]
+        },
+        "explanationDataDisplayPosition": "PRIMARY_LINE",
+        "displayPriceStyle": "REGULATED_TOTAL",
+        "loggingMetadata": {
+         "__typename": "StructuredDisplayPriceLoggingMetadata",
+         "loggingCorrelationId": "00000000-0000-0000-0000-000000000000"
+        }
+       },
+       "badges": [],
+       "coverPhotoIds": null,
+       "contextualPictures": [
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "2030717989",
+         "picture": "https://example.com/fixture-image/36.jpg"
+        },
+        {
+         "__typename": "ExplorePicture",
+         "caption": null,
+         "id": "1909641120",
+         "picture": "https://example.com/fixture-image/37.jpg"
+        }
+       ],
+       "paymentMessages": [],
+       "title": "Apartment in 1st Arrondissement",
+       "subtitle": "Terreaux Collection - No.3 View of the square w/ AC",
+       "nameLocalized": {
+        "__typename": "UGCText",
+        "localizedStringWithTranslationPreference": "Terreaux Collection - No.3 View of the square w/ AC"
+       },
+       "propertyId": null,
+       "structuredContent": {
+        "__typename": "ExploreStructuredContent",
+        "distance": [],
+        "mapCategoryInfo": [],
+        "mapPrimaryLine": [],
+        "mapSecondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Nov 4 – 9",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "primaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Business host",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "HOSTINFO"
+         }
+        ],
+        "secondaryLine": [
+         {
+          "__typename": "MainSectionMessage",
+          "body": "Nov 4 – 9",
+          "bodyA11yLabel": null,
+          "bodyType": null,
+          "fontWeight": null,
+          "headline": null,
+          "type": "DATE"
+         }
+        ],
+        "tertiaryLine": [],
+        "reviewSnippet": null,
+        "explanation": []
+       },
+       "passportData": null,
+       "demandStayListing": {
+        "__typename": "DemandStayListing",
+        "id": "RGVtYW5kU3RheUxpc3Rpbmc6MTE1ODg3MTI2MDAwMzcwMzcwMQ==",
+        "location": {
+         "__typename": "DemandStayListingLocation",
+         "coordinate": {
+          "__typename": "Coordinate",
+          "latitude": 45.76662,
+          "longitude": 4.83375
+         }
+        },
+        "description": {
+         "__typename": "DemandStayListingDescription",
+         "name": {
+          "__typename": "UGCText",
+          "localizedStringWithTranslationPreference": "Terreaux Collection - No.3 View of the square w/ AC"
+         }
+        },
+        "wishlistItems": [],
+        "nameLocale": "en"
+       },
+       "priceBreakdownMessages": []
+      }
+     ],
+     "paginationInfo": {
+      "__typename": "StaysSearchPaginationInfo",
+      "pageCursors": [
+       "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0IjowLCJ2ZXJzaW9uIjoxfQ==",
+       "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0IjoxOCwidmVyc2lvbiI6MX0=",
+       "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0IjozNiwidmVyc2lvbiI6MX0=",
+       "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0Ijo1NCwidmVyc2lvbiI6MX0=",
+       "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0Ijo3MiwidmVyc2lvbiI6MX0=",
+       "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0Ijo5MCwidmVyc2lvbiI6MX0=",
+       "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0IjoxMDgsInZlcnNpb24iOjF9",
+       "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0IjoxMjYsInZlcnNpb24iOjF9",
+       "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0IjoxNDQsInZlcnNpb24iOjF9",
+       "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0IjoxNjIsInZlcnNpb24iOjF9",
+       "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0IjoxODAsInZlcnNpb24iOjF9",
+       "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0IjoxOTgsInZlcnNpb24iOjF9",
+       "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0IjoyMTYsInZlcnNpb24iOjF9",
+       "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0IjoyMzQsInZlcnNpb24iOjF9",
+       "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0IjoyNTIsInZlcnNpb24iOjF9"
+      ]
+     },
+     "loggingMetadata": {
+      "__typename": "StaysSearchLoggingMetadata",
+      "remarketingLoggingData": {
+       "__typename": "RemarketingLoggingData",
+       "remarketingIds": [],
+       "canonicalLocation": "Lyon, France",
+       "city": "Lyon",
+       "state": "Auvergne-Rhône-Alpes",
+       "country": "France"
+      }
+     }
+    }
+   }
+  }
+ },
+ "extensions": {
+  "traceId": "fixture-trace-id"
+ }
+}

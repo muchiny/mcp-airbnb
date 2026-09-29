@@ -1,0 +1,5484 @@
+{
+ "data": {
+  "presentation": {
+   "__typename": "RootPresentationContainer",
+   "stayProductDetailPage": {
+    "__typename": "StayPDPPresentationContainer",
+    "sections": {
+     "__typename": "StayPDPSections",
+     "sections": [
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjo1ODI4NjIxMzc1ODgyODEwODY4",
+       "sectionComponentType": "PDP_DESCRIPTION_MODAL",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "PROFESSIONAL_HOST_DETAILS_MODAL",
+       "errors": null,
+       "sectionDependencies": [],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.professional_host_details_modal",
+        "experiments": [],
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "PROFESSIONAL_HOST_DETAILS_MODAL",
+       "section": {
+        "__typename": "GeneralListContentSection",
+        "buttons": null,
+        "caption": null,
+        "ctaButton": null,
+        "flip": null,
+        "headingLevel": null,
+        "items": [
+         {
+          "__typename": "BasicListItem",
+          "action": null,
+          "anchor": null,
+          "accessibilityLabel": null,
+          "button": null,
+          "icon": null,
+          "html": {
+           "__typename": "Html",
+           "htmlText": "Placeholder text 139.<a href=\"https://www.airbnb.com/help/article/3866\">Placeholder text 139.</a>Placeholder text 139.<br /><br /><ul><li>Placeholder text 139.</li><br /><li>Placeholder text 139.</li><br /><li>Placeholder text 139.</li><br /><li>Placeholder text 139.</li><br /><li>Placeholder text 139.</li></ul><br />Placeholder text 139.",
+           "readMoreButton": null,
+           "textStyle": null,
+           "recommendedNumberOfLines": null,
+           "minimumNumberOfLinesForTruncation": null
+          },
+          "image": null,
+          "kicker": null,
+          "loggingEventData": null,
+          "media": null,
+          "subtitle": null,
+          "subtitleStyle": null,
+          "title": null,
+          "titleStyle": null
+         }
+        ],
+        "kickerString": null,
+        "logoData": null,
+        "mediaItems": null,
+        "subtitle": null,
+        "subtitleStyle": null,
+        "title": "What to know about listings offered by businesses",
+        "titleStyle": null
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjo4Njc1NjQ5ODU0OTI1MzU0Mzgx",
+       "sectionComponentType": "NAV_DEFAULT",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "NAV_DEFAULT",
+       "errors": null,
+       "sectionDependencies": [],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.nav_default",
+        "experiments": [],
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "NAV_DEFAULT",
+       "section": {
+        "__typename": "NavSection",
+        "logo": null,
+        "navItems": [
+         {
+          "__typename": "NavItem",
+          "id": "photos_1257736932578886647",
+          "title": "Photos",
+          "count": null,
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.stickyNav.photos",
+           "experiments": [],
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "stickyNav",
+           "component": "photos"
+          },
+          "scrollId": "HERO_DEFAULT"
+         },
+         {
+          "__typename": "NavItem",
+          "id": "available_rooms_1257736932578886647",
+          "title": "Rooms",
+          "count": null,
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.stickyNav.available_rooms",
+           "experiments": [],
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "stickyNav",
+           "component": "available_rooms"
+          },
+          "scrollId": "PROPERTY_AVAILABLE_ROOMS"
+         },
+         {
+          "__typename": "NavItem",
+          "id": "amenities_1257736932578886647",
+          "title": "Amenities",
+          "count": null,
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.stickyNav.amenities",
+           "experiments": [],
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "stickyNav",
+           "component": "amenities"
+          },
+          "scrollId": "AMENITIES_DEFAULT"
+         },
+         {
+          "__typename": "NavItem",
+          "id": "reviews_1257736932578886647",
+          "title": "Reviews",
+          "count": null,
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.stickyNav.reviews",
+           "experiments": [],
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "stickyNav",
+           "component": "reviews"
+          },
+          "scrollId": "REVIEWS_DEFAULT"
+         },
+         {
+          "__typename": "NavItem",
+          "id": "location_1257736932578886647",
+          "title": "Location",
+          "count": null,
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.stickyNav.location",
+           "experiments": [],
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "stickyNav",
+           "component": "location"
+          },
+          "scrollId": "LOCATION_DEFAULT"
+         }
+        ]
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjo1ODUwMzYyODQwMjcxNDM3Nzg0",
+       "sectionComponentType": "BOOK_IT_NAV",
+       "sectionContentStatus": "NOT_COMPLETE",
+       "sectionId": "BOOK_IT_NAV",
+       "errors": null,
+       "sectionDependencies": [
+        "BOOKING"
+       ],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.book_it_nav",
+        "experiments": [],
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "BOOK_IT_NAV",
+       "section": {
+        "__typename": "BookItSection",
+        "subpageIdToOpen": null,
+        "showPriceBreakdown": false,
+        "cancellationPolicyLoggingEventData": null,
+        "calendarTitle": null,
+        "calendarSubtitle": null,
+        "descriptionItems": null,
+        "discountCopy": null,
+        "maxGuestCapacity": null,
+        "maxPlusValue": null,
+        "tripDetailsLoggingEventData": null,
+        "reviewItem": {
+         "__typename": "BasicListItem",
+         "accessibilityLabel": "Rated 4.4 out of 5 from 359 reviews.",
+         "action": null,
+         "icon": "COMPACT_STAR",
+         "subtitle": "359 reviews",
+         "title": "4.4 ·"
+        },
+        "available": null,
+        "structuredDisplayPrice": null,
+        "discountData": null,
+        "bookItButtonByPlacement": {
+         "__typename": "BookItButtonByPlacement",
+         "footerButton": {
+          "__typename": "BasicListItem",
+          "title": "",
+          "action": null,
+          "loggingEventData": null,
+          "button": null
+         },
+         "sideBarButton": null,
+         "stickyNavButton": null,
+         "calendarFooterButton": {
+          "__typename": "BasicListItem",
+          "title": "Save",
+          "action": null,
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.stickyFooter.save",
+           "experiments": null,
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "stickyFooter",
+           "component": "save"
+          },
+          "button": null
+         }
+        },
+        "cancellationPolicies": null,
+        "cancellationPolicyForDisplay": null,
+        "localizedUnavailabilityMessage": null,
+        "localizedUnavailabilityMessagePositionString": null,
+        "priceDisclaimer": null,
+        "selectedDatesLink": null,
+        "selectedNights": null,
+        "bookItButtonLayout": null,
+        "productItemDetail": null,
+        "ratePlanLoggingEventData": null,
+        "ratePlanTitle": null,
+        "promotionBanner": null,
+        "guestDisclaimer": null,
+        "petsAllowed": null,
+        "petDetails": null,
+        "adultsPicker": null,
+        "childrenPicker": null,
+        "infantsPicker": null,
+        "canInstantBook": null
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjotNTU3MzU1NDgxNjkzNzcyNzM0Mw==",
+       "sectionComponentType": "SBUI_SENTINEL",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "OVERVIEW_DEFAULT_V2",
+       "errors": null,
+       "sectionDependencies": null,
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": null,
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": null,
+       "section": {
+        "__typename": "SBUISentinelSection"
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjotNjYwNDM5MjU2Mjc4OTA5NTgzNA==",
+       "sectionComponentType": "SBUI_SENTINEL",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "BYLINE",
+       "errors": null,
+       "sectionDependencies": null,
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": null,
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": null,
+       "section": {
+        "__typename": "SBUISentinelSection"
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjo2MjE0NzczMjM5MDQzNjA1NTA0",
+       "sectionComponentType": "HIGHLIGHTS_DEFAULT",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "HIGHLIGHTS_DEFAULT",
+       "errors": null,
+       "sectionDependencies": [
+        "BOOKING"
+       ],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.highlights_default",
+        "experiments": null,
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "HIGHLIGHTS_DEFAULT",
+       "section": {
+        "__typename": "PdpHighlightsSection",
+        "highlights": [
+         {
+          "__typename": "PdpHighlight",
+          "title": "30 minutes from Place Bellecour",
+          "subtitle": "Boutiques, cafes, and historic landmarks await in Lyon’s grand central square.",
+          "subtitleHtml": null,
+          "icon": null,
+          "learnMoreButton": null,
+          "type": "PROPERTY_HOTEL_LOCATION",
+          "highlightValue": null
+         },
+         {
+          "__typename": "PdpHighlight",
+          "title": "Breakfast buffet for purchase",
+          "subtitle": "Wake up to bread, organic cereals, homemade cakes, cold cuts, cheeses, eggs, and fresh fruits.",
+          "subtitleHtml": null,
+          "icon": null,
+          "learnMoreButton": null,
+          "type": "PROPERTY_HOTEL_CUSTOM",
+          "highlightValue": null
+         },
+         {
+          "__typename": "PdpHighlight",
+          "title": "Bar and restaurant on-site",
+          "subtitle": "Unwind with local beers, cocktails, share platters, and seasonal dishes.",
+          "subtitleHtml": null,
+          "icon": null,
+          "learnMoreButton": null,
+          "type": "PROPERTY_HOTEL_CUSTOM",
+          "highlightValue": null
+         }
+        ]
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjotNTkzNDM1NjM3NDM0Njg5NTM4Mg==",
+       "sectionComponentType": "SBUI_SENTINEL",
+       "sectionContentStatus": "NOT_COMPLETE",
+       "sectionId": "PROPERTY_AVAILABLE_ROOMS",
+       "errors": null,
+       "sectionDependencies": [
+        "BOOKING"
+       ],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": null,
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": null,
+       "section": {
+        "__typename": "SBUISentinelSection"
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjo2MDMxMjc5NDA5MjMzODk3OTY0",
+       "sectionComponentType": "SBUI_SENTINEL",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "PDP_EDUCATION_DEFAULT",
+       "errors": null,
+       "sectionDependencies": null,
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": null,
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": null,
+       "section": {
+        "__typename": "SBUISentinelSection"
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjo3Mjg1NDk5MDEwMDA3OTgzNDQ5",
+       "sectionComponentType": "UGC_TRANSLATION",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "UGC_TRANSLATION",
+       "errors": null,
+       "sectionDependencies": [
+        "TRANSLATE_UGC"
+       ],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.ugc_translation",
+        "experiments": [],
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "UGC_TRANSLATION",
+       "section": {
+        "__typename": "UgcTranslationSection",
+        "ugcTranslationButton": {
+         "__typename": "UgcTranslationButton",
+         "ctaText": "Show original",
+         "icon": "TRANSLATION_COLORED",
+         "loggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.ugcTranslation.showOriginal",
+          "experiments": [],
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": null,
+          "component": null
+         },
+         "subtitle": null,
+         "title": "Some info has been automatically translated.",
+         "translationState": "TRANSLATED_MMT",
+         "loadingText": null
+        },
+        "isPrivateRoom": false
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjoxNjY4MjkzMDMwMDA1MjIzNDAz",
+       "sectionComponentType": "DESCRIPTION_DEFAULT",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "DESCRIPTION_DEFAULT",
+       "errors": null,
+       "sectionDependencies": [
+        "TRANSLATE_UGC"
+       ],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.description_default",
+        "experiments": null,
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "DESCRIPTION_DEFAULT",
+       "section": {
+        "__typename": "PdpDescriptionSection",
+        "title": "About Eklo Lyon Sud Eurexpo",
+        "contactHostButton": null,
+        "hostQuote": null,
+        "htmlDescription": {
+         "__typename": "ReadMoreHtml",
+         "recommendedNumberOfLines": 6,
+         "htmlText": "Placeholder text 140.",
+         "readMoreButton": {
+          "__typename": "BasicListItem",
+          "title": "Read more"
+         }
+        },
+        "ugcTranslationButton": null,
+        "showMoreDescriptionButton": null,
+        "hasExtraDescriptionDetails": false,
+        "descriptionSummary": {
+         "__typename": "Html",
+         "htmlText": "Placeholder text 141.",
+         "recommendedNumberOfLines": 99999,
+         "minimumNumberOfLinesForTruncation": null
+        }
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjo3MTAzMTg1NjczNDQxMzM3NDgz",
+       "sectionComponentType": "AMENITIES_DEFAULT",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "AMENITIES_DEFAULT",
+       "errors": null,
+       "sectionDependencies": [
+        "AMENITIES"
+       ],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.amenities_default",
+        "experiments": [],
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "AMENITIES_DEFAULT",
+       "section": {
+        "__typename": "AmenitiesSection",
+        "title": "What this hotel offers",
+        "subtitle": null,
+        "placementGroup": null,
+        "previewLayout": "SINGLE_COLUMN",
+        "previewAmenitiesGroups": [
+         {
+          "__typename": "AmenitiesGroup",
+          "title": null,
+          "amenities": [
+           {
+            "__typename": "Amenity",
+            "available": true,
+            "title": "Breakfast for purchase",
+            "icon": "SYSTEM_BREAKFAST"
+           },
+           {
+            "__typename": "Amenity",
+            "available": true,
+            "title": "Paid parking on premises",
+            "icon": "SYSTEM_MAPS_CAR_RENTAL"
+           },
+           {
+            "__typename": "Amenity",
+            "available": true,
+            "title": "Air conditioning",
+            "icon": "SYSTEM_SNOWFLAKE"
+           },
+           {
+            "__typename": "Amenity",
+            "available": true,
+            "title": "Wifi",
+            "icon": "SYSTEM_WI_FI"
+           },
+           {
+            "__typename": "Amenity",
+            "available": true,
+            "title": "Elevator",
+            "icon": "SYSTEM_ELEVATOR"
+           },
+           {
+            "__typename": "Amenity",
+            "available": true,
+            "title": "Dedicated workspace",
+            "icon": "SYSTEM_WORKSPACE"
+           },
+           {
+            "__typename": "Amenity",
+            "available": true,
+            "title": "Bar",
+            "icon": "SYSTEM_COCKTAIL"
+           },
+           {
+            "__typename": "Amenity",
+            "available": true,
+            "title": "TV",
+            "icon": "SYSTEM_TV"
+           },
+           {
+            "__typename": "Amenity",
+            "available": true,
+            "title": "Luggage dropoff allowed",
+            "icon": "SYSTEM_LUGGAGE_DROP"
+           },
+           {
+            "__typename": "Amenity",
+            "available": true,
+            "title": "Toiletries",
+            "icon": "SYSTEM_SHAMPOO"
+           }
+          ]
+         }
+        ],
+        "seeAllAmenitiesGroups": [
+         {
+          "__typename": "AmenitiesGroup",
+          "title": "Parking and facilities",
+          "amenities": [
+           {
+            "__typename": "Amenity",
+            "id": "pdp_v3_parking_facilities_21_1257736932578886647-0",
+            "available": true,
+            "title": "Elevator",
+            "subtitle": "The home or building has an elevator that’s at least 52 inches deep and a doorway at least 32 inches wide",
+            "icon": "SYSTEM_ELEVATOR"
+           },
+           {
+            "__typename": "Amenity",
+            "id": "pdp_v3_parking_facilities_287_1257736932578886647-0",
+            "available": true,
+            "title": "Paid parking on premises",
+            "subtitle": "",
+            "icon": "SYSTEM_MAPS_CAR_RENTAL"
+           }
+          ]
+         },
+         {
+          "__typename": "AmenitiesGroup",
+          "title": "Services",
+          "amenities": [
+           {
+            "__typename": "Amenity",
+            "id": "property_pdp_hotel_v3_services_103_1257736932578886647-0",
+            "available": true,
+            "title": "Luggage dropoff allowed",
+            "subtitle": "For guests' convenience when they have early arrival or late departure",
+            "icon": "SYSTEM_LUGGAGE_DROP"
+           },
+           {
+            "__typename": "Amenity",
+            "id": "property_pdp_hotel_v3_services_16_1257736932578886647-0",
+            "available": true,
+            "title": "Breakfast for purchase",
+            "subtitle": null,
+            "icon": "SYSTEM_BREAKFAST"
+           },
+           {
+            "__typename": "Amenity",
+            "id": "property_pdp_hotel_v3_services_51_1257736932578886647-0",
+            "available": true,
+            "title": "Self check-in",
+            "subtitle": "",
+            "icon": "SYSTEM_KEY"
+           },
+           {
+            "__typename": "Amenity",
+            "id": "property_pdp_hotel_v3_services_55_1257736932578886647-0",
+            "available": true,
+            "title": "Building staff",
+            "subtitle": "Someone is available 24 hours a day to let guests in",
+            "icon": "SYSTEM_DOORMAN"
+           },
+           {
+            "__typename": "Amenity",
+            "id": "property_pdp_hotel_v3_services_188_1257736932578886647-0",
+            "available": true,
+            "title": "Bar",
+            "subtitle": "",
+            "icon": "SYSTEM_COCKTAIL"
+           }
+          ]
+         },
+         {
+          "__typename": "AmenitiesGroup",
+          "title": "Bathroom",
+          "amenities": [
+           {
+            "__typename": "Amenity",
+            "id": "pdp_v3_bathroom_41_1257736932578886647-0",
+            "available": true,
+            "title": "Shampoo",
+            "subtitle": "",
+            "icon": "SYSTEM_SHAMPOO"
+           },
+           {
+            "__typename": "Amenity",
+            "id": "pdp_v3_bathroom_657_1257736932578886647-0",
+            "available": true,
+            "title": "Conditioner",
+            "subtitle": "",
+            "icon": "SYSTEM_SHAMPOO"
+           },
+           {
+            "__typename": "Amenity",
+            "id": "pdp_v3_bathroom_77_1257736932578886647-0",
+            "available": true,
+            "title": "Hot water",
+            "subtitle": "",
+            "icon": "SYSTEM_HOT_WATER"
+           },
+           {
+            "__typename": "Amenity",
+            "id": "pdp_v3_bathroom_611_1257736932578886647-0",
+            "available": true,
+            "title": "Shower gel",
+            "subtitle": "",
+            "icon": "SYSTEM_SOAP"
+           }
+          ]
+         },
+         {
+          "__typename": "AmenitiesGroup",
+          "title": "Bedroom and laundry",
+          "amenities": [
+           {
+            "__typename": "Amenity",
+            "id": "pdp_v3_bedroom_laundry_40_1257736932578886647-0",
+            "available": true,
+            "title": "Essentials",
+            "subtitle": "Towels, bed sheets, soap, and toilet paper",
+            "icon": "SYSTEM_TOILETRIES"
+           },
+           {
+            "__typename": "Amenity",
+            "id": "pdp_v3_bedroom_laundry_44_1257736932578886647-0",
+            "available": true,
+            "title": "Hangers",
+            "subtitle": "",
+            "icon": "SYSTEM_HANGERS"
+           },
+           {
+            "__typename": "Amenity",
+            "id": "pdp_v3_bedroom_laundry_85_1257736932578886647-0",
+            "available": true,
+            "title": "Bed linens",
+            "subtitle": "",
+            "icon": "SYSTEM_BLANKETS"
+           },
+           {
+            "__typename": "Amenity",
+            "id": "pdp_v3_bedroom_laundry_73_1257736932578886647-0",
+            "available": true,
+            "title": "Room-darkening shades",
+            "subtitle": "",
+            "icon": "SYSTEM_BLACKOUT_SHADES"
+           }
+          ]
+         },
+         {
+          "__typename": "AmenitiesGroup",
+          "title": "Entertainment",
+          "amenities": [
+           {
+            "__typename": "Amenity",
+            "id": "pdp_v3_entertainment_1_1257736932578886647-0",
+            "available": true,
+            "title": "TV",
+            "subtitle": "",
+            "icon": "SYSTEM_TV"
+           }
+          ]
+         },
+         {
+          "__typename": "AmenitiesGroup",
+          "title": "Heating and cooling",
+          "amenities": [
+           {
+            "__typename": "Amenity",
+            "id": "pdp_v3_heating_cooling_5_1257736932578886647-0",
+            "available": true,
+            "title": "Air conditioning",
+            "subtitle": "",
+            "icon": "SYSTEM_SNOWFLAKE"
+           },
+           {
+            "__typename": "Amenity",
+            "id": "pdp_v3_heating_cooling_30_1257736932578886647-0",
+            "available": true,
+            "title": "Heating",
+            "subtitle": "",
+            "icon": "SYSTEM_THERMOMETER"
+           }
+          ]
+         },
+         {
+          "__typename": "AmenitiesGroup",
+          "title": "Home safety",
+          "amenities": [
+           {
+            "__typename": "Amenity",
+            "id": "pdp_v3_home_safety_35_1257736932578886647-0",
+            "available": true,
+            "title": "Smoke alarm",
+            "subtitle": "",
+            "icon": "SYSTEM_DETECTOR_SMOKE"
+           }
+          ]
+         },
+         {
+          "__typename": "AmenitiesGroup",
+          "title": "Internet and office",
+          "amenities": [
+           {
+            "__typename": "Amenity",
+            "id": "pdp_v3_internet_office_4_1257736932578886647-0",
+            "available": true,
+            "title": "Wifi",
+            "subtitle": "",
+            "icon": "SYSTEM_WI_FI"
+           },
+           {
+            "__typename": "Amenity",
+            "id": "pdp_v3_internet_office_47_1257736932578886647-0",
+            "available": true,
+            "title": "Dedicated workspace",
+            "subtitle": "",
+            "icon": "SYSTEM_WORKSPACE"
+           }
+          ]
+         }
+        ],
+        "seeAllAmenitiesButton": {
+         "__typename": "BasicListItem",
+         "title": "Show all 21 amenities",
+         "loggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.amenities.showAll",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "amenities",
+          "component": "showAll"
+         },
+         "action": {
+          "__typename": "NavigateToUrl",
+          "loggingData": {
+           "__typename": "LoggingEventData",
+           "experiments": []
+          }
+         }
+        }
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjotMjczNjQ0MTIwOTcwMzQyNzEyMQ==",
+       "sectionComponentType": "BOOK_IT_SIDEBAR",
+       "sectionContentStatus": "NOT_COMPLETE",
+       "sectionId": "BOOK_IT_SIDEBAR",
+       "errors": null,
+       "sectionDependencies": [
+        "BOOKING"
+       ],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.book_it_sidebar",
+        "experiments": [],
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "BOOK_IT_SIDEBAR",
+       "section": {
+        "__typename": "BookItSection",
+        "subpageIdToOpen": null,
+        "showPriceBreakdown": true,
+        "cancellationPolicyLoggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.bookItSidebar.cancellationPolicyInput",
+         "experiments": null,
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        },
+        "calendarTitle": "Select dates",
+        "calendarSubtitle": "Add your travel dates for exact pricing",
+        "descriptionItems": null,
+        "discountCopy": null,
+        "maxGuestCapacity": null,
+        "maxPlusValue": null,
+        "tripDetailsLoggingEventData": {
+         "__typename": "CalendarLoggingEventData",
+         "clearDatesButton": {
+          "__typename": "BasicListItem",
+          "title": "Clear dates",
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.bookItSidebar.clearDates",
+           "experiments": null,
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "bookItSidebar",
+           "component": "clearDates"
+          }
+         },
+         "saveDatesButton": {
+          "__typename": "BasicListItem",
+          "title": "Close",
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.bookItSidebar.saveDates",
+           "experiments": null,
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "bookItSidebar",
+           "component": "saveDates"
+          }
+         },
+         "datesInputLoggingEventData": null,
+         "selectDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.bookItSidebar.selectDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "bookItSidebar",
+          "component": "selectDate"
+         },
+         "previousMonthLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.bookItSidebar.monthsNavPrevious",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "bookItSidebar",
+          "component": "monthsNavPrevious"
+         },
+         "nextMonthLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.bookItSidebar.monthsNavNext",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "bookItSidebar",
+          "component": "monthsNavNext"
+         },
+         "checkInDateInputLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.bookItSidebar.checkInInput",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "bookItSidebar",
+          "component": "checkInInput"
+         },
+         "checkOutDateInputLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.bookItSidebar.checkOutInput",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "bookItSidebar",
+          "component": "checkOutInput"
+         },
+         "guestInputLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.bookItSidebar.guestInput",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "bookItSidebar",
+          "component": "guestInput"
+         },
+         "cancellationPolicyLoggingEventData": null,
+         "changeDatesButtonLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.bookItSidebar.changeDatesButton",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "bookItSidebar",
+          "component": "changeDatesButton"
+         },
+         "selectCheckOutOnlyDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.bookItSidebar.selectCheckOutOnlyDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "bookItSidebar",
+          "component": "selectCheckOutOnlyDate"
+         },
+         "selectMaxNightsViolationDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.bookItSidebar.selectMaxNightsViolationDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "bookItSidebar",
+          "component": "selectMaxNightsViolationDate"
+         },
+         "selectMinNightsViolationDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.bookItSidebar.selectMinNightsViolationDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "bookItSidebar",
+          "component": "selectMinNightsViolationDate"
+         },
+         "selectUnavailableForCheckInDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.bookItSidebar.selectUnavailableForCheckInDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "bookItSidebar",
+          "component": "selectUnavailableForCheckInDate"
+         },
+         "selectUnavailableForCheckoutDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.bookItSidebar.selectUnavailableForCheckoutDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "bookItSidebar",
+          "component": "selectUnavailableForCheckoutDate"
+         }
+        },
+        "reviewItem": null,
+        "available": null,
+        "structuredDisplayPrice": null,
+        "discountData": null,
+        "bookItButtonByPlacement": {
+         "__typename": "BookItButtonByPlacement",
+         "footerButton": {
+          "__typename": "BasicListItem",
+          "title": "",
+          "action": null,
+          "loggingEventData": null,
+          "button": null
+         },
+         "sideBarButton": null,
+         "stickyNavButton": null,
+         "calendarFooterButton": {
+          "__typename": "BasicListItem",
+          "title": "Save",
+          "action": null,
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.stickyFooter.save",
+           "experiments": null,
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "stickyFooter",
+           "component": "save"
+          },
+          "button": null
+         }
+        },
+        "cancellationPolicies": null,
+        "cancellationPolicyForDisplay": null,
+        "localizedUnavailabilityMessage": null,
+        "localizedUnavailabilityMessagePositionString": null,
+        "priceDisclaimer": null,
+        "selectedDatesLink": null,
+        "selectedNights": null,
+        "bookItButtonLayout": null,
+        "productItemDetail": null,
+        "ratePlanLoggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.bookItSidebar.ratePlanInput",
+         "experiments": null,
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        },
+        "ratePlanTitle": null,
+        "promotionBanner": null,
+        "guestDisclaimer": "This place has a maximum of 2 guests, not including infants. Pets aren't allowed.",
+        "petsAllowed": false,
+        "petDetails": {
+         "__typename": "GuestPickerPetDetails",
+         "maxPetCount": 5,
+         "petDisclaimerText": "Bringing a service animal?",
+         "petSubtitleAction": {
+          "__typename": "NavigateToScreen",
+          "loggingData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.bookItSidebar.petModal",
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "bookItSidebar",
+           "component": "petModal"
+          },
+          "url": null,
+          "screenId": "WHAT_COUNTS_AS_A_PET_MODAL",
+          "itemId": null
+         }
+        },
+        "adultsPicker": null,
+        "childrenPicker": null,
+        "infantsPicker": null,
+        "canInstantBook": null
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjo2ODExNTgxMDM0NDA4MDA1NTc5",
+       "sectionComponentType": "REPORT_TO_AIRBNB",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "REPORT_TO_AIRBNB",
+       "errors": null,
+       "sectionDependencies": [],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.report_to_airbnb",
+        "experiments": [],
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "REPORT_TO_AIRBNB",
+       "section": {
+        "__typename": "ReportToAirbnbSection",
+        "reportButton": {
+         "__typename": "BasicListItem",
+         "title": "Report this listing",
+         "icon": "COMPACT_REPORT_LISTING",
+         "loggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.reportToAirbnb.report",
+          "experiments": [],
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "reportToAirbnb",
+          "component": "report"
+         }
+        },
+        "entityType": "STAY"
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjotODU2MDk5NzM2NTEyMTMzMTU0NA==",
+       "sectionComponentType": "TITLE_DEFAULT",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "TITLE_DEFAULT",
+       "errors": null,
+       "sectionDependencies": [
+        "TRANSLATE_UGC"
+       ],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.title_default",
+        "experiments": [],
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "TITLE_DEFAULT",
+       "section": {
+        "__typename": "PdpTitleSection",
+        "title": "Eklo Lyon Sud Eurexpo",
+        "icon": null,
+        "logo": null,
+        "overviewItems": null,
+        "logoAccessibilityLabel": null,
+        "shareSave": {
+         "__typename": "ShareSave",
+         "entityId": "1257736932578886647",
+         "entityType": "HOTEL",
+         "shareButton": {
+          "__typename": "BasicListItem",
+          "title": "Share",
+          "subtitle": null,
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.title.share",
+           "experiments": [],
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "title",
+           "component": "share"
+          }
+         },
+         "saveButton": {
+          "__typename": "BasicListItem",
+          "title": "Save",
+          "subtitle": null,
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.title.save",
+           "experiments": [],
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "title",
+           "component": "save"
+          }
+         },
+         "unsaveButton": {
+          "__typename": "BasicListItem",
+          "title": "Saved",
+          "subtitle": null,
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.title.unsave",
+           "experiments": [],
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "title",
+           "component": "unsave"
+          }
+         },
+         "sharingConfig": {
+          "__typename": "PdpSharingConfig",
+          "title": "Eklo Lyon Sud Eurexpo · ★4.4 · Hotel in Vénissieux"
+         },
+         "embedData": {
+          "__typename": "StayEmbedData",
+          "id": "1257736932578886647",
+          "name": "Eklo Lyon Sud Eurexpo",
+          "personCapacity": 2,
+          "pictureUrl": "https://example.com/fixture-image/92.jpg",
+          "propertyType": "Room in hotel",
+          "url": null,
+          "reviewCount": 359,
+          "starRating": 4.4
+         }
+        },
+        "actionableIcon": null
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjo0Mzk4MjQ0MDgzNDc5NTY3MTI=",
+       "sectionComponentType": "HERO_DEFAULT",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "HERO_DEFAULT",
+       "errors": null,
+       "sectionDependencies": [],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.hero_default",
+        "experiments": null,
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "HERO_DEFAULT",
+       "section": {
+        "__typename": "PdpHeroSection",
+        "previewImages": [
+         {
+          "__typename": "Image",
+          "id": "2570855505",
+          "baseUrl": "https://example.com/fixture-image/93.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 1"
+         },
+         {
+          "__typename": "Image",
+          "id": "2634604491",
+          "baseUrl": "https://example.com/fixture-image/94.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 2"
+         },
+         {
+          "__typename": "Image",
+          "id": "2570855539",
+          "baseUrl": "https://example.com/fixture-image/95.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 3"
+         },
+         {
+          "__typename": "Image",
+          "id": "2570855563",
+          "baseUrl": "https://example.com/fixture-image/96.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 4"
+         },
+         {
+          "__typename": "Image",
+          "id": "2570855574",
+          "baseUrl": "https://example.com/fixture-image/97.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 5"
+         },
+         {
+          "__typename": "Image",
+          "id": "2570855592",
+          "baseUrl": "https://example.com/fixture-image/98.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 6"
+         },
+         {
+          "__typename": "Image",
+          "id": "2570855624",
+          "baseUrl": "https://example.com/fixture-image/99.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 7"
+         },
+         {
+          "__typename": "Image",
+          "id": "2570855642",
+          "baseUrl": "https://example.com/fixture-image/100.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 8"
+         },
+         {
+          "__typename": "Image",
+          "id": "2570855665",
+          "baseUrl": "https://example.com/fixture-image/101.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 9"
+         },
+         {
+          "__typename": "Image",
+          "id": "2570855675",
+          "baseUrl": "https://example.com/fixture-image/102.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 10"
+         },
+         {
+          "__typename": "Image",
+          "id": "2659488184",
+          "baseUrl": "https://example.com/fixture-image/103.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 11"
+         },
+         {
+          "__typename": "Image",
+          "id": "2659488236",
+          "baseUrl": "https://example.com/fixture-image/104.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 12"
+         },
+         {
+          "__typename": "Image",
+          "id": "2659488297",
+          "baseUrl": "https://example.com/fixture-image/105.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 13"
+         },
+         {
+          "__typename": "Image",
+          "id": "2659488296",
+          "baseUrl": "https://example.com/fixture-image/106.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 14"
+         },
+         {
+          "__typename": "Image",
+          "id": "2659488353",
+          "baseUrl": "https://example.com/fixture-image/107.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 15"
+         },
+         {
+          "__typename": "Image",
+          "id": "2565436067",
+          "baseUrl": "https://example.com/fixture-image/108.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 16"
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035664",
+          "baseUrl": "https://example.com/fixture-image/109.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 17"
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035684",
+          "baseUrl": "https://example.com/fixture-image/110.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 18"
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035654",
+          "baseUrl": "https://example.com/fixture-image/111.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 19"
+         },
+         {
+          "__typename": "Image",
+          "id": "2565693827",
+          "baseUrl": "https://example.com/fixture-image/112.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 20"
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035682",
+          "baseUrl": "https://example.com/fixture-image/113.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 21"
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035692",
+          "baseUrl": "https://example.com/fixture-image/114.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 22"
+         },
+         {
+          "__typename": "Image",
+          "id": "2648496202",
+          "baseUrl": "https://example.com/fixture-image/115.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 23"
+         },
+         {
+          "__typename": "Image",
+          "id": "2648496212",
+          "baseUrl": "https://example.com/fixture-image/116.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 24"
+         },
+         {
+          "__typename": "Image",
+          "id": "2648496258",
+          "baseUrl": "https://example.com/fixture-image/117.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 25"
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035657",
+          "baseUrl": "https://example.com/fixture-image/118.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 26"
+         },
+         {
+          "__typename": "Image",
+          "id": "2565434782",
+          "baseUrl": "https://example.com/fixture-image/119.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 27"
+         },
+         {
+          "__typename": "Image",
+          "id": "2565693836",
+          "baseUrl": "https://example.com/fixture-image/120.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 28"
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035680",
+          "baseUrl": "https://example.com/fixture-image/121.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 29"
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035696",
+          "baseUrl": "https://example.com/fixture-image/122.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 30"
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035873",
+          "baseUrl": "https://example.com/fixture-image/123.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 31"
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035874",
+          "baseUrl": "https://example.com/fixture-image/124.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 32"
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035879",
+          "baseUrl": "https://example.com/fixture-image/125.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 33"
+         },
+         {
+          "__typename": "Image",
+          "id": "2565693828",
+          "baseUrl": "https://example.com/fixture-image/126.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 34"
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035891",
+          "baseUrl": "https://example.com/fixture-image/127.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 35"
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035888",
+          "baseUrl": "https://example.com/fixture-image/128.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 36"
+         },
+         {
+          "__typename": "Image",
+          "id": "2664969436",
+          "baseUrl": "https://example.com/fixture-image/129.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 37"
+         },
+         {
+          "__typename": "Image",
+          "id": "2664969441",
+          "baseUrl": "https://example.com/fixture-image/130.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 38"
+         },
+         {
+          "__typename": "Image",
+          "id": "2664969430",
+          "baseUrl": "https://example.com/fixture-image/131.jpg",
+          "previewEncodedPng": null,
+          "accessibilityLabel": "Eklo Lyon Sud Eurexpo image 39"
+         }
+        ],
+        "carouselImageNavigationLoggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.hero.carouselImageNavigation",
+         "experiments": null,
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": "hero",
+         "component": "carouselImageNavigation"
+        },
+        "previewImageLoggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.hero.image",
+         "experiments": null,
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": "hero",
+         "component": "image"
+        },
+        "seePhotosButton": {
+         "__typename": "BasicListItem",
+         "title": "Show all photos",
+         "loggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.hero.seePhotos",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "hero",
+          "component": "seePhotos"
+         },
+         "action": {
+          "__typename": "NavigateToScreen",
+          "loggingData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.hero.seePhotos",
+           "eventData": null,
+           "eventDataSchemaName": null
+          },
+          "url": null,
+          "screenId": "PHOTO_TOUR_SCROLLABLE",
+          "itemId": null
+         }
+        },
+        "heroVariant": null
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjotODI2Mjk5NDQ5MjM5ODM2OTQwMw==",
+       "sectionComponentType": "LOCATION_PDP",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "LOCATION_DEFAULT",
+       "errors": null,
+       "sectionDependencies": [
+        "TRANSLATE_UGC",
+        "CHECK_IN",
+        "CHECK_OUT"
+       ],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.location_default",
+        "experiments": [
+         {
+          "__typename": "Experiment",
+          "experiment": "map_category_button_experiment_v2_desktop",
+          "treatment": "treatment",
+          "dontLogOnFormFactor": null
+         }
+        ],
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": {
+        "__typename": "UniversalLoggingData",
+        "eventData": "{}",
+        "eventDataSchema": "Pdp.v1.PdpLocationSectionViewportPresentationSession"
+       },
+       "mutationMetadata": null,
+       "pluginPointId": "LOCATION_DEFAULT",
+       "section": {
+        "__typename": "LocationSection",
+        "title": "Where you’ll be",
+        "subtitle": null,
+        "lat": 45.716,
+        "lng": 4.8792,
+        "homeIcon": "COMPACT_MAPS_GENERIC",
+        "mapMarkerType": "EXACT",
+        "address": "2 rue simone Veil, 69200, Vénissieux, France",
+        "addressTitle": "Eklo Lyon Sud Eurexpo",
+        "locationDisclaimer": null,
+        "fullscreenMapDisclaimer": null,
+        "previewLocationDetails": null,
+        "listingLocationVerificationDetails": {
+         "__typename": "ListingLocationVerificationDetails",
+         "isVerified": false,
+         "verifiedHelpHtml": null,
+         "verifiedHelpLinkText": null,
+         "verifiedHelpModalContent": null
+        },
+        "summaryLocationDetails": [],
+        "seeAllLocationDetails": null,
+        "seeAllDetailsButton": null,
+        "hostGuidebookButton": null,
+        "mapMarkerAccessibilityLabel": null,
+        "mapMarkerRadiusInMeters": 0,
+        "nearbyPlaces": null,
+        "categoricalNearbyPlacesSheet": null
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjotMjYzODU2MTA0MTk0MzA4NTMzNA==",
+       "sectionComponentType": "REVIEWS_DEFAULT",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "REVIEWS_DEFAULT",
+       "errors": null,
+       "sectionDependencies": [],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.reviews_default",
+        "experiments": [],
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "REVIEWS_DEFAULT",
+       "section": {
+        "__typename": "StayPdpReviewsSection",
+        "title": null,
+        "subtitle": null,
+        "ratings": [
+         {
+          "__typename": "CategoryRating",
+          "categoryType": "CLEANLINESS",
+          "localizedRating": "4.5",
+          "label": "Cleanliness",
+          "accessibilityLabel": "Rated 4.5 out of 5 stars for cleanliness",
+          "percentage": 0.9
+         },
+         {
+          "__typename": "CategoryRating",
+          "categoryType": "ACCURACY",
+          "localizedRating": "4.5",
+          "label": "Accuracy",
+          "accessibilityLabel": "Rated 4.5 out of 5 stars for accuracy",
+          "percentage": 0.9
+         },
+         {
+          "__typename": "CategoryRating",
+          "categoryType": "CHECKIN",
+          "localizedRating": "4.6",
+          "label": "Check-in",
+          "accessibilityLabel": "Rated 4.6 out of 5 stars for check-in",
+          "percentage": 0.9199999999999999
+         },
+         {
+          "__typename": "CategoryRating",
+          "categoryType": "COMMUNICATION",
+          "localizedRating": "4.4",
+          "label": "Communication",
+          "accessibilityLabel": "Rated 4.4 out of 5 stars for communication",
+          "percentage": 0.8800000000000001
+         },
+         {
+          "__typename": "CategoryRating",
+          "categoryType": "LOCATION",
+          "localizedRating": "4.4",
+          "label": "Location",
+          "accessibilityLabel": "Rated 4.4 out of 5 stars for location",
+          "percentage": 0.8800000000000001
+         },
+         {
+          "__typename": "CategoryRating",
+          "categoryType": "VALUE",
+          "localizedRating": "4.4",
+          "label": "Value",
+          "accessibilityLabel": "Rated 4.4 out of 5 stars for value",
+          "percentage": 0.8800000000000001
+         }
+        ],
+        "ratingDistribution": [
+         {
+          "__typename": "CategoryRating",
+          "label": "5",
+          "localizedRating": "63%",
+          "percentage": 0.6295264623955432,
+          "accessibilityLabel": "5 stars, 63% of reviews"
+         },
+         {
+          "__typename": "CategoryRating",
+          "label": "4",
+          "localizedRating": "25%",
+          "percentage": 0.24512534818941503,
+          "accessibilityLabel": "4 stars, 25% of reviews"
+         },
+         {
+          "__typename": "CategoryRating",
+          "label": "3",
+          "localizedRating": "7%",
+          "percentage": 0.06963788300835655,
+          "accessibilityLabel": "3 stars, 7% of reviews"
+         },
+         {
+          "__typename": "CategoryRating",
+          "label": "2",
+          "localizedRating": "1%",
+          "percentage": 0.011142061281337047,
+          "accessibilityLabel": "2 stars, 1% of reviews"
+         },
+         {
+          "__typename": "CategoryRating",
+          "label": "1",
+          "localizedRating": "4%",
+          "percentage": 0.04456824512534819,
+          "accessibilityLabel": "1 stars, 4% of reviews"
+         }
+        ],
+        "ratingDistributionTitle": "Overall rating",
+        "heading": {
+         "__typename": "BasicListItem",
+         "accessibilityLabel": "4.4 out of 5 stars from 359 reviews",
+         "icon": "COMPACT_STAR",
+         "title": "4.4 · 359 reviews",
+         "subtitle": null
+        },
+        "modalHeading": {
+         "__typename": "BasicListItem",
+         "title": "4.4",
+         "subtitle": null
+        },
+        "overallCount": 359,
+        "overallRating": 4.4,
+        "seeAllReviewsButton": {
+         "__typename": "BasicListItem",
+         "title": "Show all 359 reviews",
+         "accessibilityLabel": "Show all 359 reviews, Opens modal dialog",
+         "loggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.reviews.showAll",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "reviews",
+          "component": "showAll"
+         }
+        },
+        "seeMoreReviewsLoggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.moreReviews",
+         "experiments": null,
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": "reviews",
+         "component": "moreReviews"
+        },
+        "reviewerProfilePhotoLoggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.reviewerPhoto",
+         "experiments": null,
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": "reviews",
+         "component": "reviewerPhoto"
+        },
+        "translateReviewsLoggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.translate",
+         "experiments": null,
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": "reviews",
+         "component": "translate"
+        },
+        "reviewImpressionLoggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.review",
+         "experiments": null,
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": "reviews",
+         "component": "review"
+        },
+        "titleAccessibilityLabel": null,
+        "disclaimer": {
+         "__typename": "BasicListItem",
+         "title": "How reviews work",
+         "subtitle": "Reviews from past guests help our community learn more about each home. By default, reviews are sorted by relevancy. Relevancy is based on recency, length, and information that you provide to us, such as your booking search, your country, and your language preferences.\n\nOnly the guest who booked the reservation can leave a review, and Airbnb only moderates reviews flagged for not following our policies.\n\nTo be eligible for a percentile ranking or guest favorite label, listings need at least 5 reviews in the last 4 years. Criteria is subject to change.\n\n<a target=\"_blank\" href=\"/help/article/13\">Learn more in our Help Center</a>",
+         "accessibilityLabel": "How reviews work",
+         "kicker": "How reviews work"
+        },
+        "isGuestFavorite": false,
+        "brandDescription": null,
+        "reviewsData": {
+         "__typename": "PdpReviewsSectionReviewData",
+         "accessibilityLabel": "Rated 4.4 out of 5 from 359 reviews.",
+         "reviewRating": "4.4"
+        },
+        "reviewSortSelect": {
+         "__typename": "ReviewSortSelect",
+         "accessibilityLabel": "Ratings sort order",
+         "loggingId": "pdp.reviews.sort_select",
+         "options": [
+          {
+           "__typename": "ReviewSortSelectOption",
+           "reviewsSortType": "BEST_QUALITY",
+           "title": "Most relevant"
+          },
+          {
+           "__typename": "ReviewSortSelectOption",
+           "reviewsSortType": "MOST_RECENT",
+           "title": "Most recent"
+          },
+          {
+           "__typename": "ReviewSortSelectOption",
+           "reviewsSortType": "RATING_DESC",
+           "title": "Highest rated"
+          },
+          {
+           "__typename": "ReviewSortSelectOption",
+           "reviewsSortType": "RATING_ASC",
+           "title": "Lowest rated"
+          }
+         ]
+        },
+        "style": "GRAY",
+        "styles": {
+         "__typename": "PdpReviewsSectionStyles",
+         "background": "GRAY",
+         "disclaimer": "UNDER_SUBTITLE"
+        },
+        "reviewTags": [
+         {
+          "__typename": "ReviewTag",
+          "count": 78,
+          "localizedName": "Cleanliness",
+          "name": "CLEANLINESS"
+         },
+         {
+          "__typename": "ReviewTag",
+          "count": 27,
+          "localizedName": "Parking",
+          "name": "PARKING"
+         },
+         {
+          "__typename": "ReviewTag",
+          "count": 94,
+          "localizedName": "Hospitality",
+          "name": "HOSPITALITY"
+         },
+         {
+          "__typename": "ReviewTag",
+          "count": 37,
+          "localizedName": "Location",
+          "name": "LOCATION"
+         },
+         {
+          "__typename": "ReviewTag",
+          "count": 26,
+          "localizedName": "Getting around",
+          "name": "GETTING_AROUND"
+         },
+         {
+          "__typename": "ReviewTag",
+          "count": 45,
+          "localizedName": "Indoor spaces",
+          "name": "INDOOR_SPACES"
+         },
+         {
+          "__typename": "ReviewTag",
+          "count": 20,
+          "localizedName": "Breakfast",
+          "name": "BREAKFAST"
+         },
+         {
+          "__typename": "ReviewTag",
+          "count": 37,
+          "localizedName": "Value",
+          "name": "VALUE"
+         },
+         {
+          "__typename": "ReviewTag",
+          "count": 25,
+          "localizedName": "Accuracy",
+          "name": "ACCURACY"
+         },
+         {
+          "__typename": "ReviewTag",
+          "count": 19,
+          "localizedName": "Bathroom",
+          "name": "BATHROOM"
+         }
+        ],
+        "qualityScorePercentile": null
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjotNzg2MzA2NTM3MzMxMjI0ODQwNA==",
+       "sectionComponentType": "POLICIES_DEFAULT",
+       "sectionContentStatus": "NOT_COMPLETE",
+       "sectionId": "POLICIES_DEFAULT",
+       "errors": null,
+       "sectionDependencies": [
+        "CHECK_IN",
+        "CHECK_OUT",
+        "TRANSLATE_UGC",
+        "BOOKING"
+       ],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.policies_default",
+        "experiments": [],
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "POLICIES_DEFAULT",
+       "section": {
+        "__typename": "PoliciesSection",
+        "title": "Things to know",
+        "cancellationPolicyForDisplay": null,
+        "additionalHouseRules": null,
+        "additionalHouseRulesTitle": null,
+        "cancellationPolicyTitle": null,
+        "houseRulesTitle": "Hotel rules",
+        "listingExpectationsTitle": null,
+        "safetyAndPropertyTitle": "Safety & property",
+        "houseRules": [
+         {
+          "__typename": "BasicListItem",
+          "icon": null,
+          "title": "Check-in after 3:00 PM"
+         },
+         {
+          "__typename": "BasicListItem",
+          "icon": null,
+          "title": "Checkout before 11:00 AM"
+         },
+         {
+          "__typename": "BasicListItem",
+          "icon": null,
+          "title": "No pets"
+         }
+        ],
+        "listingExpectations": null,
+        "previewSafetyAndProperties": [
+         {
+          "__typename": "SafetyAndPropertyInfo",
+          "title": "Choose a room to get the safety and property details",
+          "icon": null,
+          "learnMoreButton": null
+         }
+        ],
+        "safetyExpectationsAndAmenities": null,
+        "seeAllSafetyAndPropertyButton": null,
+        "seeAllHouseRulesButton": {
+         "__typename": "BasicListItem",
+         "accessibilityLabel": "More information about house rules",
+         "title": "Show more",
+         "loggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.policies.showAllRules",
+          "experiments": [],
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": null,
+          "component": null
+         }
+        },
+        "seeCancellationPolicyButton": null,
+        "reportButton": null,
+        "cleaningModal": null,
+        "documentDisplay": null,
+        "seeDocumentDisplayDetailsButton": null,
+        "houseRulesSubtitle": "Review these details for a smooth stay.",
+        "houseRulesTranslationDisclaimer": null,
+        "houseRulesSections": [
+         {
+          "__typename": "GeneralListContentSection",
+          "loggingEventData": null,
+          "title": "Checking in and out",
+          "items": [
+           {
+            "__typename": "BasicListItem",
+            "loggingEventData": null,
+            "title": "Check-in after 3:00 PM",
+            "subtitle": null,
+            "icon": "SYSTEM_CLOCK",
+            "html": null
+           },
+           {
+            "__typename": "BasicListItem",
+            "loggingEventData": null,
+            "title": "Checkout before 11:00 AM",
+            "subtitle": null,
+            "icon": "SYSTEM_CLOCK",
+            "html": null
+           },
+           {
+            "__typename": "BasicListItem",
+            "loggingEventData": null,
+            "title": "Self check-in with building staff",
+            "subtitle": null,
+            "icon": "SYSTEM_CHECK_IN",
+            "html": null
+           }
+          ]
+         },
+         {
+          "__typename": "GeneralListContentSection",
+          "loggingEventData": null,
+          "title": "During your stay",
+          "items": [
+           {
+            "__typename": "BasicListItem",
+            "loggingEventData": null,
+            "title": "No pets",
+            "subtitle": null,
+            "icon": "SYSTEM_NO_PETS",
+            "html": null
+           },
+           {
+            "__typename": "BasicListItem",
+            "loggingEventData": null,
+            "title": "Additional rules",
+            "subtitle": null,
+            "icon": "SYSTEM_CLIPBOARD",
+            "html": {
+             "__typename": "Html",
+             "htmlText": "Placeholder text 142.",
+             "recommendedNumberOfLines": 5,
+             "minimumNumberOfLinesForTruncation": 5,
+             "readMoreButton": {
+              "__typename": "Button",
+              "accessibilityLabel": null,
+              "title": "Show more",
+              "loggingData": {
+               "__typename": "LoggingEventData",
+               "loggingId": "pdp.policies.duringYourStay.additionalRules"
+              }
+             }
+            }
+           }
+          ]
+         }
+        ],
+        "safetyAndPropertySubtitle": null,
+        "safetyAndPropertiesTranslationDisclaimer": null,
+        "safetyAndPropertiesSections": null
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjo5MTk1Nzg3NjEzMjEwMjM2NjMy",
+       "sectionComponentType": "SBUI_SENTINEL",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "NEARBY_HOTELS_CAROUSEL",
+       "errors": null,
+       "sectionDependencies": null,
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": null,
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": null,
+       "section": {
+        "__typename": "SBUISentinelSection"
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjo3Mzc1NTg0MTQ4NDc5MDc4Mjg4",
+       "sectionComponentType": "SEO_LINKS_DEFAULT",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "SEO_LINKS_DEFAULT",
+       "errors": null,
+       "sectionDependencies": [],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": null,
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": null,
+       "section": {
+        "__typename": "SeoLinksSection",
+        "title": "Explore other options in and around Lyon",
+        "nearbyCities": [],
+        "internalLinksTitle": null,
+        "internalLinks": null,
+        "breadcrumbs": [
+         {
+          "__typename": "BasicListItem",
+          "title": "Airbnb",
+          "anchor": "/"
+         },
+         {
+          "__typename": "BasicListItem",
+          "title": "France",
+          "anchor": "/france/stays"
+         },
+         {
+          "__typename": "BasicListItem",
+          "title": "Southern France",
+          "anchor": "/southern-france/stays"
+         }
+        ]
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjo2MDMxNzIxNDY3NzYyNDQwNzA2",
+       "sectionComponentType": "SBUI_SENTINEL",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "INLINE_GALLERY",
+       "errors": null,
+       "sectionDependencies": null,
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": null,
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": null,
+       "section": {
+        "__typename": "SBUISentinelSection"
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjotNDQ5MTA0Njg2MzY2ODQ1MTIzNg==",
+       "sectionComponentType": "NAV_MOBILE",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "NAV_MOBILE",
+       "errors": [],
+       "sectionDependencies": [],
+       "enableDependencies": [],
+       "disableDependencies": [],
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.nav_mobile",
+        "experiments": [],
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "NAV_MOBILE",
+       "section": {
+        "__typename": "NavMobileSection",
+        "shareSave": {
+         "__typename": "ShareSave",
+         "entityId": "1257736932578886647",
+         "entityType": "HOTEL",
+         "giftButton": null,
+         "shareButton": {
+          "__typename": "BasicListItem",
+          "title": "Share",
+          "subtitle": null,
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.stickyNav.share",
+           "experiments": [],
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "stickyNav",
+           "component": "share"
+          }
+         },
+         "saveButton": {
+          "__typename": "BasicListItem",
+          "title": "Save",
+          "subtitle": null,
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.stickyNav.save",
+           "experiments": [],
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "stickyNav",
+           "component": "save"
+          }
+         },
+         "unsaveButton": {
+          "__typename": "BasicListItem",
+          "title": "Saved",
+          "subtitle": null,
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.stickyNav.unsave",
+           "experiments": [],
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "stickyNav",
+           "component": "unsave"
+          }
+         },
+         "embedData": {
+          "__typename": "StayEmbedData",
+          "id": "1257736932578886647",
+          "name": "Eklo Lyon Sud Eurexpo",
+          "personCapacity": 2,
+          "pictureUrl": "https://example.com/fixture-image/92.jpg",
+          "propertyType": "Room in hotel",
+          "url": null,
+          "reviewCount": 359,
+          "starRating": 4.4
+         }
+        },
+        "backLink": {
+         "__typename": "SeoBreadcrumbDetails",
+         "linkRoute": "/s/homes",
+         "linkText": "Homes"
+        },
+        "isElvisListing": false,
+        "NavMobileSectionFragment": null
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjotNDg5OTc2NDAxODY5OTM1Njg4MQ==",
+       "sectionComponentType": "BOOK_IT_FLOATING_FOOTER",
+       "sectionContentStatus": "NOT_COMPLETE",
+       "sectionId": "PROPERTY_BOOK_IT_FLOATING_FOOTER",
+       "errors": null,
+       "sectionDependencies": [
+        "BOOKING"
+       ],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.property_book_it_floating_footer",
+        "experiments": [],
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "PROPERTY_BOOK_IT_FLOATING_FOOTER",
+       "section": {
+        "__typename": "BookItSection",
+        "subpageIdToOpen": null,
+        "showPriceBreakdown": null,
+        "cancellationPolicyLoggingEventData": null,
+        "calendarTitle": null,
+        "calendarSubtitle": null,
+        "descriptionItems": null,
+        "discountCopy": null,
+        "maxGuestCapacity": null,
+        "maxPlusValue": null,
+        "tripDetailsLoggingEventData": null,
+        "reviewItem": {
+         "__typename": "BasicListItem",
+         "accessibilityLabel": "Rated 4.4 out of 5 from 359 reviews.",
+         "action": null,
+         "icon": "COMPACT_STAR",
+         "subtitle": null,
+         "title": "4.4"
+        },
+        "available": null,
+        "structuredDisplayPrice": null,
+        "discountData": null,
+        "bookItButtonByPlacement": null,
+        "cancellationPolicies": null,
+        "cancellationPolicyForDisplay": null,
+        "localizedUnavailabilityMessage": null,
+        "localizedUnavailabilityMessagePositionString": null,
+        "priceDisclaimer": null,
+        "selectedDatesLink": null,
+        "selectedNights": null,
+        "bookItButtonLayout": null,
+        "productItemDetail": null,
+        "ratePlanLoggingEventData": null,
+        "ratePlanTitle": null,
+        "promotionBanner": null,
+        "guestDisclaimer": null,
+        "petsAllowed": null,
+        "petDetails": null,
+        "adultsPicker": null,
+        "childrenPicker": null,
+        "infantsPicker": null,
+        "canInstantBook": null
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjotMjk4MDY5MDE4NDc1ODUzNDQzMA==",
+       "sectionComponentType": "PHOTO_TOUR_SCROLLABLE",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "PHOTO_TOUR_SCROLLABLE_MODAL",
+       "errors": null,
+       "sectionDependencies": null,
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.photo_tour_scrollable_modal",
+        "experiments": [],
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": null,
+       "section": {
+        "__typename": "PhotoTourModalSection",
+        "title": "Hotel tour",
+        "mediaItems": [
+         {
+          "__typename": "Image",
+          "id": "2570855505",
+          "aspectRatio": 1.3550135501355014,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Overview image 1",
+          "baseUrl": "https://example.com/fixture-image/93.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2634604491",
+          "aspectRatio": 1.3599274705349047,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Overview image 2",
+          "baseUrl": "https://example.com/fixture-image/94.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2570855539",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Overview image 3",
+          "baseUrl": "https://example.com/fixture-image/95.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2570855563",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Overview image 4",
+          "baseUrl": "https://example.com/fixture-image/96.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2570855574",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Overview image 5",
+          "baseUrl": "https://example.com/fixture-image/97.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2570855592",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Overview image 6",
+          "baseUrl": "https://example.com/fixture-image/98.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2570855624",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Overview image 7",
+          "baseUrl": "https://example.com/fixture-image/99.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2570855642",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Overview image 8",
+          "baseUrl": "https://example.com/fixture-image/100.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2570855665",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Overview image 9",
+          "baseUrl": "https://example.com/fixture-image/101.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2570855675",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Overview image 10",
+          "baseUrl": "https://example.com/fixture-image/102.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2659488184",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Classic XL image 1",
+          "baseUrl": "https://example.com/fixture-image/103.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2659488236",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Classic XL image 2",
+          "baseUrl": "https://example.com/fixture-image/104.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2659488297",
+          "aspectRatio": 1.44,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Classic XL image 3",
+          "baseUrl": "https://example.com/fixture-image/105.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2659488296",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Classic XL image 4",
+          "baseUrl": "https://example.com/fixture-image/106.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2659488353",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Classic XL image 5",
+          "baseUrl": "https://example.com/fixture-image/107.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2565436067",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Classique image 1",
+          "baseUrl": "https://example.com/fixture-image/108.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035664",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Classique image 2",
+          "baseUrl": "https://example.com/fixture-image/109.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035684",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Classique image 3",
+          "baseUrl": "https://example.com/fixture-image/110.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035654",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Classique image 4",
+          "baseUrl": "https://example.com/fixture-image/111.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2565693827",
+          "aspectRatio": 1.44,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Classique image 5",
+          "baseUrl": "https://example.com/fixture-image/112.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035682",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Classique image 6",
+          "baseUrl": "https://example.com/fixture-image/113.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035692",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Classique image 7",
+          "baseUrl": "https://example.com/fixture-image/114.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035657",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Duo image 1",
+          "baseUrl": "https://example.com/fixture-image/118.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2565434782",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Duo image 2",
+          "baseUrl": "https://example.com/fixture-image/119.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2565693836",
+          "aspectRatio": 1.44,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Duo image 3",
+          "baseUrl": "https://example.com/fixture-image/120.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035680",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Duo image 4",
+          "baseUrl": "https://example.com/fixture-image/121.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035696",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Duo image 5",
+          "baseUrl": "https://example.com/fixture-image/122.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035873",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Family image 1",
+          "baseUrl": "https://example.com/fixture-image/123.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035874",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Family image 2",
+          "baseUrl": "https://example.com/fixture-image/124.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035879",
+          "aspectRatio": 0.75,
+          "orientation": "PORTRAIT",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Family image 3",
+          "baseUrl": "https://example.com/fixture-image/125.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2565693828",
+          "aspectRatio": 1.44,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Family image 4",
+          "baseUrl": "https://example.com/fixture-image/126.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035891",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Family image 5",
+          "baseUrl": "https://example.com/fixture-image/127.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2397035888",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Family image 6",
+          "baseUrl": "https://example.com/fixture-image/128.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2648496202",
+          "aspectRatio": 1.44,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Private dormitory for 6 people image 1",
+          "baseUrl": "https://example.com/fixture-image/115.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2648496212",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Private dormitory for 6 people image 2",
+          "baseUrl": "https://example.com/fixture-image/116.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2648496258",
+          "aspectRatio": 1.3333333333333333,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Private dormitory for 6 people image 3",
+          "baseUrl": "https://example.com/fixture-image/117.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2664969436",
+          "aspectRatio": 1.3330078125,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Solo image 1",
+          "baseUrl": "https://example.com/fixture-image/129.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2664969441",
+          "aspectRatio": 1.3330078125,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Solo image 2",
+          "baseUrl": "https://example.com/fixture-image/130.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         },
+         {
+          "__typename": "Image",
+          "id": "2664969430",
+          "aspectRatio": 1.3330078125,
+          "orientation": "LANDSCAPE",
+          "onPressAction": null,
+          "accessibilityLabel": "Eklo Solo image 3",
+          "baseUrl": "https://example.com/fixture-image/131.jpg",
+          "displayAspectRatio": null,
+          "imageMetadata": {
+           "__typename": "ImageMetadata",
+           "caption": null,
+           "imageType": null,
+           "isProfessional": false,
+           "isVerified": null,
+           "localizedCaption": null
+          },
+          "previewEncodedPng": null,
+          "overlay": null,
+          "loggingEventData": null
+         }
+        ],
+        "gridImageLoggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.photoTour.gridImage",
+         "experiments": null,
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": "photoTour",
+         "component": "gridImage"
+        },
+        "carouselImageNavigationLoggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.photoTour.carouselImageNavigation",
+         "experiments": null,
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": "photoTour",
+         "component": "carouselImageNavigation"
+        },
+        "shareSave": null,
+        "closeButton": {
+         "__typename": "BasicListItem",
+         "title": "Close",
+         "anchor": null,
+         "icon": null,
+         "loggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.photoTour.close",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "photoTour",
+          "component": "close"
+         },
+         "action": null
+        },
+        "imageNavigationLoggingEventData": null,
+        "recommendedNumberOfHighlights": null,
+        "roomTourLayoutInfos": [
+         {
+          "__typename": "RoomTourLayoutInfo",
+          "roomTourItems": [
+           {
+            "__typename": "RoomTourItem",
+            "title": "Overview",
+            "imageIds": [
+             "2570855505",
+             "2634604491",
+             "2570855539",
+             "2570855563",
+             "2570855574",
+             "2570855592",
+             "2570855624",
+             "2570855642",
+             "2570855665",
+             "2570855675"
+            ],
+            "mediaBlocks": [
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "ONE_LANDSCAPE",
+              "mediaBlock": {
+               "__typename": "OneLandscapeMediaBlock",
+               "landscapeId": "2570855505"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "TWO_LANDSCAPES",
+              "mediaBlock": {
+               "__typename": "TwoLandscapesMediaBlock",
+               "leftLandscapeId": "2634604491",
+               "rightLandscapeId": "2570855539"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "ONE_LANDSCAPE",
+              "mediaBlock": {
+               "__typename": "OneLandscapeMediaBlock",
+               "landscapeId": "2570855563"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "TWO_LANDSCAPES",
+              "mediaBlock": {
+               "__typename": "TwoLandscapesMediaBlock",
+               "leftLandscapeId": "2570855574",
+               "rightLandscapeId": "2570855592"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "ONE_LANDSCAPE",
+              "mediaBlock": {
+               "__typename": "OneLandscapeMediaBlock",
+               "landscapeId": "2570855624"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "TWO_LANDSCAPES",
+              "mediaBlock": {
+               "__typename": "TwoLandscapesMediaBlock",
+               "leftLandscapeId": "2570855642",
+               "rightLandscapeId": "2570855665"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "ONE_LANDSCAPE",
+              "mediaBlock": {
+               "__typename": "OneLandscapeMediaBlock",
+               "landscapeId": "2570855675"
+              }
+             }
+            ],
+            "highlights": []
+           },
+           {
+            "__typename": "RoomTourItem",
+            "title": "Eklo Classic XL",
+            "imageIds": [
+             "2659488184",
+             "2659488236",
+             "2659488297",
+             "2659488296",
+             "2659488353"
+            ],
+            "mediaBlocks": [
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "ONE_LANDSCAPE",
+              "mediaBlock": {
+               "__typename": "OneLandscapeMediaBlock",
+               "landscapeId": "2659488184"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "TWO_LANDSCAPES",
+              "mediaBlock": {
+               "__typename": "TwoLandscapesMediaBlock",
+               "leftLandscapeId": "2659488236",
+               "rightLandscapeId": "2659488297"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "TWO_LANDSCAPES",
+              "mediaBlock": {
+               "__typename": "TwoLandscapesMediaBlock",
+               "leftLandscapeId": "2659488296",
+               "rightLandscapeId": "2659488353"
+              }
+             }
+            ],
+            "highlights": []
+           },
+           {
+            "__typename": "RoomTourItem",
+            "title": "Eklo Classique",
+            "imageIds": [
+             "2565436067",
+             "2397035664",
+             "2397035684",
+             "2397035654",
+             "2565693827",
+             "2397035682",
+             "2397035692"
+            ],
+            "mediaBlocks": [
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "ONE_LANDSCAPE",
+              "mediaBlock": {
+               "__typename": "OneLandscapeMediaBlock",
+               "landscapeId": "2565436067"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "TWO_LANDSCAPES",
+              "mediaBlock": {
+               "__typename": "TwoLandscapesMediaBlock",
+               "leftLandscapeId": "2397035664",
+               "rightLandscapeId": "2397035684"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "ONE_LANDSCAPE",
+              "mediaBlock": {
+               "__typename": "OneLandscapeMediaBlock",
+               "landscapeId": "2397035654"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "TWO_LANDSCAPES",
+              "mediaBlock": {
+               "__typename": "TwoLandscapesMediaBlock",
+               "leftLandscapeId": "2565693827",
+               "rightLandscapeId": "2397035682"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "ONE_LANDSCAPE",
+              "mediaBlock": {
+               "__typename": "OneLandscapeMediaBlock",
+               "landscapeId": "2397035692"
+              }
+             }
+            ],
+            "highlights": []
+           },
+           {
+            "__typename": "RoomTourItem",
+            "title": "Eklo Duo",
+            "imageIds": [
+             "2397035657",
+             "2565434782",
+             "2565693836",
+             "2397035680",
+             "2397035696"
+            ],
+            "mediaBlocks": [
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "ONE_LANDSCAPE",
+              "mediaBlock": {
+               "__typename": "OneLandscapeMediaBlock",
+               "landscapeId": "2397035657"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "TWO_LANDSCAPES",
+              "mediaBlock": {
+               "__typename": "TwoLandscapesMediaBlock",
+               "leftLandscapeId": "2565434782",
+               "rightLandscapeId": "2565693836"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "TWO_LANDSCAPES",
+              "mediaBlock": {
+               "__typename": "TwoLandscapesMediaBlock",
+               "leftLandscapeId": "2397035680",
+               "rightLandscapeId": "2397035696"
+              }
+             }
+            ],
+            "highlights": []
+           },
+           {
+            "__typename": "RoomTourItem",
+            "title": "Eklo Family",
+            "imageIds": [
+             "2397035873",
+             "2397035874",
+             "2397035879",
+             "2565693828",
+             "2397035891",
+             "2397035888"
+            ],
+            "mediaBlocks": [
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "HORIZONTAL_FLIP",
+              "format": "ONE_PORTRAIT_TWO_LANDSCAPES",
+              "mediaBlock": {
+               "__typename": "OnePortraitTwoLandscapesMediaBlock",
+               "lowerLandscapeId": "2397035874",
+               "portraitId": "2397035879",
+               "upperLandscapeId": "2397035873"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "ONE_LANDSCAPE",
+              "mediaBlock": {
+               "__typename": "OneLandscapeMediaBlock",
+               "landscapeId": "2565693828"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "TWO_LANDSCAPES",
+              "mediaBlock": {
+               "__typename": "TwoLandscapesMediaBlock",
+               "leftLandscapeId": "2397035891",
+               "rightLandscapeId": "2397035888"
+              }
+             }
+            ],
+            "highlights": []
+           },
+           {
+            "__typename": "RoomTourItem",
+            "title": "Eklo Private dormitory for 6 people",
+            "imageIds": [
+             "2648496202",
+             "2648496212",
+             "2648496258"
+            ],
+            "mediaBlocks": [
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "ONE_LANDSCAPE",
+              "mediaBlock": {
+               "__typename": "OneLandscapeMediaBlock",
+               "landscapeId": "2648496202"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "TWO_LANDSCAPES",
+              "mediaBlock": {
+               "__typename": "TwoLandscapesMediaBlock",
+               "leftLandscapeId": "2648496212",
+               "rightLandscapeId": "2648496258"
+              }
+             }
+            ],
+            "highlights": []
+           },
+           {
+            "__typename": "RoomTourItem",
+            "title": "Eklo Solo",
+            "imageIds": [
+             "2664969436",
+             "2664969441",
+             "2664969430"
+            ],
+            "mediaBlocks": [
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "ONE_LANDSCAPE",
+              "mediaBlock": {
+               "__typename": "OneLandscapeMediaBlock",
+               "landscapeId": "2664969436"
+              }
+             },
+             {
+              "__typename": "MediaBlockContainer",
+              "flip": "DEFAULT",
+              "format": "TWO_LANDSCAPES",
+              "mediaBlock": {
+               "__typename": "TwoLandscapesMediaBlock",
+               "leftLandscapeId": "2664969441",
+               "rightLandscapeId": "2664969430"
+              }
+             }
+            ],
+            "highlights": []
+           }
+          ]
+         }
+        ],
+        "translationDisclaimer": {
+         "__typename": "BasicListItem",
+         "title": null,
+         "subtitle": "Translate to English",
+         "icon": "COMPACT_NO_TRANSLATION",
+         "loggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.photoTour.translateCaption",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "photoTour",
+          "component": "translateCaption"
+         }
+        },
+        "showOriginalDisclaimer": {
+         "__typename": "BasicListItem",
+         "title": "Automatically translated.",
+         "subtitle": "Show original",
+         "icon": "COMPACT_TRANSLATE",
+         "loggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.photoTour.untranslateCaption",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "photoTour",
+          "component": "untranslateCaption"
+         }
+        },
+        "isAutoTranslatedOn": true
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjotNzYwODk0MTk3MzA0MTc4MDMzNg==",
+       "sectionComponentType": "AVAILABILITY_CALENDAR_DEFAULT",
+       "sectionContentStatus": "COMPLETE",
+       "sectionId": "AVAILABILITY_CALENDAR_DEFAULT",
+       "errors": null,
+       "sectionDependencies": [],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.availability_calendar_default",
+        "experiments": [],
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "AVAILABILITY_CALENDAR_DEFAULT",
+       "section": {
+        "__typename": "AvailabilityCalendarSection",
+        "title": "Select dates",
+        "subtitle": "Add your travel dates for exact pricing",
+        "descriptionItems": [
+         {
+          "__typename": "BasicListItem",
+          "title": "Room in hotel"
+         },
+         {
+          "__typename": "BasicListItem",
+          "title": "1 bed"
+         },
+         {
+          "__typename": "BasicListItem",
+          "title": "1 private bath"
+         }
+        ],
+        "listingTitle": "Eklo Classique",
+        "discountCopy": null,
+        "localizedLocation": "Vénissieux",
+        "thumbnail": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/92.jpg"
+        },
+        "maxGuestCapacity": 2,
+        "inlineCalendarLoggingEventData": {
+         "__typename": "CalendarLoggingEventData",
+         "clearDatesButton": {
+          "__typename": "BasicListItem",
+          "title": "Clear dates",
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.inlineCalendar.clearDates",
+           "experiments": null,
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "inlineCalendar",
+           "component": "clearDates"
+          }
+         },
+         "saveDatesButton": null,
+         "datesInputLoggingEventData": null,
+         "selectDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.inlineCalendar.selectDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "inlineCalendar",
+          "component": "selectDate"
+         },
+         "previousMonthLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.inlineCalendar.monthsNavPrevious",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "inlineCalendar",
+          "component": "monthsNavPrevious"
+         },
+         "nextMonthLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.inlineCalendar.monthsNavNext",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "inlineCalendar",
+          "component": "monthsNavNext"
+         },
+         "checkInDateInputLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.inlineCalendar.checkInInput",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "inlineCalendar",
+          "component": "checkInInput"
+         },
+         "checkOutDateInputLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.inlineCalendar.checkOutInput",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "inlineCalendar",
+          "component": "checkOutInput"
+         },
+         "guestInputLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.inlineCalendar.guestInput",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "inlineCalendar",
+          "component": "guestInput"
+         },
+         "cancellationPolicyLoggingEventData": null,
+         "changeDatesButtonLoggingEventData": null,
+         "selectCheckOutOnlyDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.inlineCalendar.selectCheckOutOnlyDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "inlineCalendar",
+          "component": "selectCheckOutOnlyDate"
+         },
+         "selectMaxNightsViolationDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.inlineCalendar.selectMaxNightsViolationDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "inlineCalendar",
+          "component": "selectMaxNightsViolationDate"
+         },
+         "selectMinNightsViolationDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.inlineCalendar.selectMinNightsViolationDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "inlineCalendar",
+          "component": "selectMinNightsViolationDate"
+         },
+         "selectUnavailableForCheckInDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.inlineCalendar.selectUnavailableForCheckInDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "inlineCalendar",
+          "component": "selectUnavailableForCheckInDate"
+         },
+         "selectUnavailableForCheckoutDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.inlineCalendar.selectUnavailableForCheckoutDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "inlineCalendar",
+          "component": "selectUnavailableForCheckoutDate"
+         }
+        },
+        "drawerCalendarLoggingEventData": {
+         "__typename": "CalendarLoggingEventData",
+         "clearDatesButton": {
+          "__typename": "BasicListItem",
+          "title": "Clear dates",
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.drawer.clearDates",
+           "experiments": null,
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "drawer",
+           "component": "clearDates"
+          }
+         },
+         "saveDatesButton": null,
+         "datesInputLoggingEventData": null,
+         "selectDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.drawer.selectDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "drawer",
+          "component": "selectDate"
+         },
+         "previousMonthLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.drawer.monthsNavPrevious",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "drawer",
+          "component": "monthsNavPrevious"
+         },
+         "nextMonthLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.drawer.monthsNavNext",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "drawer",
+          "component": "monthsNavNext"
+         },
+         "checkInDateInputLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.drawer.checkInInput",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "drawer",
+          "component": "checkInInput"
+         },
+         "checkOutDateInputLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.drawer.checkOutInput",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "drawer",
+          "component": "checkOutInput"
+         },
+         "guestInputLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.drawer.guestInput",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "drawer",
+          "component": "guestInput"
+         },
+         "cancellationPolicyLoggingEventData": null,
+         "changeDatesButtonLoggingEventData": null,
+         "selectCheckOutOnlyDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.drawer.selectCheckOutOnlyDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "drawer",
+          "component": "selectCheckOutOnlyDate"
+         },
+         "selectMaxNightsViolationDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.drawer.selectMaxNightsViolationDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "drawer",
+          "component": "selectMaxNightsViolationDate"
+         },
+         "selectMinNightsViolationDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.drawer.selectMinNightsViolationDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "drawer",
+          "component": "selectMinNightsViolationDate"
+         },
+         "selectUnavailableForCheckInDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.drawer.selectUnavailableForCheckInDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "drawer",
+          "component": "selectUnavailableForCheckInDate"
+         },
+         "selectUnavailableForCheckoutDateLoggingEventData": {
+          "__typename": "LoggingEventData",
+          "loggingId": "pdp.drawer.selectUnavailableForCheckoutDate",
+          "experiments": null,
+          "eventData": null,
+          "eventDataSchemaName": null,
+          "section": "drawer",
+          "component": "selectUnavailableForCheckoutDate"
+         }
+        },
+        "placementGroup": null
+       }
+      },
+      {
+       "__typename": "SectionContainer",
+       "id": "U2VjdGlvbkNvbnRhaW5lcjotODg3OTY4OTY4ODg5Mjc5ODg2NQ==",
+       "sectionComponentType": "BOOK_IT_CALENDAR_SHEET",
+       "sectionContentStatus": "NOT_COMPLETE",
+       "sectionId": "BOOK_IT_CALENDAR_SHEET",
+       "errors": null,
+       "sectionDependencies": [
+        "BOOKING"
+       ],
+       "enableDependencies": null,
+       "disableDependencies": null,
+       "loggingData": {
+        "__typename": "LoggingEventData",
+        "loggingId": "pdp_platform.book_it_calendar_sheet",
+        "experiments": [],
+        "eventData": null,
+        "eventDataSchemaName": null,
+        "section": null,
+        "component": null
+       },
+       "e2eLoggingSession": null,
+       "mutationMetadata": null,
+       "pluginPointId": "BOOK_IT_CALENDAR_SHEET",
+       "section": {
+        "__typename": "BookItSection",
+        "subpageIdToOpen": null,
+        "showPriceBreakdown": false,
+        "cancellationPolicyLoggingEventData": null,
+        "calendarTitle": null,
+        "calendarSubtitle": null,
+        "descriptionItems": null,
+        "discountCopy": null,
+        "maxGuestCapacity": null,
+        "maxPlusValue": null,
+        "tripDetailsLoggingEventData": null,
+        "reviewItem": {
+         "__typename": "BasicListItem",
+         "accessibilityLabel": "Rated 4.4 out of 5 from 359 reviews.",
+         "action": null,
+         "icon": "COMPACT_STAR",
+         "subtitle": null,
+         "title": "4.4"
+        },
+        "available": null,
+        "structuredDisplayPrice": null,
+        "discountData": null,
+        "bookItButtonByPlacement": {
+         "__typename": "BookItButtonByPlacement",
+         "footerButton": {
+          "__typename": "BasicListItem",
+          "title": "",
+          "action": null,
+          "loggingEventData": null,
+          "button": null
+         },
+         "sideBarButton": null,
+         "stickyNavButton": null,
+         "calendarFooterButton": {
+          "__typename": "BasicListItem",
+          "title": "Save",
+          "action": null,
+          "loggingEventData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.stickyFooter.save",
+           "experiments": null,
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": "stickyFooter",
+           "component": "save"
+          },
+          "button": null
+         }
+        },
+        "cancellationPolicies": null,
+        "cancellationPolicyForDisplay": null,
+        "localizedUnavailabilityMessage": null,
+        "localizedUnavailabilityMessagePositionString": null,
+        "priceDisclaimer": null,
+        "selectedDatesLink": null,
+        "selectedNights": null,
+        "bookItButtonLayout": null,
+        "productItemDetail": null,
+        "ratePlanLoggingEventData": null,
+        "ratePlanTitle": null,
+        "promotionBanner": null,
+        "guestDisclaimer": null,
+        "petsAllowed": null,
+        "petDetails": null,
+        "adultsPicker": null,
+        "childrenPicker": null,
+        "infantsPicker": null,
+        "canInstantBook": null
+       }
+      }
+     ],
+     "sectionsV2": [],
+     "screens": [
+      {
+       "__typename": "ScreenContainer",
+       "screenId": "PROFESSIONAL_HOST_DETAILS",
+       "screenProperties": {
+        "__typename": "ScreenProperties",
+        "modalType": "CONTEXT_SHEET_FITTED",
+        "transitionType": "CONTEXTUAL_GROW",
+        "modalTitle": "Business details",
+        "unstyled": null
+       },
+       "e2eLoggingSessions": null,
+       "screenContentStatus": "COMPLETE",
+       "screenContext": null,
+       "onLoadScreenAction": null,
+       "sectionPlacements": [
+        {
+         "__typename": "SectionPlacement",
+         "placement": "NAV",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [],
+         "style": null,
+         "formFactor": "WIDE",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "MAIN",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "PROFESSIONAL_HOST_DETAILS_MODAL",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 16,
+           "bottomPaddingPoints": 32,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          }
+         ],
+         "style": null,
+         "formFactor": "WIDE",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "NAV",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [],
+         "style": null,
+         "formFactor": "COMPACT",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "MAIN",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "PROFESSIONAL_HOST_DETAILS_MODAL",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 16,
+           "bottomPaddingPoints": 32,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          }
+         ],
+         "style": null,
+         "formFactor": "COMPACT",
+         "mediaType": null
+        }
+       ]
+      },
+      {
+       "__typename": "ScreenContainer",
+       "screenId": "ROOT",
+       "screenProperties": null,
+       "e2eLoggingSessions": null,
+       "screenContentStatus": "COMPLETE",
+       "screenContext": null,
+       "onLoadScreenAction": null,
+       "sectionPlacements": [
+        {
+         "__typename": "SectionPlacement",
+         "placement": "NAV",
+         "layout": "SIDEBAR",
+         "sectionDetails": [
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "NAV_DEFAULT",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": null,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "BOOK_IT_NAV",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": null,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          }
+         ],
+         "style": null,
+         "formFactor": "WIDE",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "ALONG_SIDEBAR",
+         "layout": "SIDEBAR",
+         "sectionDetails": [
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "OVERVIEW_DEFAULT_V2",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 32,
+           "bottomPaddingPoints": 32,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "BYLINE",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "NONE",
+            "lineWidth": null,
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 0,
+           "bottomPaddingPoints": 24,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "HIGHLIGHTS_DEFAULT",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 32,
+           "bottomPaddingPoints": 32,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "PROPERTY_AVAILABLE_ROOMS",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 48,
+           "bottomPaddingPoints": 48,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "PDP_EDUCATION_DEFAULT",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 24,
+           "bottomPaddingPoints": 24,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "UGC_TRANSLATION",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 48,
+           "bottomPaddingPoints": 0,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "DESCRIPTION_DEFAULT",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "NONE",
+            "lineWidth": null,
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 24,
+           "bottomPaddingPoints": 48,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "AMENITIES_DEFAULT",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "NONE",
+            "lineWidth": null,
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 0,
+           "bottomPaddingPoints": 48,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          }
+         ],
+         "style": {
+          "__typename": "PlacementStyle",
+          "backgroundColor": null,
+          "border": null,
+          "bottomMarginPoints": null,
+          "bottomPadding": null,
+          "bottomPaddingPoints": null,
+          "fixedWidthPoints": null,
+          "span": 7,
+          "topMarginPoints": null,
+          "topPadding": null,
+          "topPaddingPoints": null
+         },
+         "formFactor": "WIDE",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "SIDEBAR",
+         "layout": "SIDEBAR",
+         "sectionDetails": [
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "BOOK_IT_SIDEBAR",
+           "divider": null,
+           "border": {
+            "__typename": "Border",
+            "lineStyle": "THIN",
+            "shadow": "SECONDARY",
+            "color": null,
+            "hoverColor": null,
+            "paddingPoints": 24,
+            "leftOnly": null,
+            "rightOnly": null,
+            "topRounded": null,
+            "sides": null,
+            "bottomRounded": null,
+            "cornerRadiusPoints": null,
+            "padding": null
+           },
+           "topMarginPoints": 48,
+           "topPaddingPoints": null,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "REPORT_TO_AIRBNB",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": 24,
+           "topPaddingPoints": null,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          }
+         ],
+         "style": {
+          "__typename": "PlacementStyle",
+          "backgroundColor": null,
+          "border": {
+           "__typename": "Border",
+           "lineStyle": "NONE",
+           "shadow": null,
+           "color": null,
+           "hoverColor": null,
+           "paddingPoints": null,
+           "leftOnly": null,
+           "rightOnly": null,
+           "topRounded": null,
+           "sides": null,
+           "bottomRounded": null,
+           "cornerRadiusPoints": null,
+           "padding": null
+          },
+          "bottomMarginPoints": null,
+          "bottomPadding": null,
+          "bottomPaddingPoints": 48,
+          "fixedWidthPoints": null,
+          "span": 4,
+          "topMarginPoints": null,
+          "topPadding": null,
+          "topPaddingPoints": null
+         },
+         "formFactor": "WIDE",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "TOP",
+         "layout": "SIDEBAR",
+         "sectionDetails": [
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "TITLE_DEFAULT",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 24,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "HERO_DEFAULT",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 24,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          }
+         ],
+         "style": null,
+         "formFactor": "WIDE",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "BELOW_SIDEBAR",
+         "layout": "SIDEBAR",
+         "sectionDetails": [
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "LOCATION_DEFAULT",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 48,
+           "bottomPaddingPoints": 48,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "REVIEWS_DEFAULT",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 48,
+           "bottomPaddingPoints": 48,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "POLICIES_DEFAULT",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 48,
+           "bottomPaddingPoints": 48,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "NEARBY_HOTELS_CAROUSEL",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 32,
+           "bottomPaddingPoints": 40,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "SEO_LINKS_DEFAULT",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 48,
+           "bottomPaddingPoints": 48,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": {
+            "__typename": "Color",
+            "hex": null,
+            "dls19": "FAINT"
+           },
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          }
+         ],
+         "style": null,
+         "formFactor": "WIDE",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "MAIN",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "HERO_DEFAULT",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": null,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "TITLE_DEFAULT",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 32,
+           "bottomPaddingPoints": 24,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "OVERVIEW_DEFAULT_V2",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "NONE",
+            "lineWidth": null,
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 0,
+           "bottomPaddingPoints": 24,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "BYLINE",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "NONE",
+            "lineWidth": null,
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 0,
+           "bottomPaddingPoints": 24,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "HIGHLIGHTS_DEFAULT",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 32,
+           "bottomPaddingPoints": 24,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "PROPERTY_AVAILABLE_ROOMS",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 32,
+           "bottomPaddingPoints": 32,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "PDP_EDUCATION_DEFAULT",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 24,
+           "bottomPaddingPoints": 24,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "UGC_TRANSLATION",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 32,
+           "bottomPaddingPoints": 0,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "DESCRIPTION_DEFAULT",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "NONE",
+            "lineWidth": null,
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 32,
+           "bottomPaddingPoints": 32,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "INLINE_GALLERY",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "NONE",
+            "lineWidth": null,
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 0,
+           "bottomPaddingPoints": 32,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "AMENITIES_DEFAULT",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 32,
+           "bottomPaddingPoints": 24,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "LOCATION_DEFAULT",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 32,
+           "bottomPaddingPoints": 24,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "REVIEWS_DEFAULT",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 32,
+           "bottomPaddingPoints": 24,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "POLICIES_DEFAULT",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 24,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "REPORT_TO_AIRBNB",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 24,
+           "bottomPaddingPoints": 24,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "NEARBY_HOTELS_CAROUSEL",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THIN",
+            "lineWidth": "LONG",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 32,
+           "bottomPaddingPoints": 40,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "CONTAINED",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "SEO_LINKS_DEFAULT",
+           "divider": {
+            "__typename": "Divider",
+            "lineStyle": "THICK",
+            "lineWidth": "FULL_WIDTH",
+            "lineColor": null,
+            "topPadding": null,
+            "paddingBelowDivider": null
+           },
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 32,
+           "bottomPaddingPoints": 32,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          }
+         ],
+         "style": {
+          "__typename": "PlacementStyle",
+          "backgroundColor": null,
+          "border": null,
+          "bottomMarginPoints": null,
+          "bottomPadding": null,
+          "bottomPaddingPoints": 80,
+          "fixedWidthPoints": null,
+          "span": null,
+          "topMarginPoints": null,
+          "topPadding": null,
+          "topPaddingPoints": null
+         },
+         "formFactor": "COMPACT",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "NAV",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "NAV_MOBILE",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": null,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          }
+         ],
+         "style": null,
+         "formFactor": "COMPACT",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "FLOATING_FOOTER",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "PROPERTY_BOOK_IT_FLOATING_FOOTER",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": 16,
+           "bottomPaddingPoints": 16,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": null,
+           "maxWidth": null
+          }
+         ],
+         "style": null,
+         "formFactor": "COMPACT",
+         "mediaType": null
+        }
+       ]
+      },
+      {
+       "__typename": "ScreenContainer",
+       "screenId": "PHOTO_TOUR_SCROLLABLE",
+       "screenProperties": {
+        "__typename": "ScreenProperties",
+        "modalType": "FULL_SCREEN_MODAL",
+        "transitionType": "CONTEXTUAL_GROW",
+        "modalTitle": null,
+        "unstyled": true
+       },
+       "e2eLoggingSessions": null,
+       "screenContentStatus": "COMPLETE",
+       "screenContext": null,
+       "onLoadScreenAction": null,
+       "sectionPlacements": [
+        {
+         "__typename": "SectionPlacement",
+         "placement": "MAIN",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "PHOTO_TOUR_SCROLLABLE_MODAL",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": null,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          }
+         ],
+         "style": null,
+         "formFactor": "WIDE",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "MAIN",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "PHOTO_TOUR_SCROLLABLE_MODAL",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": null,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          }
+         ],
+         "style": null,
+         "formFactor": "COMPACT",
+         "mediaType": null
+        }
+       ]
+      },
+      {
+       "__typename": "ScreenContainer",
+       "screenId": "INDIVIDUAL_HOST_PROMPT",
+       "screenProperties": {
+        "__typename": "ScreenProperties",
+        "modalType": "CONTEXT_SHEET_FITTED",
+        "transitionType": "CONTEXTUAL_GROW",
+        "modalTitle": "What to know",
+        "unstyled": null
+       },
+       "e2eLoggingSessions": null,
+       "screenContentStatus": "COMPLETE",
+       "screenContext": null,
+       "onLoadScreenAction": null,
+       "sectionPlacements": [
+        {
+         "__typename": "SectionPlacement",
+         "placement": "NAV",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [],
+         "style": null,
+         "formFactor": "WIDE",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "MAIN",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [],
+         "style": null,
+         "formFactor": "WIDE",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "NAV",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [],
+         "style": null,
+         "formFactor": "COMPACT",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "MAIN",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [],
+         "style": null,
+         "formFactor": "COMPACT",
+         "mediaType": null
+        }
+       ]
+      },
+      {
+       "__typename": "ScreenContainer",
+       "screenId": "CALENDAR",
+       "screenProperties": null,
+       "e2eLoggingSessions": null,
+       "screenContentStatus": "COMPLETE",
+       "screenContext": null,
+       "onLoadScreenAction": null,
+       "sectionPlacements": [
+        {
+         "__typename": "SectionPlacement",
+         "placement": "MAIN",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "AVAILABILITY_CALENDAR_DEFAULT",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": null,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "BOOK_IT_CALENDAR_SHEET",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": null,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          }
+         ],
+         "style": null,
+         "formFactor": "WIDE",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "MAIN",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "AVAILABILITY_CALENDAR_DEFAULT",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": null,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          },
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "BOOK_IT_CALENDAR_SHEET",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": null,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": "FULL_WIDTH",
+           "maxWidth": null
+          }
+         ],
+         "style": null,
+         "formFactor": "COMPACT",
+         "mediaType": null
+        }
+       ]
+      },
+      {
+       "__typename": "ScreenContainer",
+       "screenId": "ACCESSIBILITY",
+       "screenProperties": {
+        "__typename": "ScreenProperties",
+        "modalType": "FULL_SCREEN_MODAL",
+        "transitionType": null,
+        "modalTitle": null,
+        "unstyled": null
+       },
+       "e2eLoggingSessions": null,
+       "screenContentStatus": "COMPLETE",
+       "screenContext": null,
+       "onLoadScreenAction": null,
+       "sectionPlacements": [
+        {
+         "__typename": "SectionPlacement",
+         "placement": "MAIN",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [],
+         "style": null,
+         "formFactor": "WIDE",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "MAIN",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [],
+         "style": null,
+         "formFactor": "COMPACT",
+         "mediaType": null
+        }
+       ]
+      },
+      {
+       "__typename": "ScreenContainer",
+       "screenId": "TRANSLATION_PROMPT",
+       "screenProperties": {
+        "__typename": "ScreenProperties",
+        "modalType": "CONTEXT_SHEET_FITTED",
+        "transitionType": "CONTEXTUAL_GROW",
+        "modalTitle": "Translation",
+        "unstyled": null
+       },
+       "e2eLoggingSessions": null,
+       "screenContentStatus": "COMPLETE",
+       "screenContext": null,
+       "onLoadScreenAction": null,
+       "sectionPlacements": [
+        {
+         "__typename": "SectionPlacement",
+         "placement": "NAV",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [],
+         "style": null,
+         "formFactor": "WIDE",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "MAIN",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [],
+         "style": null,
+         "formFactor": "WIDE",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "NAV",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [],
+         "style": null,
+         "formFactor": "COMPACT",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "MAIN",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [],
+         "style": null,
+         "formFactor": "COMPACT",
+         "mediaType": null
+        }
+       ]
+      },
+      {
+       "__typename": "ScreenContainer",
+       "screenId": "PRICE_DETAIL_MODAL",
+       "screenProperties": null,
+       "e2eLoggingSessions": null,
+       "screenContentStatus": "COMPLETE",
+       "screenContext": null,
+       "onLoadScreenAction": null,
+       "sectionPlacements": [
+        {
+         "__typename": "SectionPlacement",
+         "placement": "MAIN",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "PROPERTY_BOOK_IT_FLOATING_FOOTER",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": null,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": null,
+           "maxWidth": null
+          }
+         ],
+         "style": null,
+         "formFactor": "WIDE",
+         "mediaType": null
+        },
+        {
+         "__typename": "SectionPlacement",
+         "placement": "MAIN",
+         "layout": "SINGLE_COLUMN",
+         "sectionDetails": [
+          {
+           "__typename": "SectionDetail",
+           "sectionId": "PROPERTY_BOOK_IT_FLOATING_FOOTER",
+           "divider": null,
+           "border": null,
+           "topMarginPoints": null,
+           "topPaddingPoints": null,
+           "bottomPaddingPoints": null,
+           "bottomMarginPoints": null,
+           "backgroundColorNew": null,
+           "horizontalPadding": null,
+           "maxWidth": null
+          }
+         ],
+         "style": null,
+         "formFactor": "COMPACT",
+         "mediaType": null
+        }
+       ]
+      }
+     ],
+     "screensV2": [],
+     "flows": [],
+     "metadata": {
+      "__typename": "StayPDPMetadata",
+      "pdpType": "HOTEL",
+      "pdpUrlType": "HOTELS",
+      "pageTitle": null,
+      "misaId": null,
+      "isElvisListing": false,
+      "errorData": null,
+      "sharingConfig": {
+       "__typename": "PdpSharingConfig",
+       "title": "Eklo Lyon Sud Eurexpo · ★4.4 · Hotel in Vénissieux",
+       "propertyType": "Room in hotel",
+       "location": "Vénissieux",
+       "personCapacity": 2,
+       "imageUrl": "https://example.com/fixture-image/92.jpg",
+       "pdpLink": "https://www.airbnb.com/rooms/1257736932578886647",
+       "shareUrl": "https://www.airbnb.com/properties/1652914967350479498?unique_share_id=00000000-0000-0000-0000-000000000000&viralityEntryPoint=1&s=76&anchor_room_id=1257736932578886647",
+       "reviewCount": 235,
+       "starRating": 4.39
+      },
+      "loggingContext": {
+       "__typename": "PdpLoggingContext",
+       "eventDataLogging": {
+        "__typename": "PdpEventData",
+        "listingId": "1257736932578886647",
+        "page": "p3",
+        "pdpPageType": 18,
+        "listingLat": 45.716,
+        "listingLng": 4.8792,
+        "homeTier": 1,
+        "bedType": null,
+        "roomType": "Private room",
+        "personCapacity": 2,
+        "descriptionLanguage": "en",
+        "isSuperhost": false,
+        "pictureCount": 17,
+        "utcOffset": null,
+        "amenities": [],
+        "accuracyRating": 4.44,
+        "checkinRating": 4.61,
+        "cleanlinessRating": 4.48,
+        "communicationRating": 4.37,
+        "locationRating": 4.35,
+        "valueRating": 4.33,
+        "guestSatisfactionOverall": 4.4,
+        "visibleReviewCount": "359"
+       }
+      },
+      "clientLoggingContext": {
+       "__typename": "StayPDPLoggingContext",
+       "productId": "1257736932578886647",
+       "pdpType": "HOTEL",
+       "staysData": null,
+       "guestCheckoutSteps": []
+      },
+      "seoFeatures": {
+       "__typename": "SeoFeatures",
+       "androidAlternateUrl": "android-app://com.airbnb.android/airbnb/rooms/1257736932578886647",
+       "androidDeeplink": "airbnb://rooms/1257736932578886647",
+       "canonicalUrl": "https://www.airbnb.com/rooms/1257736932578886647",
+       "iphoneDeeplink": "airbnb://rooms/1257736932578886647",
+       "metaDescription": "Sep 28, 2026 · Room in hotel · Solo travellers, couples. The 11 sqm Eklo room is perfect for a good night's sleep. A truly simple and intimate cocoon designed with respect for th...",
+       "title": "Eklo Lyon Sud Eurexpo - Hotels for Rent in Vénissieux, Auvergne-Rhône-Alpes, France - Airbnb",
+       "breadcrumbDetails": [],
+       "nearbyCities": [],
+       "neighborhoodBreadcrumbDetails": [],
+       "ogTags": {
+        "__typename": "SeoOgTags",
+        "ogDescription": "Set 20 minutes from Lyon Part-Dieu station, this inviting eco-design hotel features compact rooms and convivial social spaces. It offers a residential setting within reach of city attractions.",
+        "ogImage": "https://example.com/fixture-image/132.jpg",
+        "ogTitle": "Eklo Lyon Sud Eurexpo · ★4.4 · Hotel in Vénissieux",
+        "ogType": "airbedandbreakfast:listing",
+        "ogUrl": "https://www.airbnb.com/rooms/1257736932578886647",
+        "ogImageHeight": null,
+        "ogImageWidth": null,
+        "ogVideoUrl": null,
+        "ogVideoHeight": null,
+        "ogVideoWidth": null
+       },
+       "otherPropertyTypes": [],
+       "propertySearchUrl": null,
+       "relImageSrc": "https://example.com/fixture-image/132.jpg",
+       "twitterTags": {
+        "__typename": "SeoTwitterTags",
+        "twitterCard": "photo",
+        "twitterDescription": null,
+        "twitterImage": "https://example.com/fixture-image/132.jpg",
+        "twitterTitle": null,
+        "twitterUrl": "https://www.airbnb.com/rooms/1257736932578886647"
+       },
+       "indexInSearchEngines": false
+      },
+      "initialTranslationState": null,
+      "bookingPrefetchData": {
+       "__typename": "PdpBookingPrefetchData",
+       "isHotelRatePlanEnabled": null,
+       "tpointContent": null,
+       "barPrice": null,
+       "canInstantBook": null,
+       "cancellationPolicies": [
+        {
+         "__typename": "LegacyPdpCancellationSection",
+         "cancellation_policy_price_type": null,
+         "book_it_module_tooltip": "Add your trip dates to get the cancellation details for this stay.",
+         "cancellation_policy_id": 3,
+         "link": "/help/article/2637",
+         "link_text": "Get full details",
+         "localized_cancellation_policy_name": "Flexible",
+         "milestones": [],
+         "subtitles": [
+          "Add your trip dates to get the cancellation details for this stay."
+         ],
+         "title": ""
+        }
+       ],
+       "p3DepositData": null,
+       "p3MessageData": null,
+       "p3CancellationSection": null,
+       "price": null,
+       "productRateSections": [],
+       "p3_display_rate": null,
+       "productItemDetail": null,
+       "ratePlanLoggingEventData": null
+      }
+     },
+     "sbuiData": {
+      "__typename": "StayPDPSBUIData",
+      "sectionConfiguration": {
+       "__typename": "StayPDPSectionConfiguration",
+       "root": {
+        "__typename": "PlacementGroupsPerFormFactor",
+        "sections": [
+         {
+          "__typename": "SectionDataContainer",
+          "sectionId": "OVERVIEW_DEFAULT_V2",
+          "loggingData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp.overview_default_v2",
+           "experiments": null,
+           "eventData": {
+            "productId": "U3RheUxpc3Rpbmc6MTI1NzczNjkzMjU3ODg4NjY0Nw==",
+            "pdpImpressionId": null,
+            "pdpContext": {
+             "isGuestFavorite": "false",
+             "hasListingSize": "false"
+            }
+           },
+           "eventDataSchemaName": "Pdp.v5.ClientEventData",
+           "section": null,
+           "component": null
+          },
+          "sectionData": {
+           "__typename": "PdpOverviewV2Section",
+           "title": "Hotel in Vénissieux, France",
+           "overviewItems": [],
+           "reviewData": {
+            "__typename": "PdpOverviewV2ReviewData",
+            "reviewCountText": "359 reviews",
+            "ratingText": "4.4",
+            "reviewCount": "359",
+            "isNewListing": false,
+            "ratingAccessibilityLabel": "Rated 4.4 out of 5 stars.",
+            "loggingEventData": {
+             "__typename": "LoggingEventData",
+             "loggingId": "pdp.overview_default_v2",
+             "eventData": {
+              "productId": "U3RheUxpc3Rpbmc6MTI1NzczNjkzMjU3ODg4NjY0Nw==",
+              "pdpImpressionId": null,
+              "pdpContext": {
+               "isGuestFavorite": "false"
+              }
+             },
+             "eventDataSchemaName": "Pdp.v5.ClientEventData",
+             "section": null,
+             "component": null
+            }
+           }
+          }
+         },
+         {
+          "__typename": "SectionDataContainer",
+          "sectionId": "PROPERTY_AVAILABLE_ROOMS",
+          "loggingData": null,
+          "sectionData": {
+           "__typename": "PdpPropertyAvailableRoomsSection"
+          }
+         },
+         {
+          "__typename": "SectionDataContainer",
+          "sectionId": "LUXE_BANNER",
+          "loggingData": {
+           "__typename": "LoggingEventData",
+           "loggingId": "pdp_platform.luxe_banner",
+           "experiments": null,
+           "eventData": null,
+           "eventDataSchemaName": null,
+           "section": null,
+           "component": null
+          },
+          "sectionData": {
+           "__typename": "PdpLuxeBannerSection",
+           "accessibilityLabel": "Airbnb Luxe",
+           "brandDescription": "Extraordinary homes, vetted for quality."
+          }
+         }
+        ]
+       },
+       "aircover": {
+        "__typename": "PlacementGroupsPerFormFactor",
+        "sections": []
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "extensions": {
+  "traceId": "fixture-trace-id"
+ }
+}

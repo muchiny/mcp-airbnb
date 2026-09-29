@@ -5,7 +5,10 @@ use std::time::Duration;
 use proptest::prelude::*;
 
 use mcp_airbnb::adapters::cache::memory_cache::MemoryCache;
-use mcp_airbnb::domain::analytics::{compute_neighborhood_stats, compute_occupancy_estimate};
+use mcp_airbnb::domain::analytics::{
+    compute_gap_finder, compute_neighborhood_stats, compute_occupancy_estimate,
+    compute_price_trends,
+};
 use mcp_airbnb::domain::calendar::{CalendarDay, PriceCalendar};
 use mcp_airbnb::domain::listing::Listing;
 use mcp_airbnb::domain::search_params::SearchParams;
@@ -89,7 +92,8 @@ proptest! {
         offset in 1..365_i64,
         duration in 1..30_i64,
     ) {
-        let base = chrono::NaiveDate::from_ymd_opt(2026, 6, 1).unwrap();
+        // Relative to today: validate() rejects past check-ins (VAL-2).
+        let base = chrono::Utc::now().date_naive();
         let checkin = base + chrono::TimeDelta::days(offset);
         let checkout = checkin + chrono::TimeDelta::days(duration);
         let params = SearchParams {
@@ -373,5 +377,44 @@ proptest! {
             }
         }
         prop_assert!(found <= capacity, "found {found} > capacity {capacity}");
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Calendar analytics never panic on arbitrary upstream dates (panic = abort)
+// ---------------------------------------------------------------------------
+
+proptest! {
+    #[test]
+    fn prop_calendar_analytics_never_panic_on_arbitrary_dates(
+        dates in prop::collection::vec("\\PC{0,12}", 0..40),
+        flags in prop::collection::vec(any::<bool>(), 40),
+    ) {
+        let days: Vec<CalendarDay> = dates
+            .iter()
+            .zip(flags.iter())
+            .map(|(date, &available)| CalendarDay {
+                date: date.clone(),
+                price: Some(100.0),
+                available,
+                min_nights: Some(1),
+                max_nights: None,
+                closed_to_arrival: None,
+                closed_to_departure: None,
+                unavailability_reason: None,
+            })
+            .collect();
+        let cal = PriceCalendar {
+            listing_id: "p".to_string(),
+            currency: "USD".to_string(),
+            days,
+            average_price: None,
+            occupancy_rate: None,
+            min_price: None,
+            max_price: None,
+        };
+        let _ = compute_occupancy_estimate("p", &cal);
+        let _ = compute_price_trends("p", &cal);
+        let _ = compute_gap_finder("p", &cal);
     }
 }

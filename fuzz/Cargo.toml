@@ -10,7 +10,6 @@ cargo-fuzz = true
 [dependencies]
 libfuzzer-sys = "0.4"
 mcp-airbnb = { path = ".." }
-serde_json = "1.0"
 
 # Prevent this from interfering with workspaces
 [workspace]
@@ -54,4 +53,29 @@ doc = false
 [[bin]]
 name = "fuzz_graphql_host"
 path = "fuzz_targets/fuzz_graphql_host.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_host_profile_html"
+path = "fuzz_targets/fuzz_host_profile_html.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_api_key"
+path = "fuzz_targets/fuzz_api_key.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_calendar_analytics"
+path = "fuzz_targets/fuzz_calendar_analytics.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_calendar_model"
+path = "fuzz_targets/fuzz_calendar_model.rs"
+doc = false
+
+[[bin]]
+name = "fuzz_input_validation"
+path = "fuzz_targets/fuzz_input_validation.rs"
 doc = false

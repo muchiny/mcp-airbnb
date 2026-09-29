@@ -1,0 +1,20 @@
+{
+ "errors": [
+  {
+   "message": "Sorry, something went wrong.",
+   "locations": [
+    {
+     "line": 1,
+     "column": 131
+    }
+   ],
+   "extensions": {
+    "classification": "ValidationError"
+   }
+  }
+ ],
+ "data": null,
+ "extensions": {
+  "traceId": "fixture-trace-id"
+ }
+}

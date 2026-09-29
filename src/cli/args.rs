@@ -12,7 +12,9 @@ use clap::{Args, Parser, Subcommand};
     long_about = None,
 )]
 pub struct Cli {
-    /// Path to config.yaml (overrides auto-discovery and `AIRBNB_CONFIG` env var)
+    /// Path to config.yaml; the file must exist (also read from `AIRBNB_CONFIG`).
+    /// Without it: ~/.config/mcp-airbnb/config.yaml, then config.yaml next to
+    /// the binary, then built-in defaults. The working directory is not searched.
     #[arg(long, short = 'c', global = true, env = "AIRBNB_CONFIG")]
     pub config: Option<PathBuf>,
 
@@ -50,22 +52,22 @@ pub enum Commands {
     /// Compare multiple listings side-by-side
     Compare(CompareArgs),
     /// Analyze seasonal price trends from the calendar
-    PriceTrends(CalendarArgs),
+    PriceTrends(PriceTrendsArgs),
     /// Detect booking gaps and orphan nights
     GapFinder(CalendarArgs),
     /// Estimate revenue (ADR, occupancy, monthly/annual)
-    Revenue(IdMonthsLocationArgs),
+    Revenue(RevenueArgs),
     /// Score a listing's quality (0–100)
     ListingScore(IdArgs),
     /// Compare a listing's amenities vs its neighborhood
     Amenities(IdLocationArgs),
     /// Compare 2–5 neighborhoods side-by-side
     MarketComparison(MarketComparisonArgs),
-    /// Analyze a host's full property portfolio
+    /// List a host's properties visible in a search of the listing's city
     HostPortfolio(IdArgs),
     /// Analyze sentiment in a listing's guest reviews
     ReviewSentiment(ReviewSentimentArgs),
-    /// Evaluate competitive positioning across 5 axes
+    /// Rank a listing against comparable listings (price, rating, amenities, reviews)
     Competitive(IdLocationArgs),
     /// Recommend optimal pricing based on market data
     OptimalPricing(IdMonthsLocationArgs),
@@ -86,9 +88,10 @@ pub struct SearchArgs {
     #[arg(long)]
     pub checkout: Option<String>,
 
-    /// Number of adult guests
-    #[arg(long, default_value_t = 1)]
-    pub adults: u32,
+    /// Number of adult guests (1–16). If omitted, no guest count is sent
+    /// and Airbnb applies its own default (same as the MCP tool).
+    #[arg(long)]
+    pub adults: Option<u32>,
 
     /// Number of children
     #[arg(long)]
@@ -110,7 +113,7 @@ pub struct SearchArgs {
     #[arg(long)]
     pub max_price: Option<u32>,
 
-    /// Property type filter (e.g. "Entire home")
+    /// Property type filter: "Entire home", "Private room" or "Hotel room"
     #[arg(long)]
     pub property_type: Option<String>,
 
@@ -177,22 +180,82 @@ pub struct IdMonthsLocationArgs {
 
 #[derive(Debug, Args)]
 pub struct CompareArgs {
-    /// Comma-separated list of listing IDs (mutually exclusive with --location)
+    /// Comma-separated list of 2–10 listing IDs (mutually exclusive with --location)
     #[arg(long, value_delimiter = ',', conflicts_with = "location")]
     pub ids: Option<Vec<String>>,
 
     /// Location to discover listings via search (mutually exclusive with --ids)
     #[arg(long)]
     pub location: Option<String>,
+
+    /// Listings to compare in --location mode (2–100, default 20, same as the MCP tool)
+    #[arg(long, requires = "location", conflicts_with = "ids", value_parser = clap::value_parser!(u32).range(2..=100))]
+    pub max_listings: Option<u32>,
+
+    /// Check-in date (YYYY-MM-DD) for --location mode
+    #[arg(long, requires = "location", conflicts_with = "ids")]
+    pub checkin: Option<String>,
+
+    /// Check-out date (YYYY-MM-DD) for --location mode
+    #[arg(long, requires = "location", conflicts_with = "ids")]
+    pub checkout: Option<String>,
+
+    /// Property type filter for --location mode (e.g. "Entire home")
+    #[arg(long, requires = "location", conflicts_with = "ids")]
+    pub property_type: Option<String>,
+}
+
+#[derive(Debug, Args)]
+pub struct PriceTrendsArgs {
+    /// Listing ID
+    pub id: String,
+
+    /// Number of months to analyze (1–12, default 12, same as the MCP tool)
+    #[arg(long, default_value_t = 12, value_parser = clap::value_parser!(u32).range(1..=12))]
+    pub months: u32,
+}
+
+#[derive(Debug, Args)]
+pub struct RevenueArgs {
+    /// Listing ID (omit it and pass --location for a market-level estimate)
+    #[arg(required_unless_present = "location")]
+    pub id: Option<String>,
+
+    /// Location: overrides the listing's own location, or is required without an ID
+    #[arg(long)]
+    pub location: Option<String>,
+
+    /// Months of calendar data to use (1–12)
+    #[arg(long, default_value_t = 12, value_parser = clap::value_parser!(u32).range(1..=12))]
+    pub months: u32,
 }
 
 #[derive(Debug, Args)]
 pub struct MarketComparisonArgs {
-    /// 2–5 locations to compare (comma-separated or repeated). Validated
-    /// at dispatch time rather than parse time because `num_args` interacts
-    /// awkwardly with `value_delimiter` for positional args in clap 4.
-    #[arg(value_delimiter = ',', num_args = 1..)]
+    /// 2–5 locations, one per argument. Quote a location that contains
+    /// spaces or commas: `"Paris, France" "Lyon, France"`
+    #[arg(required = true, num_args = 2..=5, value_parser = parse_location)]
     pub locations: Vec<String>,
+
+    /// Check-in date (YYYY-MM-DD); must be paired with --checkout
+    #[arg(long)]
+    pub checkin: Option<String>,
+
+    /// Check-out date (YYYY-MM-DD); must be paired with --checkin
+    #[arg(long)]
+    pub checkout: Option<String>,
+
+    /// Property type filter (e.g. "Entire home")
+    #[arg(long)]
+    pub property_type: Option<String>,
+}
+
+/// clap value parser for one location argument: trimmed, non-empty and at
+/// most `limits::LOCATION_MAX_CHARS` characters.
+fn parse_location(raw: &str) -> Result<String, String> {
+    let trimmed = raw.trim();
+    crate::domain::limits::check_location(trimmed).map_err(|e| e.to_string())?;
+    Ok(trimmed.to_string())
 }
 
 #[derive(Debug, Args)]
@@ -222,7 +285,7 @@ mod tests {
         match cli.command {
             Commands::Search(args) => {
                 assert_eq!(args.location, "Paris");
-                assert_eq!(args.adults, 1);
+                assert_eq!(args.adults, None);
                 assert!(args.checkin.is_none());
             }
             _ => panic!("expected Search"),
@@ -254,7 +317,7 @@ mod tests {
                 assert_eq!(args.location, "Barcelona");
                 assert_eq!(args.checkin.as_deref(), Some("2025-06-01"));
                 assert_eq!(args.checkout.as_deref(), Some("2025-06-08"));
-                assert_eq!(args.adults, 2);
+                assert_eq!(args.adults, Some(2));
                 assert_eq!(args.max_price, Some(200));
                 assert_eq!(args.property_type.as_deref(), Some("Entire home"));
             }
@@ -335,35 +398,69 @@ mod tests {
     }
 
     #[test]
-    fn parse_market_comparison_accepts_two_locations() {
-        let cli = parse(&["airbnb", "market-comparison", "Paris,Lyon"]).unwrap();
+    fn parse_market_comparison_keeps_city_country_pairs() {
+        let cli = parse(&[
+            "airbnb",
+            "market-comparison",
+            "Paris, France",
+            "Barcelona, Spain",
+            "Rome, Italy",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::MarketComparison(args) => assert_eq!(
+                args.locations,
+                vec![
+                    "Paris, France".to_string(),
+                    "Barcelona, Spain".to_string(),
+                    "Rome, Italy".to_string()
+                ]
+            ),
+            _ => panic!("expected MarketComparison"),
+        }
+    }
+
+    #[test]
+    fn parse_market_comparison_rejects_one_comma_joined_argument() {
+        assert!(parse(&["airbnb", "market-comparison", "Paris,Lyon"]).is_err());
+    }
+
+    #[test]
+    fn parse_market_comparison_rejects_one_and_six_locations() {
+        assert!(parse(&["airbnb", "market-comparison", "Paris"]).is_err());
+        assert!(parse(&["airbnb", "market-comparison", "A", "B", "C", "D", "E", "F"]).is_err());
+    }
+
+    #[test]
+    fn parse_market_comparison_trims_and_rejects_blank_locations() {
+        let cli = parse(&["airbnb", "market-comparison", "  Paris ", "Lyon"]).unwrap();
+        match cli.command {
+            Commands::MarketComparison(args) => assert_eq!(args.locations[0], "Paris"),
+            _ => panic!("expected MarketComparison"),
+        }
+        assert!(parse(&["airbnb", "market-comparison", "Paris", "   "]).is_err());
+    }
+
+    #[test]
+    fn parse_market_comparison_accepts_filters() {
+        let cli = parse(&[
+            "airbnb",
+            "market-comparison",
+            "Paris",
+            "Lyon",
+            "--checkin",
+            "2026-10-01",
+            "--checkout",
+            "2026-10-05",
+            "--property-type",
+            "Entire home",
+        ])
+        .unwrap();
         match cli.command {
             Commands::MarketComparison(args) => {
-                assert_eq!(
-                    args.locations,
-                    vec!["Paris".to_string(), "Lyon".to_string()]
-                );
+                assert_eq!(args.checkin.as_deref(), Some("2026-10-01"));
+                assert_eq!(args.property_type.as_deref(), Some("Entire home"));
             }
-            _ => panic!("expected MarketComparison"),
-        }
-    }
-
-    #[test]
-    fn parse_market_comparison_accepts_single_location_at_parse_time() {
-        // Parse-time accepts; runtime validation in dispatch rejects < 2.
-        let cli = parse(&["airbnb", "market-comparison", "Paris"]).unwrap();
-        match cli.command {
-            Commands::MarketComparison(args) => assert_eq!(args.locations.len(), 1),
-            _ => panic!("expected MarketComparison"),
-        }
-    }
-
-    #[test]
-    fn parse_market_comparison_accepts_six_at_parse_time() {
-        // Parse-time accepts; runtime validation in dispatch rejects > 5.
-        let cli = parse(&["airbnb", "market-comparison", "A,B,C,D,E,F"]).unwrap();
-        match cli.command {
-            Commands::MarketComparison(args) => assert_eq!(args.locations.len(), 6),
             _ => panic!("expected MarketComparison"),
         }
     }
@@ -394,12 +491,68 @@ mod tests {
         .unwrap();
         match cli.command {
             Commands::Revenue(args) => {
-                assert_eq!(args.id, "12345");
+                assert_eq!(args.id.as_deref(), Some("12345"));
                 assert_eq!(args.location.as_deref(), Some("Tokyo"));
                 assert_eq!(args.months, 6);
             }
             _ => panic!("expected Revenue"),
         }
+    }
+
+    #[test]
+    fn parse_price_trends_defaults_to_twelve_months() {
+        let cli = parse(&["airbnb", "price-trends", "12345"]).unwrap();
+        match cli.command {
+            Commands::PriceTrends(args) => assert_eq!(args.months, 12),
+            _ => panic!("expected PriceTrends"),
+        }
+    }
+
+    #[test]
+    fn parse_revenue_location_only() {
+        let cli = parse(&["airbnb", "revenue", "--location", "Rome, Italy"]).unwrap();
+        match cli.command {
+            Commands::Revenue(args) => {
+                assert!(args.id.is_none());
+                assert_eq!(args.location.as_deref(), Some("Rome, Italy"));
+            }
+            _ => panic!("expected Revenue"),
+        }
+        assert!(parse(&["airbnb", "revenue"]).is_err());
+    }
+
+    #[test]
+    fn parse_compare_location_filters() {
+        let cli = parse(&[
+            "airbnb",
+            "compare",
+            "--location",
+            "Rome",
+            "--max-listings",
+            "40",
+            "--property-type",
+            "Entire home",
+        ])
+        .unwrap();
+        match cli.command {
+            Commands::Compare(args) => {
+                assert_eq!(args.max_listings, Some(40));
+                assert_eq!(args.property_type.as_deref(), Some("Entire home"));
+            }
+            _ => panic!("expected Compare"),
+        }
+        assert!(parse(&["airbnb", "compare", "--ids", "1,2", "--max-listings", "40"]).is_err());
+        assert!(
+            parse(&[
+                "airbnb",
+                "compare",
+                "--location",
+                "Rome",
+                "--max-listings",
+                "101"
+            ])
+            .is_err()
+        );
     }
 
     #[test]

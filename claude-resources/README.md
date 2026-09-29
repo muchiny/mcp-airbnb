@@ -16,7 +16,7 @@ claude-resources/
 ├── skills/
 │   ├── mcp-smoke/SKILL.md         # /mcp-smoke — smoke-test the MCP server via stdin
 │   ├── cli-demo/SKILL.md          # /cli-demo — run the `airbnb` CLI with sample queries
-│   └── fixtures/SKILL.md          # /fixtures — list and regenerate HTML/JSON test fixtures
+│   └── fixtures/SKILL.md          # /fixtures — list, capture and anonymize JSON test fixtures
 └── agents/
     ├── mcp-tool-builder.md        # Scaffolds a new MCP tool following project conventions
     └── scraper-debugger.md        # Diagnoses HTML/GraphQL parsing failures
@@ -70,7 +70,7 @@ Most resources assume a working Rust toolchain and that you're inside the
 | `rules/*.md` | Nothing — they're pure guidance, always safe to install |
 | `skills/mcp-smoke` | `cargo`, built `mcp-airbnb` binary |
 | `skills/cli-demo` | `cargo`, built `airbnb` binary |
-| `skills/fixtures` | `tests/fixtures/` folder (part of the repo) |
+| `skills/fixtures` | `tests/fixtures/airbnb/` folder (part of the repo), `scripts/anonymize_fixtures.py` |
 | `agents/mcp-tool-builder` | Read access to `src/mcp/`, `src/ports/`, `src/domain/` |
 | `agents/scraper-debugger` | Read access to `src/adapters/scraper/`, `tests/fixtures/` |
 

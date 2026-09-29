@@ -1,10 +1,10 @@
+#![warn(clippy::unwrap_used, clippy::expect_used)]
 use anyhow::Result;
 use rmcp::ServiceExt;
 use rmcp::transport::stdio;
 use tracing_subscriber::EnvFilter;
 
-use mcp_airbnb::application::{build_client, find_config_path};
-use mcp_airbnb::config::load_config;
+use mcp_airbnb::application::{build_client, load_app_config};
 use mcp_airbnb::mcp::server::AirbnbMcpServer;
 
 #[tokio::main]
@@ -22,8 +22,10 @@ async fn main() -> Result<()> {
 
     // Load configuration and build the shared `AirbnbClient` via the
     // application layer (same wiring as the `airbnb` CLI binary).
-    let config_path = find_config_path();
-    let config = load_config(&config_path)?;
+    // Configuration: AIRBNB_CONFIG (must exist) > $XDG_CONFIG_HOME/mcp-airbnb/config.yaml
+    // > config.yaml next to the binary > built-in defaults. The working
+    // directory is never searched.
+    let config = load_app_config(None)?;
     let client = build_client(config)?;
 
     let server = AirbnbMcpServer::new(client);

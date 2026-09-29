@@ -1,5 +1,9 @@
 # mcp-airbnb Constitution
 
+> **Historical (February 2026).** Written for the first, scraping-only version
+> (rmcp 0.16, `serde_yaml`). Versions, tool counts and data-source details are
+> out of date; `README.md` and `src/README.md` describe the current design.
+
 ## Core Principles
 
 ### I. Hexagonal Architecture (Strict)
@@ -9,7 +13,7 @@ All code follows domain/ports/adapters separation. The dependency arrow always p
 The `domain/` module has ZERO external I/O dependencies. Allowed: `serde`, `thiserror`, `chrono`, `schemars`. Forbidden: `reqwest`, `tokio::fs`, `scraper`, `std::net`. Domain errors use `thiserror`.
 
 ### III. Web Scraping Ethics
-Respect `robots.txt` by default. Rate limiting enforced (configurable, default 0.5 req/s). Configurable user-agent. Public data only — no authentication bypass. Clear error messages when blocked.
+`robots.txt` is not consulted (the no-op `respect_robots_txt` flag was removed in the 2026-09 audit); politeness rests on one process-wide rate limiter and a process-wide pause after HTTP 429. Rate limiting enforced (configurable, default 0.5 req/s). Configurable user-agent. Public data only — no authentication bypass. Clear error messages when blocked.
 
 ### IV. Test Discipline
 - Inline `#[cfg(test)]` for unit tests in each module

@@ -5,6 +5,7 @@ pub struct Listing {
     pub id: String,
     pub name: String,
     pub location: String,
+    /// Nightly price; `0.0` means unknown. Read it with [`Listing::known_price`].
     pub price_per_night: f64,
     pub currency: String,
     pub rating: Option<f64>,
@@ -37,6 +38,7 @@ pub struct ListingDetail {
     pub name: String,
     pub location: String,
     pub description: String,
+    /// Nightly price; `0.0` means unknown. Read it with [`ListingDetail::known_price`].
     pub price_per_night: f64,
     pub currency: String,
     pub rating: Option<f64>,
@@ -81,6 +83,30 @@ pub struct ListingDetail {
     pub neighborhood: Option<String>,
 }
 
+/// A price is known only when it is a finite, strictly positive number.
+fn known(price: f64) -> Option<f64> {
+    (price.is_finite() && price > 0.0).then_some(price)
+}
+
+impl Listing {
+    /// Nightly price, if Airbnb published one.
+    ///
+    /// `price_per_night` stays a plain `f64` on the wire for schema stability,
+    /// and `0.0` means unknown (a listing fetched without dates, or a price
+    /// string that could not be parsed). Every consumer that treats the price
+    /// as data must read it through this accessor.
+    pub fn known_price(&self) -> Option<f64> {
+        known(self.price_per_night)
+    }
+}
+
+impl ListingDetail {
+    /// Nightly price, if Airbnb published one. See [`Listing::known_price`].
+    pub fn known_price(&self) -> Option<f64> {
+        known(self.price_per_night)
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SearchResult {
     pub listings: Vec<Listing>,
@@ -110,17 +136,17 @@ impl std::fmt::Display for Listing {
         // Airbnb only exposes nightly prices on search results and listings
         // fetched with explicit dates; a direct detail fetch without dates
         // yields `price_per_night == 0.0`, so format accordingly.
-        if self.price_per_night > 0.0 {
+        if let Some(price) = self.known_price() {
             write!(
                 f,
-                "{} - {} ({}{}/night",
-                self.name, self.location, self.currency, self.price_per_night
+                "[ID {}] {} - {} ({}{price}/night",
+                self.id, self.name, self.location, self.currency
             )?;
         } else {
             write!(
                 f,
-                "{} - {} (price unavailable — use search to get dated pricing",
-                self.name, self.location
+                "[ID {}] {} - {} (price unavailable — use search to get dated pricing",
+                self.id, self.name, self.location
             )?;
         }
         if let Some(rating) = self.rating {
@@ -142,7 +168,7 @@ impl std::fmt::Display for Listing {
         if let Some(total) = self.total_price {
             write!(f, " | Total: {}{total:.0}", self.currency)?;
         }
-        write!(f, ")")
+        write!(f, ") {}", self.url)
     }
 }
 
@@ -153,12 +179,12 @@ impl std::fmt::Display for ListingDetail {
         // When the public API doesn't surface a nightly price for a direct
         // detail fetch, `price_per_night` is 0.0 — flag that explicitly
         // rather than printing a misleading "$0/night".
-        if self.price_per_night > 0.0 {
-            writeln!(f, "Price: {}{}/night", self.currency, self.price_per_night)?;
+        if let Some(price) = self.known_price() {
+            writeln!(f, "Price: {}{price}/night", self.currency)?;
         } else {
             writeln!(
                 f,
-                "Price: unavailable — fetch via `airbnb search` with --checkin/--checkout for dated pricing"
+                "Price: unavailable — Airbnb shows nightly prices only for dated searches (search with check-in and check-out dates)"
             )?;
         }
         if let Some(rating) = self.rating {
@@ -235,6 +261,34 @@ impl std::fmt::Display for ListingDetail {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn listing_display_includes_id_and_url() {
+        let listing = Listing {
+            id: "987654321".into(),
+            name: "Flat 1".into(),
+            location: "Rome, Italy".into(),
+            price_per_night: 120.0,
+            currency: "€".into(),
+            rating: Some(4.8),
+            review_count: 10,
+            thumbnail_url: None,
+            property_type: None,
+            host_name: None,
+            host_id: None,
+            url: "https://www.airbnb.com/rooms/987654321".into(),
+            is_superhost: None,
+            is_guest_favorite: None,
+            instant_book: None,
+            total_price: None,
+            photos: vec![],
+            latitude: None,
+            longitude: None,
+        };
+        let s = listing.to_string();
+        assert!(s.starts_with("[ID 987654321] Flat 1"), "{s}");
+        assert!(s.ends_with("https://www.airbnb.com/rooms/987654321"), "{s}");
+    }
 
     #[test]
     fn listing_display_with_rating() {
@@ -649,5 +703,104 @@ mod tests {
             s.contains("Languages: English, Italian"),
             "Display should contain 'Languages: English, Italian', got: {s}"
         );
+    }
+
+    fn listing_with_price(price: f64) -> Listing {
+        Listing {
+            id: "1".into(),
+            name: "Priced".into(),
+            location: "Lyon".into(),
+            price_per_night: price,
+            currency: "$".into(),
+            rating: None,
+            review_count: 0,
+            thumbnail_url: None,
+            property_type: None,
+            host_name: None,
+            host_id: None,
+            url: "https://www.airbnb.com/rooms/1".into(),
+            is_superhost: None,
+            is_guest_favorite: None,
+            instant_book: None,
+            total_price: None,
+            photos: vec![],
+            latitude: None,
+            longitude: None,
+        }
+    }
+
+    fn detail_with_price(price: f64) -> ListingDetail {
+        ListingDetail {
+            id: "1".into(),
+            name: "Priced".into(),
+            location: "Lyon".into(),
+            description: String::new(),
+            price_per_night: price,
+            currency: "$".into(),
+            rating: None,
+            review_count: 0,
+            property_type: None,
+            host_name: None,
+            url: "https://www.airbnb.com/rooms/1".into(),
+            amenities: vec![],
+            house_rules: vec![],
+            latitude: None,
+            longitude: None,
+            photos: vec![],
+            bedrooms: None,
+            beds: None,
+            bathrooms: None,
+            max_guests: None,
+            check_in_time: None,
+            check_out_time: None,
+            host_id: None,
+            host_is_superhost: None,
+            host_response_rate: None,
+            host_response_time: None,
+            host_joined: None,
+            host_total_listings: None,
+            host_languages: vec![],
+            cancellation_policy: None,
+            instant_book: None,
+            cleaning_fee: None,
+            service_fee: None,
+            neighborhood: None,
+        }
+    }
+
+    #[test]
+    fn known_price_is_some_only_for_finite_positive_prices() {
+        assert_eq!(listing_with_price(446.94).known_price(), Some(446.94));
+        assert_eq!(listing_with_price(0.0).known_price(), None);
+        assert_eq!(listing_with_price(-5.0).known_price(), None);
+        assert_eq!(listing_with_price(f64::NAN).known_price(), None);
+        assert_eq!(listing_with_price(f64::INFINITY).known_price(), None);
+    }
+
+    #[test]
+    fn detail_known_price_follows_the_same_rule() {
+        assert_eq!(detail_with_price(120.0).known_price(), Some(120.0));
+        assert_eq!(detail_with_price(0.0).known_price(), None);
+        assert_eq!(detail_with_price(f64::NAN).known_price(), None);
+    }
+
+    #[test]
+    fn displays_treat_nan_and_zero_as_unavailable() {
+        let listing = listing_with_price(f64::NAN).to_string();
+        assert!(listing.contains("price unavailable"), "got: {listing}");
+        let detail = detail_with_price(0.0).to_string();
+        assert!(detail.contains("Price: unavailable"), "got: {detail}");
+        let priced = detail_with_price(120.0).to_string();
+        assert!(priced.contains("Price: $120/night"), "got: {priced}");
+    }
+
+    #[test]
+    fn listing_detail_unknown_price_hint_is_frontend_neutral() {
+        let mut detail = crate::test_helpers::make_listing_detail("1");
+        detail.price_per_night = 0.0;
+        let s = detail.to_string();
+        assert!(s.contains("Price: unavailable"), "{s}");
+        assert!(!s.contains("airbnb search"), "{s}");
+        assert!(s.contains("check-in and check-out"), "{s}");
     }
 }

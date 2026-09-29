@@ -1,64 +1,41 @@
 use scraper::{Html, Selector};
 
+use crate::adapters::scraper::deferred_state::{
+    deferred_state_json, next_data_json, niobe_payloads,
+};
 use crate::domain::review::{Review, ReviewsPage, ReviewsSummary};
 use crate::error::{AirbnbError, Result};
 
+use super::page_markers;
+
 /// Parse reviews from Airbnb listing page HTML.
+///
+/// The page is parsed into a DOM once. Structured PDP sections are tried on
+/// every embedded payload before any heuristic JSON search.
 pub fn parse_reviews(html: &str, listing_id: &str) -> Result<ReviewsPage> {
-    // Try __NEXT_DATA__ JSON first
-    if let Some(page) = try_parse_next_data_reviews(html, listing_id) {
+    let document = Html::parse_document(html);
+    if let Some(page) =
+        next_data_json(&document).and_then(|data| extract_reviews_from_json(&data, listing_id))
+    {
         return Ok(page);
     }
-
-    // Try deferred state (current format with niobeClientData)
-    if let Some(page) = try_parse_deferred_state_reviews(html, listing_id) {
+    let states = deferred_state_json(&document);
+    let payloads: Vec<&serde_json::Value> = states.iter().flat_map(niobe_payloads).collect();
+    if let Some(page) = payloads
+        .iter()
+        .find_map(|payload| extract_reviews_from_pdp_sections(payload, listing_id))
+    {
         return Ok(page);
     }
-
-    // CSS fallback
-    parse_reviews_css(html, listing_id)
-}
-
-fn try_parse_next_data_reviews(html: &str, listing_id: &str) -> Option<ReviewsPage> {
-    let document = Html::parse_document(html);
-    let selector = Selector::parse(r"script#__NEXT_DATA__").ok()?;
-    let script = document.select(&selector).next()?;
-    let json_text = script.text().collect::<String>();
-    let data: serde_json::Value = serde_json::from_str(&json_text).ok()?;
-
-    extract_reviews_from_json(&data, listing_id)
-}
-
-fn try_parse_deferred_state_reviews(html: &str, listing_id: &str) -> Option<ReviewsPage> {
-    let document = Html::parse_document(html);
-    let selector =
-        Selector::parse("script[data-deferred-state], script[id^='data-deferred-state']").ok()?;
-
-    for script in document.select(&selector) {
-        let json_text = script.text().collect::<String>();
-        if let Ok(data) = serde_json::from_str::<serde_json::Value>(&json_text) {
-            // Try niobeClientData wrapper (current Airbnb format)
-            if let Some(entries) = data.get("niobeClientData").and_then(|v| v.as_array()) {
-                for entry in entries {
-                    if let Some(inner) = entry.as_array().and_then(|arr| arr.get(1)) {
-                        // Try PDP sections format for reviews
-                        if let Some(page) = extract_reviews_from_pdp_sections(inner, listing_id) {
-                            return Some(page);
-                        }
-                        // Try legacy format
-                        if let Some(page) = extract_reviews_from_json(inner, listing_id) {
-                            return Some(page);
-                        }
-                    }
-                }
-            }
-            // Legacy: try direct JSON structure
-            if let Some(page) = extract_reviews_from_json(&data, listing_id) {
-                return Some(page);
-            }
-        }
+    if let Some(page) = payloads
+        .iter()
+        .copied()
+        .chain(states.iter())
+        .find_map(|data| extract_reviews_from_json(data, listing_id))
+    {
+        return Ok(page);
     }
-    None
+    parse_reviews_css(&document, html, listing_id)
 }
 
 /// Extract reviews from current Airbnb PDP sections format.
@@ -272,9 +249,8 @@ fn deep_find_reviews(data: &serde_json::Value, max_depth: u32) -> Option<&serde_
     match data {
         serde_json::Value::Object(map) => {
             if let Some(reviews) = map.get("reviews")
-                && reviews.is_array()
+                && let Some(arr) = reviews.as_array()
             {
-                let arr = reviews.as_array().unwrap();
                 let has_review_data = arr.iter().any(|item| {
                     item.get("comments").is_some()
                         || item.get("comment").is_some()
@@ -408,9 +384,7 @@ fn extract_reviews_summary(data: &serde_json::Value) -> Option<ReviewsSummary> {
     None
 }
 
-fn parse_reviews_css(html: &str, listing_id: &str) -> Result<ReviewsPage> {
-    let document = Html::parse_document(html);
-
+fn parse_reviews_css(document: &Html, html: &str, listing_id: &str) -> Result<ReviewsPage> {
     let review_selector =
         Selector::parse("[data-testid='review'], [itemprop='review']").map_err(|e| {
             AirbnbError::Parse {
@@ -433,6 +407,17 @@ fn parse_reviews_css(html: &str, listing_id: &str) -> Result<ReviewsPage> {
                 response: None,
             });
         }
+    }
+
+    // No review markup: only a genuine listing page may mean "0 reviews"; anything
+    // else (bot challenge, consent wall, error page served with HTTP 200) is drift.
+    if reviews.is_empty() && !page_markers::is_listing_page(document, html, listing_id) {
+        return Err(AirbnbError::UpstreamSchema {
+            operation: "reviews page (HTML)".into(),
+            detail: format!(
+                "no review data and no canonical /rooms/{listing_id} marker (bot challenge, consent wall or changed page layout)"
+            ),
+        });
     }
 
     Ok(ReviewsPage {
@@ -464,8 +449,26 @@ mod tests {
     }
 
     #[test]
-    fn parse_empty_reviews() {
+    fn blank_page_is_upstream_schema() {
         let html = "<html><body></body></html>";
+        let err = parse_reviews(html, "123").unwrap_err();
+        assert!(
+            matches!(err, AirbnbError::UpstreamSchema { .. }),
+            "got {err:?}"
+        );
+    }
+
+    #[test]
+    fn genuine_listing_without_reviews_is_an_empty_page() {
+        let html = r#"<html><head><link rel="canonical" href="https://www.airbnb.com/rooms/123"></head><body><h1>New listing</h1></body></html>"#;
+        let page = parse_reviews(html, "123").unwrap();
+        assert!(page.reviews.is_empty());
+        assert!(page.next_cursor.is_none());
+    }
+
+    #[test]
+    fn embedded_canonical_url_counts_as_a_listing_marker() {
+        let html = r#"<html><body><script>{"canonicalUrl":"https://www.airbnb.com/rooms/123","x":1}</script></body></html>"#;
         let page = parse_reviews(html, "123").unwrap();
         assert!(page.reviews.is_empty());
     }
@@ -593,5 +596,35 @@ mod tests {
         assert_eq!(summary.location, Some(4.7));
         assert_eq!(summary.check_in, Some(4.9));
         assert_eq!(summary.value, Some(4.6));
+    }
+
+    #[test]
+    fn structured_pdp_payload_wins_over_an_earlier_unrelated_entry() {
+        let promo = serde_json::json!({"data": {"x": {"reviews": [
+            {"comments": "Promo text", "reviewer": {"firstName": "Bot"}}
+        ]}}});
+        let pdp = crate::test_helpers::fixture_json("p1b/pdp_apartment.json");
+        let html = crate::test_helpers::niobe_page(
+            "niobeClientData",
+            &[("Other:{}", &promo), ("StaysPdpSections:{}", &pdp)],
+        );
+        let page = parse_reviews(&html, "38817969").unwrap();
+        assert!(
+            page.reviews.iter().all(|r| r.comment != "Promo text"),
+            "{:?}",
+            page.reviews
+        );
+        assert_eq!(page.summary.map(|s| s.total_reviews), Some(490));
+    }
+
+    #[test]
+    fn niobe_minimal_wrapper_is_unwrapped_for_reviews() {
+        let pdp = crate::test_helpers::fixture_json("p1b/pdp_apartment.json");
+        let html = crate::test_helpers::niobe_page(
+            "niobeMinimalClientData",
+            &[("StaysPdpSections:{}", &pdp)],
+        );
+        let page = parse_reviews(&html, "38817969").unwrap();
+        assert_eq!(page.summary.map(|s| s.total_reviews), Some(490));
     }
 }

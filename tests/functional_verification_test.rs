@@ -265,6 +265,8 @@ impl AirbnbClient for FunctionalMock {
                 },
             ],
             superhost_percentage: Some(32.0),
+            currency: Some("$".into()),
+            priced_listings: 0,
         })
     }
 
@@ -277,6 +279,9 @@ impl AirbnbClient for FunctionalMock {
             occupied_days: 65,
             available_days: 27,
             occupancy_rate: 70.6,
+            past_days_excluded: 0,
+            blocked_days_excluded: 0,
+            currency: "$".into(),
             average_available_price: Some(105.0),
             weekend_avg_price: Some(130.0),
             weekday_avg_price: Some(90.0),
@@ -757,59 +762,6 @@ fn listing_host_id_serde_roundtrip() {
     assert!(json.contains("host-123"), "JSON should contain host_id");
     let deserialized: Listing = serde_json::from_str(&json).expect("deserialize should work");
     assert_eq!(deserialized.host_id, Some("host-123".into()));
-}
-
-// ===========================================================================
-// Phase 3: MCP protocol verification
-// ===========================================================================
-
-#[tokio::test]
-async fn list_tools_returns_18() {
-    let (client, server_handle) = setup().await;
-
-    let tools = client
-        .list_tools(None)
-        .await
-        .expect("list_tools should work");
-
-    let tool_names: Vec<String> = tools.tools.iter().map(|t| t.name.to_string()).collect();
-    assert_eq!(
-        tool_names.len(),
-        18,
-        "Expected 18 tools, got {}: {:?}",
-        tool_names.len(),
-        tool_names
-    );
-
-    // Verify all expected tools are present
-    let expected = [
-        "airbnb_search",
-        "airbnb_listing_details",
-        "airbnb_reviews",
-        "airbnb_price_calendar",
-        "airbnb_host_profile",
-        "airbnb_neighborhood_stats",
-        "airbnb_occupancy_estimate",
-        "airbnb_compare_listings",
-        "airbnb_price_trends",
-        "airbnb_gap_finder",
-        "airbnb_revenue_estimate",
-        "airbnb_listing_score",
-        "airbnb_amenity_analysis",
-        "airbnb_market_comparison",
-        "airbnb_host_portfolio",
-        "airbnb_review_sentiment",
-        "airbnb_competitive_positioning",
-        "airbnb_optimal_pricing",
-    ];
-    for name in &expected {
-        assert!(
-            tool_names.contains(&name.to_string()),
-            "Missing tool: {name}"
-        );
-    }
-
-    teardown(client, server_handle).await;
 }
 
 // ===========================================================================

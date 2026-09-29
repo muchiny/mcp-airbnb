@@ -11,14 +11,15 @@ Implements `AirbnbClient` by scraping public Airbnb pages. This adapter serves a
 | `detail_parser.rs` | 📋 Parses listing detail page → `ListingDetail` |
 | `review_parser.rs` | ⭐ Parses reviews from listing page → `ReviewsPage` |
 | `calendar_parser.rs` | 📅 Parses price calendar from listing page → `PriceCalendar` |
-| `rate_limiter.rs` | ⏱️ Tokio-compatible rate limiter with configurable interval |
+| `deferred_state.rs` | 📦 Reads `__NEXT_DATA__` and the `niobeClientData` / `niobeMinimalClientData` payloads from a page parsed once |
+| `page_markers.rs` | 🔖 Tells a genuine listing page from a bot challenge, consent wall or error page served with HTTP 200 |
 
 ## 🔧 `AirbnbScraper`
 
 The main client struct owns:
 
 - **`reqwest::Client`** — 🌐 HTTP client with cookie jar and custom User-Agent
-- **`RateLimiter`** — ⏱️ Throttles requests to respect Airbnb's rate limits
+- **`Arc<RateLimiter>`** — ⏱️ The process-wide limiter shared with the GraphQL client and the API-key manager
 - **`Arc<dyn ListingCache>`** — 💾 Shared cache reference for the cache-aside pattern
 - **`Arc<ApiKeyManager>`** — 🔑 Shared API key manager
 - **`ScraperConfig` + `CacheConfig`** — ⚙️ Runtime configuration
@@ -36,13 +37,13 @@ Every `AirbnbClient` method follows the same flow:
 
 ### 🔄 Retry Logic
 
-`fetch_html()` retries on failure with exponential backoff:
+`fetch_html()` delegates to `adapters::http::send_with_policy()`, whose retry loop (`send_with_retries`) the GraphQL client shares:
 
-- 🔢 Up to `max_retries` attempts (default: 2)
-- ⏳ Delay: `attempt * 2` seconds between retries
-- ⏱️ Re-acquires rate limiter token before each retry
-- 🚫 Returns `RateLimited` error on HTTP 429 (no retry)
-- 🚫 Returns `Parse` error on HTTP 404 (no retry)
+- ⏱️ Every attempt waits for a slot on the shared `RateLimiter`
+- 🔁 5xx, 408, timeouts and connection failures: up to `max_retries` extra attempts, backoff 2 s, 4 s, 8 s … capped at 30 s
+- 🚦 429: retried only if `Retry-After` is present and ≤ 60 s; otherwise `RateLimited` is returned at once and every caller pauses (for `Retry-After`, or 30 s)
+- 🚫 Other 4xx (400, 401, 403, 404, 410, 422): never retried. A 404 on `/rooms/{id}` becomes `ListingNotFound`; anything else becomes `UpstreamStatus`
+- 🧱 Redirects are followed only on the same origin; bodies over 16 MiB are refused
 
 ## 📊 Parser Architecture
 
@@ -75,15 +76,12 @@ sequenceDiagram
 
 ### 🎯 Parsing Tiers
 
-1. **`__NEXT_DATA__`** — Airbnb embeds a `<script id="__NEXT_DATA__">` tag containing the full page data as JSON. This is the most reliable source.
-2. **`data-deferred-state`** — Some pages use `<script>` tags with `data-deferred-state` attributes containing deferred JSON payloads.
-3. **🎨 CSS Selectors** — Last resort fallback. Extracts data from HTML elements using `itemprop`, `data-testid`, and other attributes.
+Each page is parsed into a DOM **once**; every tier reads that document.
+
+1. **`__NEXT_DATA__`** — legacy pages embed the page data in `<script id="__NEXT_DATA__">`.
+2. **`data-deferred-state`** — current pages wrap query results in `niobeClientData` or `niobeMinimalClientData` (`[query_key, payload]` pairs). Structured payloads are tried on every entry before any heuristic search. The listing page's `StaysPdpSections` payload is parsed by the GraphQL PDP parsers (`graphql::parsers::{detail, host}`), and search cards by `adapters::stay_search`, so both sources agree.
+3. **🎨 CSS Selectors** — last resort; returns an `UpstreamSchema` error when the page has no listing data at all.
 
 ## ⏱️ Rate Limiter
 
-Token-bucket style limiter (`rate_limiter.rs`):
-
-- 📏 Calculates `min_interval` from `rate_limit_per_second` (e.g., 0.5 req/s → 2 second interval)
-- 🔒 Tracks last request time via `Mutex<Option<Instant>>`
-- 😴 Calls `tokio::time::sleep()` when throttled — fully async-compatible
-- ⏱️ Applied before every HTTP request, including retries
+The limiter lives in `src/adapters/rate_limiter.rs` and is built once in `application::build_client`. The scraper, the GraphQL client and the API-key manager share it, so `rate_limit_per_second` bounds the total request rate. Slots are reserved under a lock and slept outside it, so concurrent callers are spaced by the interval instead of firing together.

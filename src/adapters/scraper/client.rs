@@ -3,12 +3,17 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use reqwest::Client;
-use tracing::{debug, warn};
+use tracing::debug;
 use url::Url;
 
+use crate::adapters::http::{
+    MAX_BODY_BYTES, RetryPolicy, http_client_builder, read_body_capped, send_with_policy,
+};
+use crate::adapters::price;
+use crate::adapters::rate_limiter::RateLimiter;
+use crate::adapters::request_locale;
 use crate::adapters::scraper::calendar_parser;
 use crate::adapters::scraper::detail_parser;
-use crate::adapters::scraper::rate_limiter::RateLimiter;
 use crate::adapters::scraper::review_parser;
 use crate::adapters::scraper::search_parser;
 use crate::adapters::shared::ApiKeyManager;
@@ -23,34 +28,37 @@ use crate::error::{AirbnbError, Result};
 use crate::ports::airbnb_client::AirbnbClient;
 use crate::ports::cache::ListingCache;
 
+/// Context label for HTML fetches in logs and errors (no caller input).
+const HTML_CONTEXT: &str = "Airbnb HTML page";
+
 pub struct AirbnbScraper {
     http: Client,
-    rate_limiter: RateLimiter,
+    rate_limiter: Arc<RateLimiter>,
+    retry: RetryPolicy,
     cache: Arc<dyn ListingCache>,
     config: ScraperConfig,
     cache_config: CacheConfig,
-    #[allow(dead_code)] // Kept for CompositeClient construction symmetry
+    #[allow(dead_code)] // The I3 constructor keeps this parameter; HTML pages need no API key.
     api_key_manager: Arc<ApiKeyManager>,
 }
 
 impl AirbnbScraper {
+    /// `rate_limiter` is the process-wide limiter shared with the GraphQL
+    /// client and the API-key manager (I3).
     pub fn new(
         config: ScraperConfig,
         cache_config: CacheConfig,
         cache: Arc<dyn ListingCache>,
         api_key_manager: Arc<ApiKeyManager>,
+        rate_limiter: Arc<RateLimiter>,
     ) -> std::result::Result<Self, reqwest::Error> {
-        let http = Client::builder()
-            .user_agent(&config.user_agent)
-            .timeout(Duration::from_secs(config.request_timeout_secs))
-            .cookie_store(true)
-            .build()?;
-
-        let rate_limiter = RateLimiter::new(config.rate_limit_per_second);
+        let http = http_client_builder(&config).cookie_store(true).build()?;
+        let retry = RetryPolicy::from_config(&config);
 
         Ok(Self {
             http,
             rate_limiter,
+            retry,
             cache,
             config,
             cache_config,
@@ -58,59 +66,73 @@ impl AirbnbScraper {
         })
     }
 
-    async fn fetch_html(&self, url: &str) -> Result<String> {
-        self.rate_limiter.wait().await;
-
-        debug!(url, "Fetching page");
-
-        let mut last_error = None;
-        for attempt in 0..=self.config.max_retries {
-            if attempt > 0 {
-                let delay = Duration::from_secs(u64::from(attempt) * 2);
-                debug!(attempt, delay_secs = delay.as_secs(), "Retrying request");
-                tokio::time::sleep(delay).await;
-                self.rate_limiter.wait().await;
-            }
-
-            match self.http.get(url).send().await {
-                Ok(response) => {
-                    let status = response.status();
-                    if status.is_success() {
-                        return response.text().await.map_err(AirbnbError::Http);
-                    }
-                    if status.as_u16() == 429 {
-                        warn!("Rate limited by Airbnb (429)");
-                        last_error = Some(AirbnbError::RateLimited);
-                        continue;
-                    }
-                    if status.as_u16() == 404 {
-                        // Extract listing ID from URL if present
-                        if let Some(id) = url
-                            .split("/rooms/")
-                            .nth(1)
-                            .and_then(|s| s.split('?').next())
-                            .map(String::from)
-                        {
-                            return Err(AirbnbError::ListingNotFound { id });
-                        }
-                        return Err(AirbnbError::Parse {
-                            reason: format!("page not found (404): {url}"),
-                        });
-                    }
-                    last_error = Some(AirbnbError::Parse {
-                        reason: format!("HTTP {status} for {url}"),
-                    });
-                }
-                Err(e) => {
-                    warn!(error = %e, attempt, "HTTP request failed");
-                    last_error = Some(AirbnbError::Http(e));
-                }
-            }
+    /// GET an Airbnb HTML page through the shared limiter and retry policy,
+    /// with the pinned currency and locale (P1b, I4).
+    ///
+    /// `listing_id` turns a 404 into `ListingNotFound`; search pages pass `None`.
+    async fn fetch_html(&self, url: &str, listing_id: Option<&str>) -> Result<String> {
+        // Pin currency and locale like the GraphQL client does (P1b, NET-10).
+        let mut pinned = Url::parse(url)?;
+        request_locale::pin_currency_and_locale(
+            &mut pinned,
+            &self.config.currency,
+            &self.config.locale,
+        );
+        debug!(url = %pinned, "Fetching page");
+        let request = self.http.get(pinned.as_str()).header(
+            "Accept-Language",
+            request_locale::accept_language(&self.config.locale),
+        );
+        match send_with_policy(&request, &self.rate_limiter, &self.retry, HTML_CONTEXT).await {
+            Ok(response) => read_body_capped(response, MAX_BODY_BYTES).await,
+            Err(AirbnbError::UpstreamStatus { status: 404, .. }) => Err(match listing_id {
+                Some(id) => AirbnbError::ListingNotFound { id: id.to_string() },
+                None => AirbnbError::UpstreamStatus {
+                    status: 404,
+                    context: HTML_CONTEXT.to_string(),
+                },
+            }),
+            Err(err) => Err(err),
         }
+    }
 
-        Err(last_error.unwrap_or_else(|| AirbnbError::Parse {
-            reason: "all retries exhausted".into(),
-        }))
+    fn cached<T: serde::de::DeserializeOwned>(&self, key: &str) -> Option<T> {
+        self.cache
+            .get(key)
+            .and_then(|json| serde_json::from_str(&json).ok())
+    }
+
+    fn cache_json<T: serde::Serialize>(&self, key: &str, value: &T, ttl_secs: u64) {
+        if let Ok(json) = serde_json::to_string(value) {
+            self.cache.set(key, &json, Duration::from_secs(ttl_secs));
+        }
+    }
+
+    /// Fetch `/rooms/{id}` once, parse it once, and cache the detail and the
+    /// host profile it contains.
+    async fn fetch_listing_page(&self, id: &str) -> Result<detail_parser::ListingPage> {
+        let url = format!("{}/rooms/{id}", self.config.base_url);
+        let html = self.fetch_html(&url, Some(id)).await?;
+        let mut page = detail_parser::parse_listing_page(&html, id, &self.config.base_url);
+        if let Ok(detail) = page.detail.as_mut() {
+            price::fill_currency(
+                &mut detail.currency,
+                &price::currency_symbol(&self.config.currency),
+            );
+            self.cache_json(
+                &format!("detail:{id}"),
+                &*detail,
+                self.cache_config.detail_ttl_secs,
+            );
+        }
+        if let Ok(profile) = page.host.as_ref() {
+            self.cache_json(
+                &format!("host:{id}"),
+                profile,
+                self.cache_config.host_profile_ttl_secs,
+            );
+        }
+        Ok(page)
     }
 }
 
@@ -119,7 +141,7 @@ impl AirbnbClient for AirbnbScraper {
     async fn search_listings(&self, params: &SearchParams) -> Result<SearchResult> {
         params.validate()?;
 
-        let cache_key = format!("search:{}", build_search_cache_key(params));
+        let cache_key = format!("search:{}", params.cache_key());
         if let Some(cached) = self.cache.get(&cache_key)
             && let Ok(result) = serde_json::from_str::<SearchResult>(&cached)
         {
@@ -127,9 +149,10 @@ impl AirbnbClient for AirbnbScraper {
             return Ok(result);
         }
 
-        let url = build_search_url(&self.config.base_url, params);
-        let html = self.fetch_html(&url).await?;
-        let result = search_parser::parse_search_results(&html, &self.config.base_url)?;
+        let url = build_search_url(&self.config.base_url, params)?;
+        let html = self.fetch_html(&url, None).await?;
+        let mut result = search_parser::parse_search_results(&html, &self.config.base_url)?;
+        price::fill_search_currency(&mut result, &price::currency_symbol(&self.config.currency));
 
         if let Ok(json) = serde_json::to_string(&result) {
             self.cache.set(
@@ -144,27 +167,11 @@ impl AirbnbClient for AirbnbScraper {
 
     async fn get_listing_detail(&self, id: &str) -> Result<ListingDetail> {
         validate_listing_id(id)?;
-        let cache_key = format!("detail:{id}");
-        if let Some(cached) = self.cache.get(&cache_key)
-            && let Ok(detail) = serde_json::from_str::<ListingDetail>(&cached)
-        {
+        if let Some(detail) = self.cached::<ListingDetail>(&format!("detail:{id}")) {
             debug!(id, "Cache hit for listing detail");
             return Ok(detail);
         }
-
-        let url = format!("{}/rooms/{id}", self.config.base_url);
-        let html = self.fetch_html(&url).await?;
-        let detail = detail_parser::parse_listing_detail(&html, id, &self.config.base_url)?;
-
-        if let Ok(json) = serde_json::to_string(&detail) {
-            self.cache.set(
-                &cache_key,
-                &json,
-                Duration::from_secs(self.cache_config.detail_ttl_secs),
-            );
-        }
-
-        Ok(detail)
+        self.fetch_listing_page(id).await?.detail
     }
 
     async fn get_reviews(&self, id: &str, cursor: Option<&str>) -> Result<ReviewsPage> {
@@ -185,7 +192,7 @@ impl AirbnbClient for AirbnbScraper {
         } else {
             base
         };
-        let html = self.fetch_html(&url).await?;
+        let html = self.fetch_html(&url, Some(id)).await?;
         let page = review_parser::parse_reviews(&html, id)?;
 
         if let Ok(json) = serde_json::to_string(&page) {
@@ -201,11 +208,14 @@ impl AirbnbClient for AirbnbScraper {
 
     async fn get_price_calendar(&self, id: &str, months: u32) -> Result<PriceCalendar> {
         validate_listing_id(id)?;
-        let cache_key = format!("calendar:{id}:m={months}");
+        // Same reference date as the GraphQL client: operator-local "today".
+        let today = chrono::Local::now().date_naive();
+        let cache_key = format!("calendar:{id}:{}:m={months}", today.format("%Y-%m"));
         if let Some(cached) = self.cache.get(&cache_key)
-            && let Ok(calendar) = serde_json::from_str::<PriceCalendar>(&cached)
+            && let Ok(mut calendar) = serde_json::from_str::<PriceCalendar>(&cached)
         {
             debug!(id, "Cache hit for calendar");
+            calendar.classify_past_days(today);
             return Ok(calendar);
         }
 
@@ -214,8 +224,13 @@ impl AirbnbClient for AirbnbScraper {
             .query_pairs_mut()
             .append_pair("calendar_months", &months.to_string());
         let url = parsed.to_string();
-        let html = self.fetch_html(&url).await?;
-        let calendar = calendar_parser::parse_price_calendar(&html, id)?;
+        let html = self.fetch_html(&url, Some(id)).await?;
+        let mut calendar = calendar_parser::parse_price_calendar(&html, id)?;
+        price::fill_currency(
+            &mut calendar.currency,
+            &price::currency_symbol(&self.config.currency),
+        );
+        calendar.classify_past_days(today);
 
         if let Ok(json) = serde_json::to_string(&calendar) {
             self.cache.set(
@@ -230,27 +245,11 @@ impl AirbnbClient for AirbnbScraper {
 
     async fn get_host_profile(&self, listing_id: &str) -> Result<HostProfile> {
         validate_listing_id(listing_id)?;
-        let cache_key = format!("host:{listing_id}");
-        if let Some(cached) = self.cache.get(&cache_key)
-            && let Ok(profile) = serde_json::from_str::<HostProfile>(&cached)
-        {
+        if let Some(profile) = self.cached::<HostProfile>(&format!("host:{listing_id}")) {
             debug!(listing_id, "Cache hit for host profile");
             return Ok(profile);
         }
-
-        let url = format!("{}/rooms/{listing_id}", self.config.base_url);
-        let html = self.fetch_html(&url).await?;
-        let profile = detail_parser::parse_host_profile(&html)?;
-
-        if let Ok(json) = serde_json::to_string(&profile) {
-            self.cache.set(
-                &cache_key,
-                &json,
-                Duration::from_secs(self.cache_config.host_profile_ttl_secs),
-            );
-        }
-
-        Ok(profile)
+        self.fetch_listing_page(listing_id).await?.host
     }
 
     async fn get_neighborhood_stats(&self, params: &SearchParams) -> Result<NeighborhoodStats> {
@@ -267,66 +266,28 @@ impl AirbnbClient for AirbnbScraper {
     }
 }
 
-fn build_search_url(base_url: &str, params: &SearchParams) -> String {
-    let encoded_location = params.location.replace(' ', "-");
-    let base = format!("{base_url}/s/{encoded_location}/homes");
+/// Build the HTML search URL. The free-text location is pushed as ONE
+/// percent-encoded path segment, so `/`, `\`, `?`, `#`, `%` and dot-segments
+/// in it can never change the path, the query or the fragment.
+fn build_search_url(base_url: &str, params: &SearchParams) -> Result<String> {
+    let mut url = Url::parse(base_url)?;
+    url.path_segments_mut()
+        .map_err(|()| {
+            AirbnbError::Config(format!("scraper.base_url {base_url:?} cannot carry a path"))
+        })?
+        .pop_if_empty()
+        .push("s")
+        .push(&params.location.trim().replace(' ', "-"))
+        .push("homes");
 
     let query_pairs = params.to_query_pairs();
-    if query_pairs.is_empty() {
-        return base;
-    }
-
-    // Use url crate for proper encoding of query parameters
-    if let Ok(mut parsed) = Url::parse(&base) {
-        {
-            let mut qp = parsed.query_pairs_mut();
-            for (k, v) in &query_pairs {
-                qp.append_pair(k, v);
-            }
+    if !query_pairs.is_empty() {
+        let mut query = url.query_pairs_mut();
+        for (key, value) in &query_pairs {
+            query.append_pair(key, value);
         }
-        parsed.to_string()
-    } else {
-        // Fallback: manual construction if base URL can't be parsed
-        let encoded: String = url::form_urlencoded::Serializer::new(String::new())
-            .extend_pairs(&query_pairs)
-            .finish();
-        format!("{base}?{encoded}")
     }
-}
-
-fn build_search_cache_key(params: &SearchParams) -> String {
-    let mut key = params.location.to_lowercase();
-    if let Some(ref checkin) = params.checkin {
-        key.push_str(&format!(":ci={checkin}"));
-    }
-    if let Some(ref checkout) = params.checkout {
-        key.push_str(&format!(":co={checkout}"));
-    }
-    if let Some(adults) = params.adults {
-        key.push_str(&format!(":a={adults}"));
-    }
-    if let Some(children) = params.children {
-        key.push_str(&format!(":ch={children}"));
-    }
-    if let Some(infants) = params.infants {
-        key.push_str(&format!(":inf={infants}"));
-    }
-    if let Some(pets) = params.pets {
-        key.push_str(&format!(":p={pets}"));
-    }
-    if let Some(min_price) = params.min_price {
-        key.push_str(&format!(":min={min_price}"));
-    }
-    if let Some(max_price) = params.max_price {
-        key.push_str(&format!(":max={max_price}"));
-    }
-    if let Some(ref property_type) = params.property_type {
-        key.push_str(&format!(":pt={}", property_type.to_lowercase()));
-    }
-    if let Some(ref cursor) = params.cursor {
-        key.push_str(&format!(":cur={cursor}"));
-    }
-    key
+    Ok(url.into())
 }
 
 #[cfg(test)]
@@ -348,7 +309,7 @@ mod tests {
             property_type: None,
             cursor: None,
         };
-        let url = build_search_url("https://www.airbnb.com", &params);
+        let url = build_search_url("https://www.airbnb.com", &params).expect("valid base url");
         assert_eq!(url, "https://www.airbnb.com/s/Paris-France/homes");
     }
 
@@ -367,7 +328,7 @@ mod tests {
             property_type: None,
             cursor: None,
         };
-        let url = build_search_url("https://www.airbnb.com", &params);
+        let url = build_search_url("https://www.airbnb.com", &params).expect("valid base url");
         assert!(url.contains("checkin=2025-07-01"));
         assert!(url.contains("checkout=2025-07-05"));
         assert!(url.contains("adults=2"));
@@ -390,87 +351,212 @@ mod tests {
     }
 
     #[test]
-    fn build_search_cache_key_location_only() {
-        let params = base_params();
-        let key = build_search_cache_key(&params);
-        assert_eq!(key, "paris");
-    }
-
-    #[test]
-    fn build_search_cache_key_with_dates() {
-        let mut params = base_params();
-        params.checkin = Some("2025-06-01".into());
-        params.checkout = Some("2025-06-05".into());
-        let key = build_search_cache_key(&params);
-        assert!(key.contains(":ci=2025-06-01"));
-        assert!(key.contains(":co=2025-06-05"));
-    }
-
-    #[test]
-    fn build_search_cache_key_with_cursor() {
-        let mut params = base_params();
-        params.cursor = Some("page2".into());
-        let key = build_search_cache_key(&params);
-        assert!(key.contains(":cur=page2"));
-    }
-
-    #[test]
     fn build_search_url_with_price_filters() {
         let mut params = base_params();
         params.min_price = Some(50);
         params.max_price = Some(200);
-        let url = build_search_url("https://www.airbnb.com", &params);
+        let url = build_search_url("https://www.airbnb.com", &params).expect("valid base url");
         assert!(url.contains("price_min=50"));
         assert!(url.contains("price_max=200"));
-    }
-
-    #[test]
-    fn cache_key_includes_all_params() {
-        let mut params = base_params();
-        params.children = Some(1);
-        params.infants = Some(1);
-        params.pets = Some(1);
-        params.min_price = Some(50);
-        params.max_price = Some(200);
-        params.property_type = Some("Entire home".into());
-        let key = build_search_cache_key(&params);
-        assert!(key.contains(":ch=1"));
-        assert!(key.contains(":inf=1"));
-        assert!(key.contains(":p=1"));
-        assert!(key.contains(":min=50"));
-        assert!(key.contains(":max=200"));
-        assert!(key.contains(":pt=entire home"));
     }
 
     #[test]
     fn build_search_url_with_property_type() {
         let mut params = base_params();
         params.property_type = Some("Entire home".into());
-        let url = build_search_url("https://www.airbnb.com", &params);
-        assert!(
-            url.contains("property_type=Entire+home")
-                || url.contains("property_type=Entire%20home")
-        );
+        let url = build_search_url("https://www.airbnb.com", &params).expect("valid base url");
+        assert!(url.contains("room_types%5B%5D=Entire+home%2Fapt"), "{url}");
+        assert!(!url.contains("property_type="), "{url}");
     }
 
     #[test]
     fn build_search_url_encodes_special_chars() {
         let mut params = base_params();
         params.cursor = Some("abc&def=123".into());
-        let url = build_search_url("https://www.airbnb.com", &params);
+        let url = build_search_url("https://www.airbnb.com", &params).expect("valid base url");
         // The cursor value should be properly encoded, not breaking the URL
         assert!(!url.contains("cursor=abc&def=123"));
         assert!(url.contains("cursor=abc%26def%3D123") || url.contains("cursor=abc%26def=123"));
     }
 
     #[test]
-    fn build_search_url_fallback_encodes_special_chars() {
-        // Non-absolute URL triggers Url::parse failure, exercising the fallback path
+    fn build_search_url_rejects_an_invalid_base_url() {
+        let err = build_search_url("not-a-valid-url", &base_params()).unwrap_err();
+        assert!(matches!(err, AirbnbError::Config(_)), "{err}");
+    }
+
+    #[test]
+    fn build_search_url_trims_and_dashes_the_location() {
         let mut params = base_params();
-        params.cursor = Some("abc&def=123".into());
-        let url = build_search_url("not-a-valid-url", &params);
-        // The fallback must still URL-encode special characters
-        assert!(!url.contains("cursor=abc&def=123"));
-        assert!(url.contains("cursor=abc%26def%3D123"));
+        params.location = "  Paris France  ".into();
+        let url = build_search_url("https://www.airbnb.com", &params).expect("valid base url");
+        assert_eq!(url, "https://www.airbnb.com/s/Paris-France/homes");
+    }
+
+    pub(super) fn scraper_for(
+        server: &wiremock::MockServer,
+        currency: &str,
+        locale: &str,
+    ) -> AirbnbScraper {
+        let config = ScraperConfig {
+            base_url: server.uri(),
+            rate_limit_per_second: 100.0,
+            max_retries: 0,
+            currency: currency.to_string(),
+            locale: locale.to_string(),
+            ..ScraperConfig::default()
+        };
+        let cache: Arc<dyn ListingCache> =
+            Arc::new(crate::adapters::cache::memory_cache::MemoryCache::new(64));
+        let api_keys = Arc::new(ApiKeyManager::new(
+            Client::new(),
+            server.uri(),
+            60,
+            Arc::new(RateLimiter::new(100.0)),
+        ));
+        AirbnbScraper::new(
+            config,
+            CacheConfig::default(),
+            cache,
+            api_keys,
+            Arc::new(RateLimiter::new(100.0)),
+        )
+        .expect("scraper constructs")
+    }
+
+    #[tokio::test]
+    async fn every_scraper_request_pins_currency_and_locale() {
+        let server = wiremock::MockServer::start().await;
+        wiremock::Mock::given(wiremock::matchers::method("GET"))
+            .respond_with(
+                wiremock::ResponseTemplate::new(200)
+                    .set_body_string("<html><body><h1>Listing</h1></body></html>"),
+            )
+            .mount(&server)
+            .await;
+        let scraper = scraper_for(&server, "EUR", "fr");
+        let _ = scraper.get_listing_detail("12345").await;
+        let params = SearchParams {
+            location: "Lyon".into(),
+            ..Default::default()
+        };
+        let _ = scraper.search_listings(&params).await;
+        let _ = scraper.get_price_calendar("12345", 1).await;
+
+        let requests = server
+            .received_requests()
+            .await
+            .expect("request recording is on");
+        assert!(requests.len() >= 3, "{} requests", requests.len());
+        for request in &requests {
+            let pairs: Vec<(String, String)> = request
+                .url
+                .query_pairs()
+                .map(|(k, v)| (k.into_owned(), v.into_owned()))
+                .collect();
+            assert!(
+                pairs.contains(&("currency".into(), "EUR".into())),
+                "{} {pairs:?}",
+                request.url
+            );
+            assert!(
+                pairs.contains(&("locale".into(), "fr".into())),
+                "{} {pairs:?}",
+                request.url
+            );
+            assert_eq!(
+                request
+                    .headers
+                    .get("accept-language")
+                    .and_then(|v| v.to_str().ok()),
+                Some("fr,en;q=0.8"),
+                "{}",
+                request.url
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn unlabelled_search_prices_get_the_pinned_currency() {
+        use base64::Engine as _;
+        let server = wiremock::MockServer::start().await;
+        let item = serde_json::json!({
+            "demandStayListing": {
+                "id": base64::engine::general_purpose::STANDARD.encode("DemandStayListing:111")
+            },
+            "title": "Room in Lyon",
+            "subtitle": "Nice Room",
+            "structuredDisplayPrice": {"primaryLine": {"price": "85", "qualifier": "night"}}
+        });
+        let payload = serde_json::json!({
+            "data": {"presentation": {"staysSearch": {"results": {"searchResults": [item]}}}}
+        });
+        let html =
+            crate::test_helpers::niobe_page("niobeClientData", &[("StaysSearch:{}", &payload)]);
+        wiremock::Mock::given(wiremock::matchers::method("GET"))
+            .and(wiremock::matchers::path_regex("^/s/.*"))
+            .respond_with(wiremock::ResponseTemplate::new(200).set_body_string(html))
+            .mount(&server)
+            .await;
+        let scraper = scraper_for(&server, "EUR", "fr");
+        let params = SearchParams {
+            location: "Lyon".into(),
+            ..Default::default()
+        };
+        let result = scraper.search_listings(&params).await.unwrap();
+        assert_eq!(result.listings[0].known_price(), Some(85.0));
+        assert_eq!(result.listings[0].currency, "\u{20ac}");
+    }
+
+    #[tokio::test]
+    async fn detail_then_host_profile_fetch_the_listing_page_once() {
+        let server = wiremock::MockServer::start().await;
+        let payload = crate::test_helpers::fixture_json("p1b/pdp_apartment.json");
+        let html = crate::test_helpers::niobe_page(
+            "niobeClientData",
+            &[("StaysPdpSections:{}", &payload)],
+        );
+        wiremock::Mock::given(wiremock::matchers::method("GET"))
+            .and(wiremock::matchers::path("/rooms/38817969"))
+            .respond_with(wiremock::ResponseTemplate::new(200).set_body_string(html))
+            .expect(1)
+            .mount(&server)
+            .await;
+        let scraper = scraper_for(&server, "USD", "en");
+        let detail = scraper.get_listing_detail("38817969").await.unwrap();
+        let host = scraper.get_host_profile("38817969").await.unwrap();
+        assert_eq!(detail.host_name.as_deref(), Some("Host A"));
+        assert_eq!(host.name, "Host A");
+    }
+
+    #[test]
+    fn build_search_url_keeps_hostile_locations_in_one_segment() {
+        let cases = [
+            ("../../rooms/12345", "/s/..%2F..%2Frooms%2F12345/homes"),
+            (
+                "Paris?adults=16&price_max=1#",
+                "/s/Paris%3Fadults=16&price_max=1%23/homes",
+            ),
+            (
+                "%2e%2e/%2E%2E/users/show/1",
+                "/s/%252e%252e%2F%252E%252E%2Fusers%2Fshow%2F1/homes",
+            ),
+            ("a\\b", "/s/a%5Cb/homes"),
+        ];
+        for (location, expected_path) in cases {
+            let mut params = base_params();
+            params.location = location.into();
+            let built =
+                build_search_url("https://www.airbnb.com", &params).expect("valid base url");
+            let url = Url::parse(&built).expect("valid URL");
+            assert_eq!(url.host_str(), Some("www.airbnb.com"), "{location:?}");
+            assert_eq!(url.path(), expected_path, "location {location:?}");
+            assert_eq!(url.query(), None, "location {location:?} injected a query");
+            assert_eq!(
+                url.fragment(),
+                None,
+                "location {location:?} injected a fragment"
+            );
+        }
     }
 }

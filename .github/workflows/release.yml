@@ -4,15 +4,35 @@ on:
   push:
     tags: ["v*"]
 
+# Least privilege by default; only the final `release` job may write
+# (audit CI-2). Actions are pinned to full commit SHAs.
 permissions:
-  contents: write
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  # A tag never publishes binaries that fail the CI gate.
+  verify:
+    name: Verify (fmt, clippy, test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+        with:
+          toolchain: "1.93"
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - run: cargo test --locked --all-targets
+
   build:
     name: Build ${{ matrix.target }}
+    needs: verify
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -21,10 +41,10 @@ jobs:
           # Linux x86_64 — native
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
-          # Linux aarch64 — cross via cross tool
+          # Linux aarch64 — native GitHub-hosted ARM runner (replaces `cross`
+          # built from git HEAD, audit CI-2)
           - target: aarch64-unknown-linux-gnu
-            os: ubuntu-latest
-            use-cross: true
+            os: ubuntu-24.04-arm
           # macOS Intel — cross-compile from ARM runner
           - target: x86_64-apple-darwin
             os: macos-latest
@@ -36,32 +56,26 @@ jobs:
             os: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
         with:
           toolchain: "1.93"
           targets: ${{ matrix.target }}
 
-      - name: Add cross-compilation target
-        if: ${{ matrix.target != '' }}
+      # rust-toolchain.toml selects 1.93; make sure the target is installed
+      # for that exact toolchain.
+      - name: Add compilation target
         run: rustup target add ${{ matrix.target }}
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           key: ${{ matrix.target }}
 
-      - name: Install cross
-        if: matrix.use-cross
-        run: cargo install cross --git https://github.com/cross-rs/cross
-
-      - name: Build (cross)
-        if: matrix.use-cross
-        run: cross build --release --target ${{ matrix.target }}
-
-      - name: Build (cargo)
-        if: ${{ !matrix.use-cross }}
-        run: cargo build --release --target ${{ matrix.target }}
+      - name: Build
+        run: cargo build --locked --release --target ${{ matrix.target }}
 
       - name: Package (unix)
         if: runner.os != 'Windows'
@@ -77,25 +91,33 @@ jobs:
           7z a ../../../mcp-airbnb-${{ matrix.target }}.zip mcp-airbnb.exe airbnb.exe
           cd ../../..
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: mcp-airbnb-${{ matrix.target }}
           path: mcp-airbnb-${{ matrix.target }}.*
+          if-no-files-found: error
 
   release:
     name: Create Release
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           path: artifacts
           merge-multiple: true
 
+      - name: Compute SHA-256 checksums
+        run: |
+          cd artifacts
+          sha256sum mcp-airbnb-* > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           generate_release_notes: true
+          fail_on_unmatched_files: true
           files: artifacts/*

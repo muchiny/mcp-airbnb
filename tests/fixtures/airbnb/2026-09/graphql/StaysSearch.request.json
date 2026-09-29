@@ -1,0 +1,251 @@
+{
+ "operationName": "StaysSearch",
+ "variables": {
+  "staysSearchRequest": {
+   "cursor": "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0IjoxOCwidmVyc2lvbiI6MX0=",
+   "metadataOnly": false,
+   "requestedPageType": "STAYS_SEARCH",
+   "treatmentFlags": [
+    "feed_map_decouple_m11_treatment",
+    "recommended_amenities_2024_treatment_b",
+    "filter_redesign_2024_treatment",
+    "filter_reordering_2024_roomtype_treatment",
+    "p2_category_bar_removal_treatment",
+    "selected_filters_2024_treatment",
+    "recommended_filters_2024_treatment_b",
+    "m13_search_input_phase2_treatment",
+    "m13_search_input_services_enabled",
+    "m13_2025_experiences_p2_treatment",
+    "homes_p25_refresh_2025_treatment"
+   ],
+   "maxMapItems": 9999,
+   "rawParams": [
+    {
+     "filterName": "adults",
+     "filterValues": [
+      "2"
+     ]
+    },
+    {
+     "filterName": "cdnCacheSafe",
+     "filterValues": [
+      "false"
+     ]
+    },
+    {
+     "filterName": "channel",
+     "filterValues": [
+      "EXPLORE"
+     ]
+    },
+    {
+     "filterName": "federatedSearchSessionId",
+     "filterValues": [
+      "00000000-0000-0000-0000-000000000000"
+     ]
+    },
+    {
+     "filterName": "flexibleTripLengths",
+     "filterValues": [
+      "one_week"
+     ]
+    },
+    {
+     "filterName": "itemsPerGrid",
+     "filterValues": [
+      "18"
+     ]
+    },
+    {
+     "filterName": "monthlyEndDate",
+     "filterValues": [
+      "2027-01-01"
+     ]
+    },
+    {
+     "filterName": "monthlyLength",
+     "filterValues": [
+      "3"
+     ]
+    },
+    {
+     "filterName": "monthlyStartDate",
+     "filterValues": [
+      "2026-10-01"
+     ]
+    },
+    {
+     "filterName": "placeId",
+     "filterValues": [
+      "ChIJl4foalHq9EcR8CG75CqrCAQ"
+     ]
+    },
+    {
+     "filterName": "priceFilterInputType",
+     "filterValues": [
+      "2"
+     ]
+    },
+    {
+     "filterName": "priceFilterNumNights",
+     "filterValues": [
+      "5"
+     ]
+    },
+    {
+     "filterName": "query",
+     "filterValues": [
+      "Lyon, France"
+     ]
+    },
+    {
+     "filterName": "refinementPaths",
+     "filterValues": [
+      "/homes"
+     ]
+    },
+    {
+     "filterName": "screenSize",
+     "filterValues": [
+      "large"
+     ]
+    },
+    {
+     "filterName": "tabId",
+     "filterValues": [
+      "home_tab"
+     ]
+    },
+    {
+     "filterName": "version",
+     "filterValues": [
+      "1.8.8"
+     ]
+    }
+   ]
+  },
+  "staysMapSearchRequestV2": {
+   "cursor": "eyJzZWN0aW9uX29mZnNldCI6MCwiaXRlbXNfb2Zmc2V0IjoxOCwidmVyc2lvbiI6MX0=",
+   "metadataOnly": false,
+   "requestedPageType": "STAYS_SEARCH",
+   "treatmentFlags": [
+    "feed_map_decouple_m11_treatment",
+    "recommended_amenities_2024_treatment_b",
+    "filter_redesign_2024_treatment",
+    "filter_reordering_2024_roomtype_treatment",
+    "p2_category_bar_removal_treatment",
+    "selected_filters_2024_treatment",
+    "recommended_filters_2024_treatment_b",
+    "m13_search_input_phase2_treatment",
+    "m13_search_input_services_enabled",
+    "m13_2025_experiences_p2_treatment",
+    "homes_p25_refresh_2025_treatment"
+   ],
+   "rawParams": [
+    {
+     "filterName": "adults",
+     "filterValues": [
+      "2"
+     ]
+    },
+    {
+     "filterName": "cdnCacheSafe",
+     "filterValues": [
+      "false"
+     ]
+    },
+    {
+     "filterName": "channel",
+     "filterValues": [
+      "EXPLORE"
+     ]
+    },
+    {
+     "filterName": "federatedSearchSessionId",
+     "filterValues": [
+      "00000000-0000-0000-0000-000000000000"
+     ]
+    },
+    {
+     "filterName": "flexibleTripLengths",
+     "filterValues": [
+      "one_week"
+     ]
+    },
+    {
+     "filterName": "monthlyEndDate",
+     "filterValues": [
+      "2027-01-01"
+     ]
+    },
+    {
+     "filterName": "monthlyLength",
+     "filterValues": [
+      "3"
+     ]
+    },
+    {
+     "filterName": "monthlyStartDate",
+     "filterValues": [
+      "2026-10-01"
+     ]
+    },
+    {
+     "filterName": "placeId",
+     "filterValues": [
+      "ChIJl4foalHq9EcR8CG75CqrCAQ"
+     ]
+    },
+    {
+     "filterName": "priceFilterInputType",
+     "filterValues": [
+      "2"
+     ]
+    },
+    {
+     "filterName": "priceFilterNumNights",
+     "filterValues": [
+      "5"
+     ]
+    },
+    {
+     "filterName": "query",
+     "filterValues": [
+      "Lyon, France"
+     ]
+    },
+    {
+     "filterName": "refinementPaths",
+     "filterValues": [
+      "/homes"
+     ]
+    },
+    {
+     "filterName": "screenSize",
+     "filterValues": [
+      "large"
+     ]
+    },
+    {
+     "filterName": "tabId",
+     "filterValues": [
+      "home_tab"
+     ]
+    },
+    {
+     "filterName": "version",
+     "filterValues": [
+      "1.8.8"
+     ]
+    }
+   ]
+  },
+  "isLeanTreatment": false
+ },
+ "extensions": {
+  "persistedQuery": {
+   "version": 1,
+   "sha256Hash": "0afc7d440ee66286e44038530dc8d2af77d795e434e5cc5c8a8034c93cb377cf"
+  }
+ }
+}

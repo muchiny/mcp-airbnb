@@ -1,0 +1,2398 @@
+{
+ "data": {
+  "presentation": {
+   "__typename": "RootPresentationContainer",
+   "stayProductDetailPage": {
+    "__typename": "StayPDPPresentationContainer",
+    "reviews": {
+     "__typename": "PdpReviews",
+     "reviews": [
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 1.<br/>Placeholder text 1.<br/>Placeholder text 1.<br/>Placeholder text 1.",
+       "id": "1000001",
+       "language": "en",
+       "createdAt": "2026-09-15T14:30:10Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person2",
+        "hostName": "Person2",
+        "id": "1000004",
+        "contextualUserId": "1000005",
+        "pictureUrl": "https://example.com/fixture-image/39.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/39.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": null,
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "1 week ago",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 2.",
+       "localizedReview": null,
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 3.<br/>Placeholder text 3.<br/>Placeholder text 3.<br/>Placeholder text 3.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 4.<br/>Placeholder text 4.<br/>Placeholder text 4.<br/>Placeholder text 4.",
+        "commentsLanguage": "en",
+        "disclaimer": null,
+        "needsTranslation": false,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 5.",
+       "id": "1000006",
+       "language": "en",
+       "createdAt": "2026-09-22T08:43:49Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person3",
+        "hostName": "Person3",
+        "id": "1000007",
+        "contextualUserId": "1000008",
+        "pictureUrl": "https://example.com/fixture-image/40.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/40.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "6 days ago",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 6.",
+       "localizedReview": null,
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 7.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 8.",
+        "commentsLanguage": "en",
+        "disclaimer": null,
+        "needsTranslation": false,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 9.",
+       "id": "1000009",
+       "language": "fr",
+       "createdAt": "2026-09-25T08:40:19Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person4",
+        "hostName": "Person4",
+        "id": "1000010",
+        "contextualUserId": "1000011",
+        "pictureUrl": "https://example.com/fixture-image/41.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/41.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "3 days ago",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 10.",
+       "localizedReview": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 11.",
+        "commentsLanguage": "fr",
+        "disclaimer": "Translated from French",
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 12.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 13.",
+        "commentsLanguage": "fr",
+        "disclaimer": null,
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 14.<br/>Placeholder text 14.<br/>Placeholder text 14.<br/>Placeholder text 14.",
+       "id": "1000012",
+       "language": "en",
+       "createdAt": "2026-09-04T08:04:17Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person5",
+        "hostName": "Person5",
+        "id": "1000013",
+        "contextualUserId": "1000014",
+        "pictureUrl": "https://example.com/fixture-image/42.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/42.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "3 weeks ago",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 15.",
+       "localizedReview": null,
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 16.<br/>Placeholder text 16.<br/>Placeholder text 16.<br/>Placeholder text 16.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 17.<br/>Placeholder text 17.<br/>Placeholder text 17.<br/>Placeholder text 17.",
+        "commentsLanguage": "en",
+        "disclaimer": null,
+        "needsTranslation": false,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 18.",
+       "id": "1000015",
+       "language": "de",
+       "createdAt": "2026-09-12T14:28:51Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person6",
+        "hostName": "Person6",
+        "id": "1000016",
+        "contextualUserId": "1000017",
+        "pictureUrl": "https://example.com/fixture-image/43.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/43.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "2 weeks ago",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 19.",
+       "localizedReview": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 20.",
+        "commentsLanguage": "de",
+        "disclaimer": "Translated from German",
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "rating": 4,
+       "ratingAccessibilityLabel": "Rating, 4 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 21.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 22.",
+        "commentsLanguage": "de",
+        "disclaimer": null,
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 23.",
+       "id": "1000018",
+       "language": "fr",
+       "createdAt": "2026-08-02T12:13:15Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person7",
+        "hostName": "Person7",
+        "id": "1000019",
+        "contextualUserId": "1000020",
+        "pictureUrl": "https://example.com/fixture-image/44.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/44.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "August 2026",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 24.",
+       "localizedReview": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 25.",
+        "commentsLanguage": "fr",
+        "disclaimer": "Translated from French",
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 26.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 27.",
+        "commentsLanguage": "fr",
+        "disclaimer": null,
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 28.",
+       "id": "1000021",
+       "language": "fr",
+       "createdAt": "2026-08-24T09:24:38Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person8",
+        "hostName": "Person8",
+        "id": "1000022",
+        "contextualUserId": "1000023",
+        "pictureUrl": "https://example.com/fixture-image/45.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/45.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "August 2026",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 29.",
+       "localizedReview": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 30.",
+        "commentsLanguage": "fr",
+        "disclaimer": "Translated from French",
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 31.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 32.",
+        "commentsLanguage": "fr",
+        "disclaimer": null,
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 33.",
+       "id": "1000024",
+       "language": "fr",
+       "createdAt": "2026-08-25T06:28:40Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person9",
+        "hostName": "Person9",
+        "id": "1000025",
+        "contextualUserId": "1000026",
+        "pictureUrl": "https://example.com/fixture-image/46.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/46.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed one night",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "August 2026",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 34.",
+       "localizedReview": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 35.",
+        "commentsLanguage": "fr",
+        "disclaimer": "Translated from French",
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 36.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 37.",
+        "commentsLanguage": "fr",
+        "disclaimer": null,
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 38.",
+       "id": "1000027",
+       "language": "en",
+       "createdAt": "2026-07-30T13:59:58Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person10",
+        "hostName": "Person10",
+        "id": "1000028",
+        "contextualUserId": "1000029",
+        "pictureUrl": "https://example.com/fixture-image/47.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/47.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "July 2026",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 39.",
+       "localizedReview": null,
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 40.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 41.",
+        "commentsLanguage": "en",
+        "disclaimer": null,
+        "needsTranslation": false,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 42.<br/>Placeholder text 42.",
+       "id": "1000030",
+       "language": "nl",
+       "createdAt": "2026-07-14T12:08:41Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person11",
+        "hostName": "Person11",
+        "id": "1000031",
+        "contextualUserId": "1000032",
+        "pictureUrl": "https://example.com/fixture-image/48.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/48.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "July 2026",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 43.",
+       "localizedReview": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 44.<br/>Placeholder text 44.",
+        "commentsLanguage": "nl",
+        "disclaimer": "Translated from Dutch",
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 45.<br/>Placeholder text 45.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 46.<br/>Placeholder text 46.",
+        "commentsLanguage": "nl",
+        "disclaimer": null,
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 47.",
+       "id": "1000033",
+       "language": "fr",
+       "createdAt": "2026-07-24T12:04:49Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person12",
+        "hostName": "Person12",
+        "id": "1000034",
+        "contextualUserId": "1000035",
+        "pictureUrl": "https://example.com/fixture-image/49.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/49.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed about a week",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "July 2026",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 48.",
+       "localizedReview": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 49.",
+        "commentsLanguage": "fr",
+        "disclaimer": "Translated from French",
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 50.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 51.",
+        "commentsLanguage": "fr",
+        "disclaimer": null,
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 52.<br/>Placeholder text 52.<br/>Placeholder text 52.",
+       "id": "1000036",
+       "language": "fr",
+       "createdAt": "2026-07-05T14:13:22Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person13",
+        "hostName": "Person13",
+        "id": "1000037",
+        "contextualUserId": "1000038",
+        "pictureUrl": "https://example.com/fixture-image/50.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/50.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "July 2026",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 53.",
+       "localizedReview": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 54.<br/>Placeholder text 54.<br/>Placeholder text 54.",
+        "commentsLanguage": "fr",
+        "disclaimer": "Translated from French",
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 55.<br/>Placeholder text 55.<br/>Placeholder text 55.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 56.<br/>Placeholder text 56.<br/>Placeholder text 56.",
+        "commentsLanguage": "fr",
+        "disclaimer": null,
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 57.",
+       "id": "1000039",
+       "language": "fr",
+       "createdAt": "2026-07-10T13:56:44Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person14",
+        "hostName": "Person14",
+        "id": "1000040",
+        "contextualUserId": "1000041",
+        "pictureUrl": "https://example.com/fixture-image/51.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/51.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "July 2026",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 58.",
+       "localizedReview": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 59.",
+        "commentsLanguage": "fr",
+        "disclaimer": "Translated from French",
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 60.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 61.",
+        "commentsLanguage": "fr",
+        "disclaimer": null,
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 62.",
+       "id": "1000042",
+       "language": "en",
+       "createdAt": "2026-06-29T13:20:55Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person15",
+        "hostName": "Person15",
+        "id": "1000043",
+        "contextualUserId": "1000044",
+        "pictureUrl": "https://example.com/fixture-image/52.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/52.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": null,
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "June 2026",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 63.",
+       "localizedReview": null,
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 64.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 65.",
+        "commentsLanguage": "en",
+        "disclaimer": null,
+        "needsTranslation": false,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 66.<br/>Placeholder text 66.",
+       "id": "1000045",
+       "language": "fr",
+       "createdAt": "2026-06-28T07:58:23Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person16",
+        "hostName": "Person16",
+        "id": "1000046",
+        "contextualUserId": "1000047",
+        "pictureUrl": "https://example.com/fixture-image/53.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/53.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed one night",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "June 2026",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 67.",
+       "localizedReview": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 68.<br/>Placeholder text 68.",
+        "commentsLanguage": "fr",
+        "disclaimer": "Translated from French",
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "rating": 4,
+       "ratingAccessibilityLabel": "Rating, 4 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 69.<br/>Placeholder text 69.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 70.<br/>Placeholder text 70.",
+        "commentsLanguage": "fr",
+        "disclaimer": null,
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 71.",
+       "id": "1000048",
+       "language": "en",
+       "createdAt": "2026-06-27T11:52:16Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person17",
+        "hostName": "Person17",
+        "id": "1000049",
+        "contextualUserId": "1000050",
+        "pictureUrl": "https://example.com/fixture-image/54.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/54.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": null,
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "June 2026",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 72.",
+       "localizedReview": null,
+       "rating": 4,
+       "ratingAccessibilityLabel": "Rating, 4 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 73.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 74.",
+        "commentsLanguage": "en",
+        "disclaimer": null,
+        "needsTranslation": false,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 75.",
+       "id": "1000051",
+       "language": "en",
+       "createdAt": "2026-06-10T11:39:41Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person18",
+        "hostName": "Person18",
+        "id": "1000052",
+        "contextualUserId": "1000053",
+        "pictureUrl": "https://example.com/fixture-image/55.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/55.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "June 2026",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 76.",
+       "localizedReview": null,
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 77.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 78.",
+        "commentsLanguage": "en",
+        "disclaimer": null,
+        "needsTranslation": false,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 79.",
+       "id": "1000054",
+       "language": "fr",
+       "createdAt": "2026-06-07T13:05:26Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person19",
+        "hostName": "Person19",
+        "id": "1000055",
+        "contextualUserId": "1000056",
+        "pictureUrl": "https://example.com/fixture-image/56.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/56.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "June 2026",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 80.",
+       "localizedReview": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 81.",
+        "commentsLanguage": "fr",
+        "disclaimer": "Translated from French",
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 82.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 83.",
+        "commentsLanguage": "fr",
+        "disclaimer": null,
+        "needsTranslation": true,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 84.",
+       "id": "1000057",
+       "language": "en",
+       "createdAt": "2026-05-27T11:10:32Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person20",
+        "hostName": "Person20",
+        "id": "1000058",
+        "contextualUserId": "1000059",
+        "pictureUrl": "https://example.com/fixture-image/57.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/57.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "May 2026",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 85.",
+       "localizedReview": null,
+       "rating": 4,
+       "ratingAccessibilityLabel": "Rating, 4 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 86.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 87.",
+        "commentsLanguage": "en",
+        "disclaimer": null,
+        "needsTranslation": false,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 88.<br/>Placeholder text 88.",
+       "id": "1000060",
+       "language": "en",
+       "createdAt": "2022-06-01T13:47:11Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person21",
+        "hostName": "Person21",
+        "id": "1000061",
+        "contextualUserId": "1000062",
+        "pictureUrl": "https://example.com/fixture-image/58.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/58.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "June 2022",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 89.",
+       "localizedReview": null,
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 90.<br/>Placeholder text 90.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 91.<br/>Placeholder text 91.",
+        "commentsLanguage": "en",
+        "disclaimer": null,
+        "needsTranslation": false,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 92.<br/>Placeholder text 92.<br/>Placeholder text 92.",
+       "id": "1000063",
+       "language": "en",
+       "createdAt": "2024-04-14T12:46:22Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person22",
+        "hostName": "Person22",
+        "id": "1000064",
+        "contextualUserId": "1000065",
+        "pictureUrl": "https://example.com/fixture-image/59.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/59.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "April 2024",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 93.",
+       "localizedReview": null,
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 94.<br/>Placeholder text 94.<br/>Placeholder text 94.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 95.<br/>Placeholder text 95.<br/>Placeholder text 95.",
+        "commentsLanguage": "en",
+        "disclaimer": null,
+        "needsTranslation": false,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 96.",
+       "id": "1000066",
+       "language": "en",
+       "createdAt": "2021-06-30T14:13:49Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person23",
+        "hostName": "Person23",
+        "id": "1000067",
+        "contextualUserId": "1000068",
+        "pictureUrl": "https://example.com/fixture-image/60.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/60.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "June 2021",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 97.",
+       "localizedReview": null,
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 98.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 99.",
+        "commentsLanguage": "en",
+        "disclaimer": null,
+        "needsTranslation": false,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 100.",
+       "id": "1000069",
+       "language": "en",
+       "createdAt": "2024-07-03T14:14:14Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person24",
+        "hostName": "Person24",
+        "id": "1000070",
+        "contextualUserId": "1000071",
+        "pictureUrl": "https://example.com/fixture-image/61.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/61.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": null,
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "July 2024",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 101.",
+       "localizedReview": null,
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 102.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 103.",
+        "commentsLanguage": "en",
+        "disclaimer": null,
+        "needsTranslation": false,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      },
+      {
+       "__typename": "PdpReviewForP3",
+       "collectionTag": null,
+       "comments": "Placeholder text 104.<br/>Placeholder text 104.<br/>Placeholder text 104.<br/>Placeholder text 104.",
+       "id": "1000072",
+       "language": "en",
+       "createdAt": "2024-08-04T11:19:05Z",
+       "responder": null,
+       "reviewee": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person1",
+        "hostName": "Person1",
+        "id": "1000002",
+        "contextualUserId": "1000003",
+        "pictureUrl": "https://example.com/fixture-image/38.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/38.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewer": {
+        "__typename": "ReviewUser",
+        "deleted": false,
+        "firstName": "Person25",
+        "hostName": "Person25",
+        "id": "1000073",
+        "contextualUserId": "1000074",
+        "pictureUrl": "https://example.com/fixture-image/62.jpg",
+        "profilePath": "/users/profile/0",
+        "isSuperhost": false,
+        "userProfilePicture": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/62.jpg",
+         "onPressAction": {
+          "__typename": "NavigateToUserProfile",
+          "url": "/users/profile/0"
+         }
+        }
+       },
+       "reviewHighlight": "Stayed a few nights",
+       "highlightType": "LENGTH_OF_STAY",
+       "localizedDate": "August 2024",
+       "localizedRespondedDate": null,
+       "localizedReviewerLocation": "Placeholder text 105.",
+       "localizedReview": null,
+       "rating": 5,
+       "ratingAccessibilityLabel": "Rating, 5 stars",
+       "recommendedNumberOfLines": null,
+       "response": null,
+       "roomTypeListingTitle": null,
+       "roomTypeListingId": null,
+       "highlightedReviewSentence": [],
+       "highlightReviewMentioned": null,
+       "showMoreButton": {
+        "__typename": "BasicListItem",
+        "title": "Show more",
+        "loggingEventData": {
+         "__typename": "LoggingEventData",
+         "loggingId": "pdp.reviews.readMore",
+         "experiments": [],
+         "eventData": null,
+         "eventDataSchemaName": null,
+         "section": null,
+         "component": null
+        }
+       },
+       "subtitleItems": [],
+       "channel": null,
+       "reviewMediaItems": [],
+       "isHostHighlightedReview": null,
+       "reviewPhotoUrls": [],
+       "commentV2": "Placeholder text 106.<br/>Placeholder text 106.<br/>Placeholder text 106.<br/>Placeholder text 106.",
+       "localizedCommentV2": {
+        "__typename": "LocalizedReview",
+        "comments": "Placeholder text 107.<br/>Placeholder text 107.<br/>Placeholder text 107.<br/>Placeholder text 107.",
+        "commentsLanguage": "en",
+        "disclaimer": null,
+        "needsTranslation": false,
+        "response": null,
+        "responseDisclaimer": null
+       },
+       "localizedPaidPromotionDisclaimer": null
+      }
+     ],
+     "metadata": {
+      "__typename": "PdpReviewsMetadata",
+      "reviewsCount": 490,
+      "modalSubtitle": null,
+      "isReviewsSearchResults": null,
+      "isReviewsHighlightTagResults": null,
+      "isAutoTranslateOn": true,
+      "endCursor": null,
+      "experiments": [],
+      "reviewTags": [
+       {
+        "__typename": "ReviewTag",
+        "count": 293,
+        "localizedName": "Location",
+        "name": "LOCATION",
+        "icon": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/63.jpg"
+        },
+        "summary": null,
+        "summaryDebugInfo": null
+       },
+       {
+        "__typename": "ReviewTag",
+        "count": 60,
+        "localizedName": "Nearby",
+        "name": "NEARBY",
+        "icon": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/64.jpg"
+        },
+        "summary": null,
+        "summaryDebugInfo": null
+       },
+       {
+        "__typename": "ReviewTag",
+        "count": 168,
+        "localizedName": "Cleanliness",
+        "name": "CLEANLINESS",
+        "icon": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/65.jpg"
+        },
+        "summary": null,
+        "summaryDebugInfo": null
+       },
+       {
+        "__typename": "ReviewTag",
+        "count": 140,
+        "localizedName": "Indoor spaces",
+        "name": "INDOOR_SPACES",
+        "icon": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/66.jpg"
+        },
+        "summary": null,
+        "summaryDebugInfo": null
+       },
+       {
+        "__typename": "ReviewTag",
+        "count": 66,
+        "localizedName": "Amenities",
+        "name": "AMENITIES",
+        "icon": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/67.jpg"
+        },
+        "summary": null,
+        "summaryDebugInfo": null
+       },
+       {
+        "__typename": "ReviewTag",
+        "count": 49,
+        "localizedName": "Getting around",
+        "name": "GETTING_AROUND",
+        "icon": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/68.jpg"
+        },
+        "summary": null,
+        "summaryDebugInfo": null
+       },
+       {
+        "__typename": "ReviewTag",
+        "count": 62,
+        "localizedName": "Walkability",
+        "name": "WALKABILITY",
+        "icon": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/69.jpg"
+        },
+        "summary": null,
+        "summaryDebugInfo": null
+       },
+       {
+        "__typename": "ReviewTag",
+        "count": 265,
+        "localizedName": "Hospitality",
+        "name": "HOSPITALITY",
+        "icon": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/70.jpg"
+        },
+        "summary": null,
+        "summaryDebugInfo": null
+       },
+       {
+        "__typename": "ReviewTag",
+        "count": 34,
+        "localizedName": "Sleep quality",
+        "name": "SLEEP",
+        "icon": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/71.jpg"
+        },
+        "summary": null,
+        "summaryDebugInfo": null
+       },
+       {
+        "__typename": "ReviewTag",
+        "count": 5,
+        "localizedName": "Layout",
+        "name": "LAYOUT",
+        "icon": {
+         "__typename": "Image",
+         "baseUrl": "https://example.com/fixture-image/72.jpg"
+        },
+        "summary": null,
+        "summaryDebugInfo": null
+       }
+      ]
+     }
+    }
+   }
+  }
+ },
+ "extensions": {
+  "traceId": "fixture-trace-id"
+ }
+}

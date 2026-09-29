@@ -6,6 +6,10 @@ use std::num::NonZeroUsize;
 
 use crate::ports::cache::ListingCache;
 
+/// Longest time an entry may live; larger TTLs are capped instead of letting
+/// `Instant + ttl` overflow and abort the process (`panic = "abort"`).
+const MAX_ENTRY_TTL: Duration = Duration::from_secs(30 * 24 * 60 * 60);
+
 struct CacheEntry {
     value: String,
     expires_at: Instant,
@@ -15,11 +19,15 @@ pub struct MemoryCache {
     inner: RwLock<LruCache<String, CacheEntry>>,
 }
 
+/// Capacity used when `max_entries` is 0. `Config::validate` rejects 0, but
+/// `MemoryCache::new` is public and must not panic.
+const FALLBACK_CAPACITY: NonZeroUsize = NonZeroUsize::MIN.saturating_add(99);
+
 impl MemoryCache {
     pub fn new(max_entries: usize) -> Self {
         let cap = NonZeroUsize::new(max_entries).unwrap_or_else(|| {
-            tracing::warn!("Cache max_entries was 0, defaulting to 100");
-            NonZeroUsize::new(100).unwrap()
+            tracing::warn!("Cache max_entries was 0, defaulting to {FALLBACK_CAPACITY}");
+            FALLBACK_CAPACITY
         });
         Self {
             inner: RwLock::new(LruCache::new(cap)),
@@ -45,12 +53,14 @@ impl ListingCache for MemoryCache {
     }
 
     fn set(&self, key: &str, value: &str, ttl: Duration) {
+        let now = Instant::now();
+        let expires_at = now.checked_add(ttl).unwrap_or_else(|| now + MAX_ENTRY_TTL);
         if let Ok(mut cache) = self.inner.write() {
             cache.put(
                 key.to_string(),
                 CacheEntry {
                     value: value.to_string(),
-                    expires_at: Instant::now() + ttl,
+                    expires_at,
                 },
             );
         } else {
@@ -98,6 +108,33 @@ mod tests {
     }
 
     #[test]
+    fn get_refreshes_recency_so_least_recently_read_is_evicted() {
+        let cache = MemoryCache::new(2);
+        cache.set("a", "1", Duration::from_mins(1));
+        cache.set("b", "2", Duration::from_mins(1));
+        // Reading "a" makes "b" the least recently used entry.
+        assert_eq!(cache.get("a"), Some("1".to_string()));
+        cache.set("c", "3", Duration::from_mins(1));
+        assert!(cache.get("b").is_none(), "b must be evicted, not a");
+        assert_eq!(cache.get("a"), Some("1".to_string()));
+        assert_eq!(cache.get("c"), Some("3".to_string()));
+    }
+
+    #[test]
+    fn expired_entry_is_removed_and_frees_its_slot() {
+        let cache = MemoryCache::new(2);
+        cache.set("stale", "0", Duration::from_millis(0));
+        cache.set("keep", "1", Duration::from_mins(1));
+        std::thread::sleep(Duration::from_millis(1));
+        // The expired read promotes "stale" to most recently used, then must pop it.
+        assert!(cache.get("stale").is_none());
+        // Without the pop, inserting "new" would evict "keep" (the LRU entry).
+        cache.set("new", "2", Duration::from_mins(1));
+        assert_eq!(cache.get("keep"), Some("1".to_string()));
+        assert_eq!(cache.get("new"), Some("2".to_string()));
+    }
+
+    #[test]
     fn cache_overwrite_key() {
         let cache = MemoryCache::new(10);
         cache.set("key", "old_value", Duration::from_mins(1));
@@ -130,5 +167,12 @@ mod tests {
             let result = handle.join().unwrap();
             assert!(result.is_some());
         }
+    }
+
+    #[test]
+    fn huge_ttl_is_capped_instead_of_panicking() {
+        let cache = MemoryCache::new(10);
+        cache.set("key", "value", Duration::MAX);
+        assert_eq!(cache.get("key"), Some("value".to_string()));
     }
 }

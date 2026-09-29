@@ -1,74 +1,62 @@
-use base64::Engine;
-use base64::engine::general_purpose::STANDARD;
+use std::collections::HashSet;
+
 use scraper::{Html, Selector};
 
+use crate::adapters::price::{normalize_currency, parse_price_amount};
+use crate::adapters::scraper::deferred_state::{
+    deferred_state_json, next_data_json, niobe_payloads,
+};
+use crate::adapters::stay_search::listing_from_stay_search_result;
 use crate::domain::listing::{Listing, SearchResult};
 use crate::error::{AirbnbError, Result};
 
 /// Extract search results from Airbnb HTML.
-/// Strategy: try `__NEXT_DATA__` JSON first, then `data-deferred-state` (with niobeClientData),
-/// fall back to CSS selectors.
+///
+/// The page is parsed into a DOM once. Tiers: `__NEXT_DATA__` JSON, the
+/// `data-deferred-state` payloads (`niobeClientData` /
+/// `niobeMinimalClientData`), then CSS selectors.
 pub fn parse_search_results(html: &str, base_url: &str) -> Result<SearchResult> {
-    // Try __NEXT_DATA__ JSON extraction first (legacy, more reliable when present)
-    if let Some(result) = try_parse_next_data_search(html, base_url) {
+    let document = Html::parse_document(html);
+    if let Some(result) =
+        next_data_json(&document).and_then(|data| extract_listings_from_json(&data, base_url))
+    {
         return Ok(result);
     }
-
-    // Try deferred state (current Airbnb format with niobeClientData)
-    if let Some(result) = try_parse_deferred_state(html, base_url) {
+    if let Some(result) = try_parse_deferred_state(&document, base_url) {
         return Ok(result);
     }
-
-    // Final fallback: CSS selectors
-    parse_search_css(html, base_url)
+    parse_search_css(&document, base_url)
 }
 
-fn try_parse_next_data_search(html: &str, base_url: &str) -> Option<SearchResult> {
-    let document = Html::parse_document(html);
-    let selector = Selector::parse(r"script#__NEXT_DATA__").ok()?;
-    let script = document.select(&selector).next()?;
-    let json_text = script.text().collect::<String>();
-    let data: serde_json::Value = serde_json::from_str(&json_text).ok()?;
-
-    extract_listings_from_json(&data, base_url)
-}
-
-fn try_parse_deferred_state(html: &str, base_url: &str) -> Option<SearchResult> {
-    let document = Html::parse_document(html);
-    let selector =
-        Selector::parse("script[data-deferred-state], script[id^='data-deferred-state']").ok()?;
-
-    for script in document.select(&selector) {
-        let json_text = script.text().collect::<String>();
-        if let Ok(data) = serde_json::from_str::<serde_json::Value>(&json_text) {
-            // Try niobeClientData wrapper (current Airbnb format)
-            if let Some(entries) = data.get("niobeClientData").and_then(|v| v.as_array()) {
-                for entry in entries {
-                    if let Some(inner) = entry.as_array().and_then(|arr| arr.get(1))
-                        && let Some(result) = extract_listings_from_json(inner, base_url)
-                    {
-                        return Some(result);
-                    }
-                }
-            }
-            // Legacy: try direct JSON structure
-            if let Some(result) = extract_listings_from_json(&data, base_url) {
-                return Some(result);
-            }
-        }
-    }
-    None
+fn try_parse_deferred_state(document: &Html, base_url: &str) -> Option<SearchResult> {
+    let states = deferred_state_json(document);
+    // Query payloads first, then the raw state object (legacy layout).
+    states
+        .iter()
+        .flat_map(niobe_payloads)
+        .chain(states.iter())
+        .find_map(|data| extract_listings_from_json(data, base_url))
 }
 
 fn extract_listings_from_json(data: &serde_json::Value, base_url: &str) -> Option<SearchResult> {
     // Navigate through various known JSON structures
-    let sections = find_search_sections(data)?;
     let mut listings = Vec::new();
-
-    for section in sections {
-        if let Some(listing) = extract_listing_from_section(section, base_url) {
-            listings.push(listing);
-        }
+    if let Some(sections) = find_search_sections(data) {
+        listings.extend(
+            sections
+                .into_iter()
+                .filter_map(|section| extract_listing_from_section(section, base_url)),
+        );
+    } else if let Some(sections) = deep_find_listings(data, 20) {
+        // Heuristic tier: the first array holding an `id` could be anything
+        // (photo ids, section ids, cursors). Legacy cards tolerate a missing
+        // price, so here a card must be priced to count as a listing.
+        listings.extend(
+            sections
+                .into_iter()
+                .filter_map(|section| extract_listing_from_section(section, base_url))
+                .filter(|listing| listing.known_price().is_some()),
+        );
     }
 
     if listings.is_empty() {
@@ -85,11 +73,12 @@ fn extract_listings_from_json(data: &serde_json::Value, base_url: &str) -> Optio
     })
 }
 
+/// Known search paths only. The heuristic `deep_find_listings` tier is applied
+/// by `extract_listings_from_json`, which filters its cards.
 fn find_search_sections(data: &serde_json::Value) -> Option<Vec<&serde_json::Value>> {
     // Airbnb structures data in various nested paths
     let paths: &[&[&str]] = &[
         &["props", "pageProps", "searchResults"],
-        &["niobeMinimalClientData"],
         &[
             "data",
             "presentation",
@@ -105,11 +94,6 @@ fn find_search_sections(data: &serde_json::Value) -> Option<Vec<&serde_json::Val
         {
             return Some(arr.iter().collect());
         }
-    }
-
-    // Deep search: look for arrays containing listing-like objects
-    if let Some(results) = deep_find_listings(data, 20) {
-        return Some(results);
     }
 
     None
@@ -159,355 +143,14 @@ fn deep_find_listings(data: &serde_json::Value, max_depth: u32) -> Option<Vec<&s
 }
 
 fn extract_listing_from_section(section: &serde_json::Value, base_url: &str) -> Option<Listing> {
-    // Try new format first (niobeClientData / StaySearchResult)
+    // Current format (niobeClientData / `StaySearchResult`), shared with GraphQL.
     if section.get("demandStayListing").is_some() || section.get("structuredDisplayPrice").is_some()
     {
-        return extract_listing_niobe_format(section, base_url);
+        return listing_from_stay_search_result(section, base_url);
     }
 
     // Legacy format: listing nested under "listing" key or flat
     extract_listing_legacy_format(section, base_url)
-}
-
-/// Extract listing from current Airbnb format (niobeClientData / `StaySearchResult`)
-#[allow(clippy::too_many_lines)]
-fn extract_listing_niobe_format(section: &serde_json::Value, base_url: &str) -> Option<Listing> {
-    // Extract ID from demandStayListing.id (base64-encoded "DemandStayListing:NUMERIC_ID")
-    let id = section
-        .get("demandStayListing")
-        .and_then(|dsl| dsl.get("id"))
-        .and_then(|v| v.as_str())
-        .and_then(decode_niobe_id)?;
-
-    // Name: prefer subtitle (listing name), fall back to title (location-based)
-    let name = section
-        .get("subtitle")
-        .and_then(|v| v.as_str())
-        .or_else(|| {
-            section
-                .get("nameLocalized")
-                .and_then(|n| n.get("localizedStringWithTranslationPreference"))
-                .and_then(|v| v.as_str())
-        })
-        .or_else(|| section.get("title").and_then(|v| v.as_str()))
-        .unwrap_or("Unknown listing")
-        .to_string();
-
-    // Location: from title (e.g., "Place to stay in Paris" → "Paris") or demandStayListing
-    let location = section
-        .get("title")
-        .and_then(|v| v.as_str())
-        .map(extract_location_from_title)
-        .unwrap_or_default();
-
-    // Price: try to get per-night from explanation data, fall back to total
-    let price_per_night = extract_price_niobe(section).unwrap_or(0.0);
-
-    // Currency: extract from price string
-    let currency = section
-        .get("structuredDisplayPrice")
-        .and_then(|sdp| sdp.get("primaryLine"))
-        .and_then(|pl| pl.get("price"))
-        .and_then(|v| v.as_str())
-        .and_then(extract_currency_symbol)
-        .unwrap_or_else(|| "$".to_string());
-
-    // Rating: parse from avgRatingLocalized (e.g., "5.0 (5)")
-    let (rating, review_count) = parse_avg_rating_localized(
-        section
-            .get("avgRatingLocalized")
-            .and_then(|v| v.as_str())
-            .unwrap_or(""),
-    );
-
-    // Thumbnail
-    let thumbnail_url = section
-        .get("contextualPictures")
-        .and_then(|pics| pics.as_array())
-        .and_then(|arr| arr.first())
-        .and_then(|pic| pic.get("picture"))
-        .and_then(|p| p.as_str())
-        .map(String::from);
-
-    // Property type: extract from title pattern
-    let property_type = extract_property_type_from_title(
-        section.get("title").and_then(|v| v.as_str()).unwrap_or(""),
-    );
-
-    // Host name: from structuredContent primaryLine HOSTINFO
-    let host_name = section
-        .get("structuredContent")
-        .and_then(|sc| sc.get("primaryLine"))
-        .and_then(|pl| pl.as_array())
-        .and_then(|arr| {
-            arr.iter().find_map(|item| {
-                if item.get("type").and_then(|v| v.as_str()) == Some("HOSTINFO") {
-                    item.get("body").and_then(|v| v.as_str()).map(String::from)
-                } else {
-                    None
-                }
-            })
-        });
-
-    let url = format!("{base_url}/rooms/{id}");
-
-    // All photos from contextualPictures
-    let photos = section
-        .get("contextualPictures")
-        .and_then(|pics| pics.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|pic| {
-                    pic.get("picture")
-                        .and_then(|p| p.as_str())
-                        .map(String::from)
-                })
-                .collect::<Vec<_>>()
-        })
-        .unwrap_or_default();
-
-    // Coordinates from demandStayListing.location.coordinate
-    let dsl = section.get("demandStayListing");
-    let coord = dsl
-        .and_then(|d| d.get("location"))
-        .and_then(|loc| loc.get("coordinate"));
-    let latitude = coord
-        .and_then(|c| c.get("latitude"))
-        .and_then(serde_json::Value::as_f64);
-    let longitude = coord
-        .and_then(|c| c.get("longitude"))
-        .and_then(serde_json::Value::as_f64);
-
-    // Superhost: check badges or structuredContent
-    let is_superhost = section
-        .get("badges")
-        .and_then(|b| b.as_array())
-        .and_then(|arr| {
-            if arr.iter().any(|badge| {
-                badge
-                    .get("type")
-                    .and_then(|v| v.as_str())
-                    .is_some_and(|t| t.contains("SUPERHOST"))
-            }) {
-                Some(true)
-            } else {
-                None
-            }
-        })
-        .or_else(|| {
-            section
-                .get("structuredContent")
-                .and_then(|sc| sc.get("primaryLine"))
-                .and_then(|pl| pl.as_array())
-                .and_then(|arr| {
-                    if arr.iter().any(|item| {
-                        item.get("body")
-                            .and_then(|v| v.as_str())
-                            .is_some_and(|s| s.contains("Superhost"))
-                    }) {
-                        Some(true)
-                    } else {
-                        None
-                    }
-                })
-        });
-
-    // Guest Favorite badge
-    let is_guest_favorite = section
-        .get("guestFavorite")
-        .and_then(serde_json::Value::as_bool)
-        .or_else(|| {
-            section
-                .get("badges")
-                .and_then(|b| b.as_array())
-                .and_then(|arr| {
-                    if arr.iter().any(|badge| {
-                        badge
-                            .get("type")
-                            .and_then(|v| v.as_str())
-                            .is_some_and(|t| t.contains("GUEST_FAVORITE"))
-                    }) {
-                        Some(true)
-                    } else {
-                        None
-                    }
-                })
-        });
-
-    // Instant book
-    let instant_book = dsl
-        .and_then(|d| d.get("instantBookEnabled"))
-        .and_then(serde_json::Value::as_bool);
-
-    // Total price from secondaryLine
-    let total_price = section
-        .get("structuredDisplayPrice")
-        .and_then(|sdp| sdp.get("secondaryLine"))
-        .and_then(|sl| sl.get("price"))
-        .and_then(|v| v.as_str())
-        .and_then(|s| {
-            let digits: String = s
-                .chars()
-                .filter(|c| c.is_ascii_digit() || *c == '.')
-                .collect();
-            digits.parse::<f64>().ok()
-        });
-
-    // Host ID: try demandStayListing.hostId or primaryHost.id
-    let host_id = dsl
-        .and_then(|d| d.get("hostId"))
-        .or_else(|| {
-            dsl.and_then(|d| d.get("primaryHost"))
-                .and_then(|h| h.get("id"))
-        })
-        .and_then(|v| {
-            v.as_str()
-                .map(String::from)
-                .or_else(|| v.as_u64().map(|n| n.to_string()))
-        });
-
-    Some(Listing {
-        id,
-        name,
-        location,
-        price_per_night,
-        currency,
-        rating,
-        review_count,
-        thumbnail_url,
-        property_type,
-        host_name,
-        host_id,
-        url,
-        is_superhost,
-        is_guest_favorite,
-        instant_book,
-        total_price,
-        photos,
-        latitude,
-        longitude,
-    })
-}
-
-/// Decode base64 niobeClientData ID (e.g., "`RGVtYW5kU3RheUxpc3Rpbmc6MTI5MDE`..." → "1290194...")
-fn decode_niobe_id(encoded: &str) -> Option<String> {
-    let bytes = STANDARD.decode(encoded).ok()?;
-    let decoded = String::from_utf8(bytes).ok()?;
-    // Format: "DemandStayListing:NUMERIC_ID"
-    decoded.split(':').nth(1).map(String::from)
-}
-
-/// Extract location from title like "Place to stay in Paris" → "Paris"
-fn extract_location_from_title(title: &str) -> String {
-    // Common patterns: "X in City", "X in City, Country"
-    if let Some(idx) = title.rfind(" in ") {
-        return title[(idx + 4)..].to_string();
-    }
-    title.to_string()
-}
-
-/// Extract per-night price from structured display price
-fn extract_price_niobe(section: &serde_json::Value) -> Option<f64> {
-    let sdp = section.get("structuredDisplayPrice")?;
-
-    // Try to get per-night from explanation data ("X nights x €Y")
-    if let Some(per_night) = sdp
-        .get("explanationData")
-        .and_then(|ed| ed.get("priceDetails"))
-        .and_then(|pd| pd.as_array())
-        .and_then(|arr| arr.first())
-        .and_then(|group| group.get("items"))
-        .and_then(|items| items.as_array())
-        .and_then(|arr| arr.first())
-        .and_then(|item| item.get("description"))
-        .and_then(|v| v.as_str())
-        .and_then(extract_per_night_from_description)
-    {
-        return Some(per_night);
-    }
-
-    // Fall back to primary line price
-    let price_str = sdp
-        .get("primaryLine")
-        .and_then(|pl| pl.get("price"))
-        .and_then(|v| v.as_str())?;
-
-    parse_price_string(price_str)
-}
-
-/// Parse "5 nights x € 45.14" → 45.14
-fn extract_per_night_from_description(desc: &str) -> Option<f64> {
-    // Match pattern: "N nights x SYMBOL PRICE" or "N nights x PRICE"
-    if let Some(idx) = desc.find(" x ") {
-        let price_part = &desc[(idx + 3)..];
-        return parse_price_string(price_part);
-    }
-    None
-}
-
-/// Parse a price string like "€ 254", "$150", "¥12000" into a float
-fn parse_price_string(s: &str) -> Option<f64> {
-    let digits: String = s
-        .chars()
-        .filter(|c| c.is_ascii_digit() || *c == '.')
-        .collect();
-    digits.parse::<f64>().ok()
-}
-
-/// Extract currency symbol from a price string like "€ 254" → "€"
-fn extract_currency_symbol(price: &str) -> Option<String> {
-    let symbol: String = price
-        .chars()
-        .take_while(|c| !c.is_ascii_digit())
-        .collect::<String>()
-        .trim()
-        .to_string();
-    if symbol.is_empty() {
-        None
-    } else {
-        Some(symbol)
-    }
-}
-
-/// Parse "5.0 (5)" → (Some(5.0), 5)
-fn parse_avg_rating_localized(s: &str) -> (Option<f64>, u32) {
-    if s.is_empty() {
-        return (None, 0);
-    }
-    // Format: "4.98 (126)" or "New"
-    let rating = s
-        .split([' ', '('])
-        .next()
-        .and_then(|r| r.parse::<f64>().ok());
-
-    let review_count = s
-        .split('(')
-        .nth(1)
-        .and_then(|part| part.trim_end_matches(')').parse::<u32>().ok())
-        .unwrap_or(0);
-
-    (rating, review_count)
-}
-
-/// Extract property type from title like "Room in Paris" → "Private room"
-fn extract_property_type_from_title(title: &str) -> Option<String> {
-    let lower = title.to_lowercase();
-    if lower.starts_with("room in") || lower.starts_with("place to stay") {
-        Some("Private room".to_string())
-    } else if lower.starts_with("apartment in")
-        || lower.starts_with("home in")
-        || lower.starts_with("condo in")
-        || lower.starts_with("loft in")
-        || lower.starts_with("townhouse in")
-        || lower.starts_with("villa in")
-        || lower.starts_with("rental unit in")
-    {
-        Some("Entire home".to_string())
-    } else if lower.starts_with("hotel") {
-        Some("Hotel".to_string())
-    } else {
-        None
-    }
 }
 
 /// Extract listing from legacy Airbnb format (__`NEXT_DATA`__ style)
@@ -539,8 +182,11 @@ fn extract_listing_legacy_format(section: &serde_json::Value, base_url: &str) ->
         .unwrap_or("")
         .to_string();
 
-    let price_per_night =
-        extract_price_legacy(section).or_else(|| extract_price_legacy(listing_data))?;
+    // A listing without a price is still a listing: 0.0 = unknown (see
+    // `Listing::known_price`). Dropping it hid unpriced listings entirely.
+    let price_per_night = extract_price_legacy(section)
+        .or_else(|| extract_price_legacy(listing_data))
+        .unwrap_or(0.0);
 
     let currency = section
         .get("pricingQuote")
@@ -555,8 +201,8 @@ fn extract_listing_legacy_format(section: &serde_json::Value, base_url: &str) ->
                 .or_else(|| listing_data.get("priceCurrency"))
         })
         .and_then(|v| v.as_str())
-        .unwrap_or("$")
-        .to_string();
+        .map(normalize_currency)
+        .unwrap_or_default();
 
     let rating = listing_data
         .get("avgRating")
@@ -650,7 +296,7 @@ fn extract_price_legacy(data: &serde_json::Value) -> Option<f64> {
             .and_then(|s| s.get("primaryLine"))
             .and_then(|p| p.get("price"))
             .and_then(|p| p.as_str())
-            .and_then(parse_price_string)
+            .and_then(parse_price_amount)
         {
             return Some(price);
         }
@@ -660,7 +306,7 @@ fn extract_price_legacy(data: &serde_json::Value) -> Option<f64> {
         .or_else(|| data.get("pricePerNight"))
         .and_then(|v| {
             v.as_f64()
-                .or_else(|| v.as_str().and_then(parse_price_string))
+                .or_else(|| v.as_str().and_then(parse_price_amount))
         })
 }
 
@@ -685,73 +331,69 @@ fn find_pagination_cursor(data: &serde_json::Value) -> Option<String> {
     None
 }
 
-fn parse_search_css(html: &str, base_url: &str) -> Result<SearchResult> {
-    let document = Html::parse_document(html);
-
-    // Airbnb listing cards typically have data-testid or itemprop attributes
+fn parse_search_css(document: &Html, base_url: &str) -> Result<SearchResult> {
     let card_selector = Selector::parse(
         "[itemprop='itemListElement'], [data-testid='card-container']",
     )
     .map_err(|e| AirbnbError::Parse {
         reason: format!("invalid CSS selector: {e}"),
     })?;
+    let link_selector = Selector::parse("a[href*='/rooms/']").map_err(|e| AirbnbError::Parse {
+        reason: format!("invalid CSS selector: {e}"),
+    })?;
 
+    let mut seen = HashSet::new();
     let mut listings = Vec::new();
-
+    // Select inside each card instead of re-serializing and re-parsing it.
+    // Nested card containers yield the same link, so ids are de-duplicated.
     for card in document.select(&card_selector) {
-        let card_html = card.html();
-        let card_doc = Html::parse_fragment(&card_html);
-
-        // Extract link with listing ID
-        if let Ok(link_sel) = Selector::parse("a[href*='/rooms/']")
-            && let Some(link) = card_doc.select(&link_sel).next()
-            && let Some(href) = link.value().attr("href")
-            && let Some(id) = extract_id_from_url(href)
-        {
-            let name = link.text().collect::<String>().trim().to_string();
-            let name = if name.is_empty() {
+        let Some(link) = card.select(&link_selector).next() else {
+            continue;
+        };
+        let Some(id) = link.value().attr("href").and_then(extract_id_from_url) else {
+            continue;
+        };
+        if !seen.insert(id.clone()) {
+            continue;
+        }
+        let name = link.text().collect::<String>().trim().to_string();
+        listings.push(Listing {
+            url: format!("{base_url}/rooms/{id}"),
+            id,
+            name: if name.is_empty() {
                 "Untitled listing".to_string()
             } else {
                 name
-            };
-
-            listings.push(Listing {
-                id: id.clone(),
-                name,
-                location: String::new(),
-                price_per_night: 0.0,
-                currency: "$".into(),
-                rating: None,
-                review_count: 0,
-                thumbnail_url: None,
-                property_type: None,
-                host_name: None,
-                host_id: None,
-                url: format!("{base_url}/rooms/{id}"),
-                is_superhost: None,
-                is_guest_favorite: None,
-                instant_book: None,
-                total_price: None,
-                photos: vec![],
-                latitude: None,
-                longitude: None,
-            });
-        }
-    }
-
-    if !listings.is_empty() {
-        tracing::warn!(
-            count = listings.len(),
-            "CSS fallback produced listings with incomplete data (price=0, no location)"
-        );
-    }
-
-    if listings.is_empty() {
-        return Err(AirbnbError::Parse {
-            reason: "no listings found in search results".into(),
+            },
+            location: String::new(),
+            price_per_night: 0.0,
+            currency: String::new(),
+            rating: None,
+            review_count: 0,
+            thumbnail_url: None,
+            property_type: None,
+            host_name: None,
+            host_id: None,
+            is_superhost: None,
+            is_guest_favorite: None,
+            instant_book: None,
+            total_price: None,
+            photos: vec![],
+            latitude: None,
+            longitude: None,
         });
     }
 
+    if listings.is_empty() {
+        return Err(AirbnbError::UpstreamSchema {
+            operation: "search page".into(),
+            detail: "no listing data and no listing cards in the page".into(),
+        });
+    }
+    tracing::warn!(
+        count = listings.len(),
+        "CSS fallback produced listings with incomplete data (unknown price, no location)"
+    );
     Ok(SearchResult {
         listings,
         total_count: None,
@@ -900,12 +542,21 @@ mod tests {
     }
 
     #[test]
-    fn currency_defaults_to_dollar() {
+    fn currency_unknown_stays_empty_until_the_client_labels_it() {
         let data: serde_json::Value = serde_json::from_str(
             r#"{"listing":{"id":"3","name":"No Currency","city":"NYC"},"pricingQuote":{"price":{"amount":120.0}}}"#
         ).unwrap();
         let listing = extract_listing_from_section(&data, "https://www.airbnb.com").unwrap();
-        assert_eq!(listing.currency, "$");
+        assert_eq!(listing.currency, "");
+        let iso: serde_json::Value = serde_json::from_str(
+            r#"{"listing":{"id":"4","name":"Iso","city":"NYC","currency":"USD"},"pricingQuote":{"price":{"amount":120.0}}}"#
+        ).unwrap();
+        assert_eq!(
+            extract_listing_from_section(&iso, "https://www.airbnb.com")
+                .unwrap()
+                .currency,
+            "$"
+        );
     }
 
     #[test]
@@ -991,64 +642,94 @@ mod tests {
             result.listings[0].thumbnail_url,
             Some("https://example.com/photo.jpg".to_string())
         );
-        assert_eq!(
-            result.listings[0].host_name,
-            Some("Hosted by Marie".to_string())
-        );
+        assert_eq!(result.listings[0].host_name, Some("Marie".to_string()));
         assert_eq!(result.next_cursor, Some("cursor_xyz".to_string()));
     }
 
     #[test]
-    fn decode_niobe_id_valid() {
-        // "DemandStayListing:123456789" base64 encoded
-        let encoded = STANDARD.encode("DemandStayListing:123456789");
-        assert_eq!(decode_niobe_id(&encoded), Some("123456789".to_string()));
+    fn search_page_with_real_stay_search_results_uses_nightly_prices() {
+        let payload = crate::test_helpers::fixture_json("p1b/stays_search.json");
+        let html =
+            crate::test_helpers::niobe_page("niobeClientData", &[("StaysSearch:{}", &payload)]);
+        let result = parse_search_results(&html, "https://www.airbnb.com").unwrap();
+        let prices: Vec<(String, Option<f64>, Option<f64>)> = result
+            .listings
+            .iter()
+            .map(|l| (l.id.clone(), l.known_price(), l.total_price))
+            .collect();
+        assert_eq!(
+            prices,
+            vec![
+                (
+                    "1344016074576611955".to_string(),
+                    Some(446.94),
+                    Some(2245.0)
+                ),
+                ("968734101213290865".to_string(), Some(158.39), Some(797.0)),
+                ("1532589801839552925".to_string(), Some(147.24), Some(810.0)),
+            ]
+        );
+        assert!(result.listings.iter().all(|l| l.currency == "$"));
+        assert_eq!(result.listings[2].name, "Example Hotel Lyon");
+        assert_eq!(result.listings[2].location, "3rd Arrondissement");
+        assert!(result.listings.iter().all(|l| l.host_name.is_none()));
     }
 
     #[test]
-    fn parse_avg_rating_localized_full() {
-        let (rating, count) = parse_avg_rating_localized("4.98 (126)");
-        assert!((rating.unwrap() - 4.98).abs() < f64::EPSILON);
-        assert_eq!(count, 126);
+    fn legacy_listing_without_price_is_kept_with_unknown_price() {
+        let data: serde_json::Value =
+            serde_json::from_str(r#"{"listing":{"id":"77","name":"No Price Yet","city":"Lyon"}}"#)
+                .unwrap();
+        let listing = extract_listing_from_section(&data, "https://www.airbnb.com")
+            .expect("an unpriced listing is still a listing");
+        assert_eq!(listing.id, "77");
+        assert_eq!(listing.known_price(), None);
     }
 
     #[test]
-    fn parse_avg_rating_localized_empty() {
-        let (rating, count) = parse_avg_rating_localized("");
-        assert!(rating.is_none());
-        assert_eq!(count, 0);
+    fn deep_search_ignores_unrelated_id_arrays() {
+        // No known search path: a decoy array of ids must not become listings.
+        let decoy = serde_json::json!({
+            "data": {"filters": [{"id": "x"}, {"id": "y"}]}
+        });
+        assert!(extract_listings_from_json(&decoy, "https://www.airbnb.com").is_none());
+
+        // A priced legacy card found only by the deep search is still returned.
+        let priced = serde_json::json!({
+            "data": {"cards": [{"id": "1", "name": "Priced", "price": 120.0}]}
+        });
+        let result = extract_listings_from_json(&priced, "https://www.airbnb.com")
+            .expect("a priced card found by the deep search is a listing");
+        assert_eq!(result.listings.len(), 1);
+        assert_eq!(result.listings[0].known_price(), Some(120.0));
     }
 
     #[test]
-    fn parse_avg_rating_localized_new() {
-        let (rating, count) = parse_avg_rating_localized("New");
-        assert!(rating.is_none());
-        assert_eq!(count, 0);
+    fn niobe_minimal_wrapper_is_unwrapped_like_niobe_client_data() {
+        let payload = crate::test_helpers::fixture_json("p1b/stays_search.json");
+        let html = crate::test_helpers::niobe_page(
+            "niobeMinimalClientData",
+            &[("StaysSearch:{}", &payload)],
+        );
+        let result = parse_search_results(&html, "https://www.airbnb.com").unwrap();
+        assert_eq!(result.listings.len(), 3);
+        assert_eq!(result.listings[0].known_price(), Some(446.94));
     }
 
     #[test]
-    fn extract_per_night_from_desc() {
+    fn nested_css_cards_are_listed_once() {
+        let html = r#"<html><body>
+            <div data-testid="card-container"><div data-testid="card-container"><a href="/rooms/111">Nested</a></div></div>
+            <div itemprop="itemListElement"><a href="/rooms/222">Other</a></div>
+        </body></html>"#;
+        let result = parse_search_results(html, "https://www.airbnb.com").unwrap();
+        let ids: Vec<&str> = result.listings.iter().map(|l| l.id.as_str()).collect();
+        assert_eq!(ids, ["111", "222"]);
         assert!(
-            (extract_per_night_from_description("5 nights x € 45.14").unwrap() - 45.14).abs()
-                < f64::EPSILON
+            result
+                .listings
+                .iter()
+                .all(|l| l.currency.is_empty() && l.known_price().is_none())
         );
-    }
-
-    #[test]
-    fn extract_location_from_title_works() {
-        assert_eq!(
-            extract_location_from_title("Place to stay in Paris"),
-            "Paris"
-        );
-        assert_eq!(
-            extract_location_from_title("Room in London, UK"),
-            "London, UK"
-        );
-    }
-
-    #[test]
-    fn extract_currency_symbol_works() {
-        assert_eq!(extract_currency_symbol("€ 254"), Some("€".to_string()));
-        assert_eq!(extract_currency_symbol("$150"), Some("$".to_string()));
     }
 }

@@ -1,445 +1,314 @@
 use serde_json::Value;
-use tracing::warn;
+use tracing::debug;
 
+use super::host;
+use super::pdp::{self, str_field};
+use crate::adapters::price;
+use crate::adapters::text;
 use crate::domain::listing::ListingDetail;
 use crate::error::{AirbnbError, Result};
 
 /// Parse the GraphQL `StaysPdpSections` response into a `ListingDetail`.
-#[allow(clippy::too_many_lines, clippy::cast_possible_truncation)]
+///
+/// The listing page embeds the same document (`niobeClientData`), so the HTML
+/// scraper uses this parser too. Values Airbnb does not publish stay
+/// explicitly unknown: `price_per_night` is `0.0` (see
+/// [`ListingDetail::known_price`]), `currency` is empty until the client
+/// labels it with the pinned currency, and optional fields are `None`. The
+/// location is a place name, never a section heading such as "Where you'll be".
+#[allow(clippy::too_many_lines)]
 pub fn parse_detail_response(json: &Value, id: &str, base_url: &str) -> Result<ListingDetail> {
     let sections = json
-        .pointer("/data/presentation/stayProductDetailPage/sections/sections")
+        .pointer(pdp::SECTIONS)
         .and_then(Value::as_array)
-        .ok_or_else(|| AirbnbError::Parse {
-            reason: "GraphQL detail: could not find sections array".into(),
+        .ok_or_else(|| AirbnbError::UpstreamSchema {
+            operation: "StaysPdpSections".into(),
+            detail: "could not find sections array".into(),
         })?;
 
-    let mut name = String::new();
-    let mut location = String::new();
+    let mut name: Option<String> = None;
+    let mut title_subtitle: Option<String> = None;
+    let mut location_subtitle: Option<String> = None;
+    let mut calendar_location: Option<String> = None;
+    let mut calendar_title: Option<String> = None;
+    let mut calendar_max_guests: Option<u32> = None;
+    let mut calendar_items: Vec<String> = Vec::new();
+    let mut legacy_overview_items: Vec<String> = Vec::new();
     let mut description = String::new();
-    let mut price_per_night = 0.0;
-    let mut currency = "USD".to_string();
+    let mut sidebar_price: Option<(f64, Option<String>)> = None;
+    let mut book_it_max_guests: Option<u32> = None;
     let mut rating: Option<f64> = None;
-    let mut review_count: u32 = 0;
+    let mut review_count: Option<u32> = None;
     let mut property_type: Option<String> = None;
-    let mut host_name: Option<String> = None;
-    let mut amenities = Vec::new();
-    let mut house_rules = Vec::new();
-    let mut photos = Vec::new();
-    let mut bedrooms: Option<u32> = None;
-    let mut beds: Option<u32> = None;
-    let mut bathrooms: Option<f64> = None;
-    let mut max_guests: Option<u32> = None;
-    let mut check_in_time: Option<String> = None;
-    let mut check_out_time: Option<String> = None;
-    let mut host_id: Option<String> = None;
-    let mut host_is_superhost: Option<bool> = None;
-    let mut host_response_rate: Option<String> = None;
-    let mut host_response_time: Option<String> = None;
-    let mut host_joined: Option<String> = None;
-    let mut host_total_listings: Option<u32> = None;
-    let mut host_languages: Vec<String> = Vec::new();
+    let mut amenities: Vec<String> = Vec::new();
+    let mut house_rules: Vec<String> = Vec::new();
+    let mut photos: Vec<String> = Vec::new();
     let mut cancellation_policy: Option<String> = None;
-    let mut cleaning_fee: Option<f64> = None;
-    let mut service_fee: Option<f64> = None;
-    let mut neighborhood: Option<String> = None;
     let mut latitude: Option<f64> = None;
     let mut longitude: Option<f64> = None;
+    let mut neighborhood: Option<String> = None;
 
     for section in sections {
         let section_type = section
             .get("sectionComponentType")
             .and_then(Value::as_str)
             .unwrap_or_default();
-
         let section_id = section
             .get("sectionId")
             .or_else(|| section.get("id"))
             .and_then(Value::as_str)
             .unwrap_or_default();
-
         let data = section.get("section").unwrap_or(section);
 
         match section_type {
             "TITLE_DEFAULT" => {
-                if name.is_empty()
-                    && let Some(n) = data.get("title").and_then(Value::as_str)
-                {
-                    name = n.to_string();
-                }
-                if location.is_empty()
-                    && let Some(subtitle) = data.get("subtitle").and_then(Value::as_str)
-                {
-                    location = subtitle.to_string();
-                }
+                name = name.or_else(|| str_field(Some(data), "title"));
+                title_subtitle = title_subtitle.or_else(|| str_field(Some(data), "subtitle"));
             }
             "HERO_DEFAULT" => {
-                // Extract photos from hero previewImages
-                if photos.is_empty()
-                    && let Some(images) = data.get("previewImages").and_then(Value::as_array)
+                for url in data
+                    .get("previewImages")
+                    .and_then(Value::as_array)
+                    .into_iter()
+                    .flatten()
+                    .filter_map(|image| image.get("baseUrl").and_then(Value::as_str))
                 {
-                    for img in images {
-                        if let Some(url) = img.get("baseUrl").and_then(Value::as_str) {
-                            photos.push(url.to_string());
-                        }
-                    }
+                    push_unique(&mut photos, url);
+                }
+            }
+            "PHOTO_TOUR_SCROLLABLE" | "PHOTO_TOUR_MODAL" => {
+                for url in data
+                    .get("mediaItems")
+                    .and_then(Value::as_array)
+                    .into_iter()
+                    .flatten()
+                    .filter_map(|item| {
+                        item.get("baseUrl")
+                            .or_else(|| item.get("url"))
+                            .and_then(Value::as_str)
+                    })
+                {
+                    push_unique(&mut photos, url);
                 }
             }
             "DESCRIPTION_DEFAULT" | "DESCRIPTION_SECTION" => {
-                if let Some(d) = data
+                if let Some(html) = data
                     .pointer("/htmlDescription/htmlText")
                     .and_then(Value::as_str)
                 {
-                    description = strip_html_tags(d);
-                } else if let Some(d) = data.get("description").and_then(Value::as_str) {
-                    description = d.to_string();
+                    description = text::html_to_text(html);
+                } else if let Some(plain) = data.get("description").and_then(Value::as_str) {
+                    description = plain.to_string();
                 }
             }
             "AMENITIES_DEFAULT" | "AMENITIES_SECTION" => {
-                // Try seeAllAmenitiesGroups first (complete list), then previewAmenitiesGroups, then amenityGroups
+                // `seeAllAmenitiesGroups` is the complete list; the preview is a subset.
                 let groups = data
                     .get("seeAllAmenitiesGroups")
                     .or_else(|| data.get("previewAmenitiesGroups"))
                     .or_else(|| data.get("amenityGroups"))
                     .and_then(Value::as_array);
-                if let Some(groups) = groups {
-                    for group in groups {
-                        if let Some(items) = group.get("amenities").and_then(Value::as_array) {
-                            for item in items {
-                                if item.get("available").and_then(Value::as_bool) == Some(false) {
-                                    continue;
-                                }
-                                if let Some(title) = item.get("title").and_then(Value::as_str)
-                                    && !amenities.contains(&title.to_string())
-                                {
-                                    amenities.push(title.to_string());
-                                }
-                            }
-                        }
+                for item in groups
+                    .into_iter()
+                    .flatten()
+                    .filter_map(|group| group.get("amenities").and_then(Value::as_array))
+                    .flatten()
+                {
+                    // Struck-through items ("Not included") are amenities the listing lacks.
+                    if item.get("available").and_then(Value::as_bool) == Some(false) {
+                        continue;
+                    }
+                    if let Some(title) = item.get("title").and_then(Value::as_str) {
+                        push_unique(&mut amenities, title);
                     }
                 }
             }
             "POLICIES_DEFAULT" | "HOUSE_RULES_DEFAULT" => {
-                if let Some(rules) = data.get("houseRules").and_then(Value::as_array) {
-                    for rule in rules {
-                        if let Some(title) = rule.get("title").and_then(Value::as_str) {
-                            house_rules.push(title.to_string());
-                        }
-                    }
-                }
-                if let Some(policy) = data
-                    .pointer("/cancellationPolicy/title")
-                    .and_then(Value::as_str)
-                {
-                    cancellation_policy = Some(policy.to_string());
-                }
-            }
-            "PHOTO_TOUR_SCROLLABLE" | "PHOTO_TOUR_MODAL" => {
-                if let Some(media_items) = data.get("mediaItems").and_then(Value::as_array) {
-                    for item in media_items {
-                        if let Some(url) = item
-                            .get("baseUrl")
-                            .or_else(|| item.get("url"))
-                            .and_then(Value::as_str)
-                            && !photos.contains(&url.to_string())
-                        {
-                            photos.push(url.to_string());
-                        }
-                    }
-                }
+                house_rules.extend(item_titles(data.get("houseRules")));
+                cancellation_policy = cancellation_policy.or_else(|| {
+                    data.pointer("/cancellationPolicy/title")
+                        .and_then(Value::as_str)
+                        .map(str::to_string)
+                });
             }
             "BOOK_IT_SIDEBAR" => {
-                // Try ratePlanTitle (e.g. "€107 night") — most reliable price source
-                if price_per_night == 0.0
-                    && let Some(rpt) = data.get("ratePlanTitle").and_then(Value::as_str)
-                    && let Some(p) = extract_price_from_text(rpt)
-                {
-                    price_per_night = p;
-                }
-                // Try descriptionItems for price
-                if price_per_night == 0.0
-                    && let Some(items) = data.get("descriptionItems").and_then(Value::as_array)
-                {
-                    for item in items {
-                        if let Some(title) = item.get("title").and_then(Value::as_str)
-                            && let Some(p) = extract_price_from_text(title)
-                        {
-                            price_per_night = p;
-                            break;
-                        }
-                    }
-                }
-                // Try priceDisclaimer
-                if price_per_night == 0.0
-                    && let Some(disclaimer) = data.get("priceDisclaimer").and_then(Value::as_str)
-                    && let Some(p) = extract_price_from_text(disclaimer)
-                {
-                    price_per_night = p;
-                }
-                // Pricing from sidebar — try multiple field name variants
-                if let Some(n) = data
-                    .pointer("/structuredStayDisplayPrice/primaryLine/price")
-                    .or_else(|| data.pointer("/structuredDisplayPrice/primaryLine/discountedPrice"))
-                    .or_else(|| data.pointer("/structuredDisplayPrice/primaryLine/originalPrice"))
-                    .or_else(|| data.pointer("/structuredDisplayPrice/primaryLine/price"))
-                    .and_then(Value::as_str)
-                    .and_then(extract_price_number)
-                {
-                    price_per_night = n;
-                }
-                if price_per_night == 0.0
-                    && let Some(p) = data.pointer("/price/amount").and_then(Value::as_f64)
-                {
-                    price_per_night = p;
-                }
-                // maxGuestCapacity from BOOK_IT_SIDEBAR
-                if max_guests.is_none()
-                    && let Some(cap) = data.get("maxGuestCapacity").and_then(Value::as_u64)
-                {
-                    max_guests = Some(cap as u32);
-                }
+                sidebar_price = sidebar_price.or_else(|| book_it_price(data));
+                book_it_max_guests =
+                    book_it_max_guests.or_else(|| u32_value(data.get("maxGuestCapacity")));
             }
-            "SBUI_SENTINEL"
-                if section_id == "OVERVIEW_DEFAULT_V2" || section_id == "OVERVIEW_DEFAULT" =>
+            "SBUI_SENTINEL" | "OVERVIEW_DEFAULT"
+                if section_type == "OVERVIEW_DEFAULT"
+                    || section_id.starts_with("OVERVIEW_DEFAULT") =>
             {
-                // Overview section has room counts in detailItems
-                if let Some(detail_items) = data.get("detailItems").and_then(Value::as_array) {
-                    for item in detail_items {
-                        let title = item
-                            .get("title")
-                            .and_then(Value::as_str)
-                            .unwrap_or_default();
-                        if title.contains("guest") {
-                            max_guests = extract_number(title);
-                        } else if title.contains("bedroom") {
-                            bedrooms = extract_number(title);
-                        } else if title.contains("bed") {
-                            beds = extract_number(title);
-                        } else if title.contains("bath") {
-                            bathrooms = extract_number(title).map(f64::from);
-                        }
-                    }
-                }
-            }
-            "OVERVIEW_DEFAULT" => {
-                // Legacy overview section format
-                if let Some(detail_items) = data.get("detailItems").and_then(Value::as_array) {
-                    for item in detail_items {
-                        let title = item
-                            .get("title")
-                            .and_then(Value::as_str)
-                            .unwrap_or_default();
-                        if title.contains("guest") {
-                            max_guests = extract_number(title);
-                        } else if title.contains("bedroom") {
-                            bedrooms = extract_number(title);
-                        } else if title.contains("bed") {
-                            beds = extract_number(title);
-                        } else if title.contains("bath") {
-                            bathrooms = extract_number(title).map(f64::from);
-                        }
-                    }
-                }
-            }
-            "MEET_YOUR_HOST" | "HOST_PROFILE_DEFAULT" | "HOST_OVERVIEW_DEFAULT" => {
-                // MEET_YOUR_HOST stores host info in cardData
-                let card = data.get("cardData");
-                host_name = card
-                    .and_then(|c| c.get("name"))
-                    .or_else(|| data.get("hostName"))
-                    .or_else(|| data.get("name"))
-                    .and_then(Value::as_str)
-                    .map(String::from);
-                host_id = card
-                    .and_then(|c| c.get("userId"))
-                    .or_else(|| data.get("hostId"))
-                    .or_else(|| data.get("id"))
-                    .and_then(|v| {
-                        v.as_str()
-                            .map(String::from)
-                            .or_else(|| v.as_u64().map(|n| n.to_string()))
-                    });
-                host_is_superhost = card
-                    .and_then(|c| c.get("isSuperhost"))
-                    .or_else(|| data.get("isSuperhost"))
-                    .and_then(Value::as_bool);
-                // Response rate/time from hostDetails array or direct fields
-                if let Some(details) = data.get("hostDetails").and_then(Value::as_array) {
-                    for detail_str in details.iter().filter_map(Value::as_str) {
-                        let lower = detail_str.to_lowercase();
-                        if lower.contains("response rate") {
-                            host_response_rate = Some(detail_str.to_string());
-                        } else if lower.contains("respond") {
-                            host_response_time = Some(detail_str.to_string());
-                        }
-                    }
-                }
-                if host_response_rate.is_none() {
-                    host_response_rate = data
-                        .get("hostResponseRate")
-                        .and_then(Value::as_str)
-                        .map(String::from);
-                }
-                if host_response_time.is_none() {
-                    host_response_time = data
-                        .get("hostRespondTimeCopy")
-                        .or_else(|| data.get("hostResponseTime"))
-                        .and_then(Value::as_str)
-                        .map(String::from);
-                }
-                host_joined = data
-                    .get("hostMemberSince")
-                    .and_then(Value::as_str)
-                    .map(String::from);
-                host_total_listings = data
-                    .get("hostListingCount")
-                    .and_then(Value::as_u64)
-                    .map(|n| n as u32);
-                // Languages from hostHighlights
-                if host_languages.is_empty() {
-                    if let Some(langs) = data.get("hostLanguages").and_then(Value::as_array) {
-                        host_languages = langs
-                            .iter()
-                            .filter_map(Value::as_str)
-                            .map(String::from)
-                            .collect();
-                    }
-                    if host_languages.is_empty() {
-                        host_languages = extract_languages_from_highlights(data);
-                    }
-                }
+                legacy_overview_items.extend(item_titles(data.get("detailItems")));
             }
             "LOCATION_DEFAULT" | "LOCATION_PDP" => {
-                if location.is_empty()
-                    && let Some(loc) = data.get("subtitle").and_then(Value::as_str)
-                {
-                    location = loc.to_string();
-                }
-                if location.is_empty()
-                    && let Some(loc) = data.get("title").and_then(Value::as_str)
-                {
-                    location = loc.to_string();
-                }
-                latitude = data.get("lat").and_then(Value::as_f64);
-                longitude = data.get("lng").and_then(Value::as_f64);
-                if neighborhood.is_none() {
-                    neighborhood = data
-                        .get("subtitle")
-                        .and_then(Value::as_str)
-                        .map(String::from);
+                // `title` is the section heading ("Where you'll be"), never a place.
+                location_subtitle = location_subtitle.or_else(|| str_field(Some(data), "subtitle"));
+                neighborhood = neighborhood.or_else(|| str_field(Some(data), "subtitle"));
+                latitude = latitude.or_else(|| data.get("lat").and_then(Value::as_f64));
+                longitude = longitude.or_else(|| data.get("lng").and_then(Value::as_f64));
+            }
+            "AVAILABILITY_CALENDAR_DEFAULT" | "STAYS_PDP_AVAILABILITY_CALENDAR_INLINE" => {
+                calendar_location =
+                    calendar_location.or_else(|| str_field(Some(data), "localizedLocation"));
+                calendar_title = calendar_title.or_else(|| str_field(Some(data), "listingTitle"));
+                calendar_max_guests =
+                    calendar_max_guests.or_else(|| u32_value(data.get("maxGuestCapacity")));
+                if calendar_items.is_empty() {
+                    calendar_items = item_titles(data.get("descriptionItems"));
                 }
             }
             "REVIEWS_DEFAULT" => {
-                if rating.is_none() {
-                    rating = data.get("overallRating").and_then(Value::as_f64);
-                }
-                if review_count == 0 {
-                    review_count = data
-                        .get("overallCount")
-                        .or_else(|| data.get("reviewsCount"))
-                        .and_then(Value::as_u64)
-                        .unwrap_or(0) as u32;
-                }
+                rating = rating.or_else(|| data.get("overallRating").and_then(Value::as_f64));
+                review_count = review_count.or_else(|| {
+                    u32_value(
+                        data.get("overallCount")
+                            .or_else(|| data.get("reviewsCount")),
+                    )
+                });
             }
+            // Host fields are read once, after the loop, from the best host section.
+            "MEET_YOUR_HOST" | "HOST_PROFILE_DEFAULT" | "HOST_OVERVIEW_DEFAULT" => {}
             _ => {
-                // Extract rating from any section containing review info
-                if rating.is_none() {
-                    rating = data
-                        .get("overallRating")
+                rating = rating.or_else(|| {
+                    data.get("overallRating")
+                        .or_else(|| data.pointer("/reviewSummary/overallRating"))
                         .and_then(Value::as_f64)
-                        .or_else(|| {
-                            data.pointer("/reviewSummary/overallRating")
-                                .and_then(Value::as_f64)
-                        });
-                }
-                if review_count == 0 {
-                    review_count = data
-                        .get("overallCount")
-                        .or_else(|| data.get("reviewsCount"))
-                        .or_else(|| data.pointer("/reviewSummary/totalReviews"))
-                        .and_then(Value::as_u64)
-                        .unwrap_or(0) as u32;
-                }
-                if property_type.is_none() {
-                    property_type = data
-                        .get("propertyType")
-                        .or_else(|| data.get("roomType"))
-                        .and_then(Value::as_str)
-                        .map(String::from);
-                }
+                });
+                review_count = review_count.or_else(|| {
+                    u32_value(
+                        data.get("overallCount")
+                            .or_else(|| data.get("reviewsCount"))
+                            .or_else(|| data.pointer("/reviewSummary/totalReviews")),
+                    )
+                });
+                property_type = property_type
+                    .or_else(|| str_field(Some(data), "propertyType"))
+                    .or_else(|| str_field(Some(data), "roomType"));
             }
         }
     }
 
-    // Also check for pricing in the top-level metadata
-    if price_per_night == 0.0
-        && let Some(p) = json
-            .pointer("/data/presentation/stayProductDetailPage/sections/metadata/loggingContext/eventDataLogging/listingPrice")
+    let metadata = json.pointer(pdp::METADATA);
+    let sharing = metadata.and_then(|m| m.get("sharingConfig"));
+    let logging = metadata.and_then(|m| m.pointer("/loggingContext/eventDataLogging"));
+    let booking = metadata.and_then(|m| m.get("bookingPrefetchData"));
+    let overview = pdp::sbui_section_data(json, "OVERVIEW_DEFAULT_V2");
+    let overview_line = overview
+        .and_then(|o| o.get("title"))
+        .and_then(Value::as_str)
+        .and_then(text::split_type_and_place);
+
+    // A place name from the most precise source; never a section heading.
+    let location = title_subtitle
+        .or(location_subtitle)
+        .or_else(|| overview_line.as_ref().map(|(_, place)| place.clone()))
+        .or_else(|| str_field(sharing, "location"))
+        .or(calendar_location)
+        .unwrap_or_default();
+    let name = name
+        .or(calendar_title)
+        .or_else(|| str_field(sharing, "title"))
+        .unwrap_or_default();
+    let property_type = property_type
+        .or_else(|| str_field(sharing, "propertyType"))
+        .or_else(|| overview_line.as_ref().map(|(kind, _)| kind.clone()))
+        .or_else(|| str_field(logging, "roomType"));
+
+    let overview_items = item_titles(overview.and_then(|o| o.get("overviewItems")));
+    let sharing_parts: Vec<String> = str_field(sharing, "title")
+        .map(|title| {
+            title
+                .split('\u{b7}')
+                .map(|part| part.trim().to_string())
+                .collect()
+        })
+        .unwrap_or_default();
+    let rooms = text::parse_room_counts(overview_items.iter().map(String::as_str))
+        .or_fill(text::parse_room_counts(
+            legacy_overview_items.iter().map(String::as_str),
+        ))
+        .or_fill(text::parse_room_counts(
+            sharing_parts.iter().map(String::as_str),
+        ))
+        .or_fill(text::parse_room_counts(
+            calendar_items.iter().map(String::as_str),
+        ));
+    let max_guests = book_it_max_guests
+        .or(rooms.guests)
+        .or(calendar_max_guests)
+        .or_else(|| u32_value(sharing.and_then(|s| s.get("personCapacity"))))
+        .or_else(|| u32_value(logging.and_then(|l| l.get("personCapacity"))));
+
+    let rating = rating
+        .or_else(|| {
+            sharing
+                .and_then(|s| s.get("starRating"))
+                .and_then(Value::as_f64)
+        })
+        .or_else(|| {
+            logging
+                .and_then(|l| l.get("guestSatisfactionOverall"))
+                .and_then(Value::as_f64)
+        });
+    let review_count = review_count
+        .or_else(|| u32_value(sharing.and_then(|s| s.get("reviewCount"))))
+        .unwrap_or(0);
+    let latitude = latitude.or_else(|| {
+        logging
+            .and_then(|l| l.get("listingLat"))
             .and_then(Value::as_f64)
-    {
-        price_per_night = p;
-    }
+    });
+    let longitude = longitude.or_else(|| {
+        logging
+            .and_then(|l| l.get("listingLng"))
+            .and_then(Value::as_f64)
+    });
 
-    if price_per_night == 0.0
-        && let Some(logging) = json.pointer("/data/presentation/stayProductDetailPage/sections/metadata/loggingContext/eventDataLogging")
-    {
-        for key in ["nightly_price", "listingPrice", "price", "pricePerNight", "native_price"] {
-            if let Some(p) = logging.get(key).and_then(Value::as_f64).filter(|&p| p > 0.0) {
-                price_per_night = p;
-                break;
-            }
-            if let Some(p) = logging.get(key).and_then(Value::as_str).and_then(extract_price_number).filter(|&p| p > 0.0) {
-                price_per_night = p;
-                break;
-            }
-        }
+    let sidebar_price = sidebar_price.or_else(|| logging_price(logging));
+    if sidebar_price.is_none() {
+        // Expected for detail fetches without dates: Airbnb omits the price.
+        debug!(id, "No nightly price in the StaysPdpSections response");
     }
+    let (price_per_night, price_currency) = sidebar_price.unwrap_or((0.0, None));
+    let currency = price_currency
+        .or_else(|| {
+            logging
+                .and_then(|l| l.get("currency"))
+                .and_then(Value::as_str)
+                .map(price::normalize_currency)
+        })
+        .unwrap_or_default();
+    let (cleaning_fee, service_fee) = fees(booking);
 
-    if price_per_night == 0.0 {
-        warn!(
-            id,
-            "Could not extract price from GraphQL detail response — will rely on search cache or scraper fallback"
-        );
-    }
+    let check_in_time = str_field(booking, "checkIn")
+        .or_else(|| house_rule_starting_with(&house_rules, &["check-in", "checkin"]));
+    let check_out_time = str_field(booking, "checkOut").or_else(|| {
+        house_rule_starting_with(&house_rules, &["checkout", "check out", "check-out"])
+    });
+    let cancellation_policy = cancellation_policy.or_else(|| {
+        booking
+            .and_then(|b| b.get("cancellationPolicies"))
+            .and_then(Value::as_array)?
+            .iter()
+            .find_map(|policy| str_field(Some(policy), "localized_cancellation_policy_name"))
+    });
+    let instant_book = logging
+        .and_then(|l| l.get("instantBook").or_else(|| l.get("isInstantBook")))
+        .and_then(Value::as_bool);
 
-    // Extract fees from pricing breakdown
-    if let Some(breakdown) = json.pointer(
-        "/data/presentation/stayProductDetailPage/sections/metadata/bookingPrefetchData/priceBreakdown/priceItems",
-    ).and_then(Value::as_array) {
-        for item in breakdown {
-            let label = item.get("localizedTitle").and_then(Value::as_str).unwrap_or_default();
-            let amount = item.pointer("/total/amountMicros").and_then(Value::as_f64).map(|m| m / 1_000_000.0)
-                .or_else(|| item.pointer("/total/amount").and_then(Value::as_f64));
-            if label.to_lowercase().contains("cleaning") {
-                cleaning_fee = amount;
-            } else if label.to_lowercase().contains("service") {
-                service_fee = amount;
-            }
-        }
-    }
-
-    if let Some(c) = json
-        .pointer("/data/presentation/stayProductDetailPage/sections/metadata/loggingContext/eventDataLogging/currency")
-        .and_then(Value::as_str)
-    {
-        currency = c.to_string();
-    }
-
-    if let Some(ci) = json
-        .pointer("/data/presentation/stayProductDetailPage/sections/metadata/bookingPrefetchData/checkIn")
-        .and_then(Value::as_str)
-    {
-        check_in_time = Some(ci.to_string());
-    }
-
-    if let Some(co) = json
-        .pointer("/data/presentation/stayProductDetailPage/sections/metadata/bookingPrefetchData/checkOut")
-        .and_then(Value::as_str)
-    {
-        check_out_time = Some(co.to_string());
-    }
-
-    let url = format!("{base_url}/rooms/{id}");
+    let host = host::find_host_section(sections)
+        .and_then(|section| host::host_profile_from_section(section, host::sbui_host_id(json)));
+    let host_ref = host.as_ref();
+    let host_id = host_ref
+        .and_then(|h| h.host_id.clone())
+        .or_else(|| host::sbui_host_id(json))
+        .or_else(|| {
+            logging
+                .and_then(|l| l.get("hostId"))
+                .and_then(text::user_id_from_json)
+        });
 
     Ok(ListingDetail {
         id: id.to_string(),
@@ -451,202 +320,154 @@ pub fn parse_detail_response(json: &Value, id: &str, base_url: &str) -> Result<L
         rating,
         review_count,
         property_type,
-        host_name,
-        url,
+        host_name: host_ref.map(|h| h.name.clone()),
+        url: format!("{base_url}/rooms/{id}"),
         amenities,
         house_rules,
         latitude,
         longitude,
         photos,
-        bedrooms,
-        beds,
-        bathrooms,
+        bedrooms: rooms.bedrooms,
+        beds: rooms.beds,
+        bathrooms: rooms.bathrooms,
         max_guests,
         check_in_time,
         check_out_time,
         host_id,
-        host_is_superhost,
-        host_response_rate,
-        host_response_time,
-        host_joined,
-        host_total_listings,
-        host_languages,
+        host_is_superhost: host_ref.and_then(|h| h.is_superhost),
+        host_response_rate: host_ref.and_then(|h| h.response_rate.clone()),
+        host_response_time: host_ref.and_then(|h| h.response_time.clone()),
+        host_joined: host_ref.and_then(|h| h.member_since.clone()),
+        host_total_listings: host_ref.and_then(|h| h.total_listings),
+        host_languages: host_ref.map(|h| h.languages.clone()).unwrap_or_default(),
         cancellation_policy,
-        instant_book: None,
+        instant_book,
         cleaning_fee,
         service_fee,
         neighborhood,
     })
 }
 
-/// Extract a number from a string like "3 bedrooms" -> 3.
-fn extract_number(s: &str) -> Option<u32> {
-    s.split_whitespace().find_map(|word| word.parse().ok())
+/// Nightly price shown in the booking sidebar, with the currency label
+/// printed next to it. Structured prices win over free-text copies.
+fn book_it_price(data: &Value) -> Option<(f64, Option<String>)> {
+    if let Some(sdp) = data
+        .get("structuredDisplayPrice")
+        .or_else(|| data.get("structuredStayDisplayPrice"))
+    {
+        let display = price::parse_structured_display_price(sdp, None);
+        if let Some(nightly) = display.nightly {
+            return Some((nightly, display.currency));
+        }
+    }
+    let rate_plan = data.get("ratePlanTitle").and_then(Value::as_str);
+    let description_titles = data
+        .get("descriptionItems")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|item| item.get("title").and_then(Value::as_str));
+    let disclaimer = data.get("priceDisclaimer").and_then(Value::as_str);
+    rate_plan
+        .into_iter()
+        .chain(description_titles)
+        .chain(disclaimer)
+        .find_map(price::find_price_in_text)
+        .or_else(|| {
+            data.pointer("/price/amount")
+                .and_then(Value::as_f64)
+                .filter(|p| p.is_finite() && *p > 0.0)
+                .map(|p| (p, None))
+        })
 }
 
-/// Extract a price number from strings like "$120", "€95.50".
-fn extract_price_number(s: &str) -> Option<f64> {
-    let cleaned: String = s
-        .chars()
-        .filter(|c| c.is_ascii_digit() || *c == '.')
-        .collect();
-    cleaned.parse().ok()
+/// Price published in the logging metadata (no currency label).
+fn logging_price(logging: Option<&Value>) -> Option<(f64, Option<String>)> {
+    let logging = logging?;
+    [
+        "listingPrice",
+        "nightly_price",
+        "price",
+        "pricePerNight",
+        "native_price",
+    ]
+    .iter()
+    .find_map(|key| {
+        let value = logging.get(*key)?;
+        value
+            .as_f64()
+            .or_else(|| value.as_str().and_then(price::parse_price_amount))
+            .filter(|p| p.is_finite() && *p > 0.0)
+    })
+    .map(|p| (p, None))
 }
 
-/// Extract a price from text that contains a currency symbol or price-like pattern.
-/// More robust than `extract_price_number` — looks for currency symbol + number patterns
-/// like "$120", "€95.50", "107 €", "USD 85", or numbers followed by "night"/"nuit".
-fn extract_price_from_text(s: &str) -> Option<f64> {
-    let currency_markers = ['$', '€', '£', '¥'];
-
-    // Pattern: currency symbol followed by number (e.g. "$120", "€95.50")
-    for (i, ch) in s.char_indices() {
-        if !currency_markers.contains(&ch) {
-            continue;
-        }
-        let rest = &s[i + ch.len_utf8()..];
-        let num_str: String = rest
-            .chars()
-            .skip_while(|c| c.is_whitespace())
-            .take_while(|c| c.is_ascii_digit() || *c == '.' || *c == ',')
-            .filter(|c| c.is_ascii_digit() || *c == '.')
-            .collect();
-        if let Ok(p) = num_str.parse::<f64>()
-            && p > 0.0
-        {
-            return Some(p);
-        }
-    }
-
-    // Pattern: number followed by currency symbol (e.g. "107 €", "85€")
-    let words: Vec<&str> = s.split_whitespace().collect();
-    for (i, word) in words.iter().enumerate() {
-        if let Some(last_char) = word.chars().last()
-            && currency_markers.contains(&last_char)
-        {
-            let num_part: String = word
-                .chars()
-                .take_while(|c| c.is_ascii_digit() || *c == '.' || *c == ',')
-                .filter(|c| c.is_ascii_digit() || *c == '.')
-                .collect();
-            if let Ok(p) = num_part.parse::<f64>()
-                && p > 0.0
-            {
-                return Some(p);
-            }
-        }
-        // Check if next word is a single currency symbol
-        if i + 1 < words.len()
-            && words[i + 1].chars().count() == 1
-            && let Some(next_char) = words[i + 1].chars().next()
-            && currency_markers.contains(&next_char)
-        {
-            let num_str: String = word
-                .chars()
-                .filter(|c| c.is_ascii_digit() || *c == '.')
-                .collect();
-            if let Ok(p) = num_str.parse::<f64>()
-                && p > 0.0
-            {
-                return Some(p);
-            }
+/// Cleaning and service fees from `bookingPrefetchData.priceBreakdown`.
+fn fees(booking: Option<&Value>) -> (Option<f64>, Option<f64>) {
+    let mut cleaning = None;
+    let mut service = None;
+    let items = booking
+        .and_then(|b| b.pointer("/priceBreakdown/priceItems"))
+        .and_then(Value::as_array);
+    for item in items.into_iter().flatten() {
+        let label = item
+            .get("localizedTitle")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_lowercase();
+        let amount = item
+            .pointer("/total/amountMicros")
+            .and_then(Value::as_f64)
+            .map(|micros| micros / 1_000_000.0)
+            .or_else(|| item.pointer("/total/amount").and_then(Value::as_f64));
+        if label.contains("cleaning") {
+            cleaning = amount;
+        } else if label.contains("service") {
+            service = amount;
         }
     }
-
-    // Pattern: number followed by "night"/"nuit"/"notte"/"noche"
-    for (i, word) in words.iter().enumerate() {
-        let lower = word.to_lowercase();
-        if i > 0 && matches!(lower.as_str(), "night" | "nuit" | "notte" | "noche") {
-            let num_str: String = words[i - 1]
-                .chars()
-                .filter(|c| c.is_ascii_digit() || *c == '.')
-                .collect();
-            if let Ok(p) = num_str.parse::<f64>()
-                && p > 0.0
-            {
-                return Some(p);
-            }
-        }
-    }
-
-    None
+    (cleaning, service)
 }
 
-/// Extract languages from hostHighlights like "Speaks English and French".
-fn extract_languages_from_highlights(data: &Value) -> Vec<String> {
-    let Some(highlights) = data.get("hostHighlights").and_then(Value::as_array) else {
-        return Vec::new();
-    };
-    for highlight in highlights {
-        if let Some(title) = highlight.get("title").and_then(Value::as_str) {
-            let lower = title.to_lowercase();
-            if lower.starts_with("speaks ") {
-                return title[7..]
-                    .split([',', '&'])
-                    .flat_map(|s| s.split(" and "))
-                    .map(|s| s.trim().to_string())
-                    .filter(|s| !s.is_empty())
-                    .collect();
-            }
-        }
-    }
-    Vec::new()
+/// A count published as a number or a numeric string.
+fn u32_value(value: Option<&Value>) -> Option<u32> {
+    let value = value?;
+    value
+        .as_u64()
+        .or_else(|| value.as_str().and_then(|s| s.trim().parse().ok()))
+        .and_then(|n| u32::try_from(n).ok())
 }
 
-/// Minimal HTML tag stripping.
-fn strip_html_tags(html: &str) -> String {
-    let mut result = String::with_capacity(html.len());
-    let mut in_tag = false;
-    for ch in html.chars() {
-        match ch {
-            '<' => in_tag = true,
-            '>' => in_tag = false,
-            _ if !in_tag => result.push(ch),
-            _ => {}
-        }
+/// `title` of every item of a list section (`detailItems`, `houseRules`, ...).
+fn item_titles(items: Option<&Value>) -> Vec<String> {
+    items
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|item| item.get("title").and_then(Value::as_str))
+        .map(str::to_string)
+        .collect()
+}
+
+fn push_unique(list: &mut Vec<String>, value: &str) {
+    if !list.iter().any(|existing| existing == value) {
+        list.push(value.to_string());
     }
-    result
+}
+
+fn house_rule_starting_with(rules: &[String], prefixes: &[&str]) -> Option<String> {
+    rules
+        .iter()
+        .find(|rule| {
+            let lower = rule.to_lowercase();
+            prefixes.iter().any(|prefix| lower.starts_with(prefix))
+        })
+        .cloned()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn strip_html_basic() {
-        assert_eq!(strip_html_tags("<p>Hello <b>world</b></p>"), "Hello world");
-    }
-
-    #[test]
-    fn extract_number_from_text() {
-        assert_eq!(extract_number("3 bedrooms"), Some(3));
-        assert_eq!(extract_number("studio"), None);
-    }
-
-    #[test]
-    fn extract_price_from_text_currency_prefix() {
-        assert_eq!(extract_price_from_text("$120"), Some(120.0));
-        assert_eq!(extract_price_from_text("€95.50 night"), Some(95.5));
-        assert_eq!(extract_price_from_text("£ 200 per night"), Some(200.0));
-    }
-
-    #[test]
-    fn extract_price_from_text_currency_suffix() {
-        assert_eq!(extract_price_from_text("107 €"), Some(107.0));
-        assert_eq!(extract_price_from_text("85€"), Some(85.0));
-    }
-
-    #[test]
-    fn extract_price_from_text_night_pattern() {
-        assert_eq!(extract_price_from_text("107 night"), Some(107.0));
-        assert_eq!(extract_price_from_text("85 nuit"), Some(85.0));
-    }
-
-    #[test]
-    fn extract_price_from_text_no_match() {
-        assert_eq!(extract_price_from_text("Beautiful apartment"), None);
-        assert_eq!(extract_price_from_text("4.96 rating"), None);
-    }
 
     #[test]
     fn parse_detail_with_all_sections() {
@@ -738,11 +559,8 @@ mod tests {
         assert_eq!(detail.host_name, Some("Alice".into()));
         assert_eq!(detail.host_id, Some("555".into()));
         assert_eq!(detail.host_is_superhost, Some(true));
-        assert_eq!(detail.host_response_rate, Some("Response rate: 98%".into()));
-        assert_eq!(
-            detail.host_response_time,
-            Some("Responds within an hour".into())
-        );
+        assert_eq!(detail.host_response_rate, Some("98%".into()));
+        assert_eq!(detail.host_response_time, Some("within an hour".into()));
         assert_eq!(detail.host_languages, vec!["English", "French"]);
         assert!((detail.latitude.unwrap() - 34.03).abs() < 0.01);
         assert_eq!(detail.neighborhood, Some("Malibu Coast".into()));
@@ -807,5 +625,174 @@ mod tests {
         assert_eq!(detail.name, "Cozy Place");
         assert_eq!(detail.location, "Paris, France");
         assert_eq!(detail.url, "https://www.airbnb.com/rooms/12345");
+    }
+
+    use crate::test_helpers::fixture_json;
+
+    fn sections_json(sections: &serde_json::Value) -> serde_json::Value {
+        serde_json::json!({"data": {"presentation": {"stayProductDetailPage": {"sections": {"sections": sections}}}}})
+    }
+
+    #[test]
+    fn hotel_fixture_location_is_a_place_not_the_section_heading() {
+        let detail = parse_detail_response(
+            &fixture_json("p1b/pdp_hotel.json"),
+            "1257736932578886647",
+            "https://www.airbnb.com",
+        )
+        .unwrap();
+        assert_eq!(detail.location, "V\u{e9}nissieux, France");
+        assert_ne!(detail.location, "Where you\u{2019}ll be");
+        assert_eq!(detail.name, "Hotel Example Lyon Sud");
+        assert_eq!(detail.property_type.as_deref(), Some("Room in hotel"));
+        assert_eq!(detail.known_price(), None);
+        assert_eq!(detail.currency, "");
+        assert_eq!((detail.rating, detail.review_count), (Some(4.4), 359));
+        assert_eq!(detail.max_guests, Some(2));
+        assert_eq!(
+            (detail.bedrooms, detail.beds, detail.bathrooms),
+            (None, Some(1), Some(1.0))
+        );
+        assert_eq!(detail.host_name, None);
+        assert_eq!(
+            detail.amenities,
+            vec![
+                "Shampoo",
+                "Conditioner",
+                "Hot water",
+                "Shower gel",
+                "Smoke alarm"
+            ]
+        );
+        assert_eq!(detail.photos.len(), 4);
+        assert_eq!(
+            detail.check_in_time.as_deref(),
+            Some("Check-in after 3:00\u{202f}PM")
+        );
+        assert_eq!(
+            detail.check_out_time.as_deref(),
+            Some("Checkout before 11:00\u{202f}AM")
+        );
+        assert_eq!(detail.cancellation_policy.as_deref(), Some("Flexible"));
+        assert_eq!(detail.neighborhood, None);
+        assert_eq!(
+            detail.description,
+            "Rooms 10 minutes from the city centre.\n\nThe space\nRooms & suites with a private bathroom."
+        );
+    }
+
+    #[test]
+    fn apartment_fixture_fields_come_from_the_real_sections() {
+        let detail = parse_detail_response(
+            &fixture_json("p1b/pdp_apartment.json"),
+            "38817969",
+            "https://www.airbnb.com",
+        )
+        .unwrap();
+        assert_eq!(detail.location, "Lyon, Auvergne-Rh\u{f4}ne-Alpes, France");
+        assert_eq!(detail.property_type.as_deref(), Some("Entire rental unit"));
+        assert_eq!(
+            (
+                detail.max_guests,
+                detail.bedrooms,
+                detail.beds,
+                detail.bathrooms
+            ),
+            (Some(4), Some(1), Some(2), Some(1.0))
+        );
+        assert_eq!(detail.host_name.as_deref(), Some("Host A"));
+        assert_eq!(detail.host_id.as_deref(), Some("1000001"));
+        assert_eq!(detail.host_is_superhost, Some(true));
+        assert_eq!(detail.host_response_rate.as_deref(), Some("100%"));
+        assert_eq!(detail.host_response_time.as_deref(), Some("within an hour"));
+        assert_eq!(detail.host_joined.as_deref(), Some("7 years hosting"));
+        assert_eq!(detail.host_languages, vec!["French"]);
+        assert_eq!(
+            detail.amenities,
+            vec!["Hair dryer", "Shampoo", "Hot water", "Smoke alarm"]
+        );
+        assert_eq!(detail.cancellation_policy.as_deref(), Some("Firm"));
+        assert_eq!(
+            detail.description,
+            "Apartment on the slopes of the district, 5 minutes from the centre.\nMetro at 100 m & bakery nearby.\n\nThe space\n2nd floor, no elevator."
+        );
+        let shown = detail.to_string();
+        assert!(shown.contains("| Response rate: 100% |"), "{shown}");
+    }
+
+    #[test]
+    fn location_heading_alone_is_not_a_place() {
+        let json = sections_json(&serde_json::json!([
+            {"sectionComponentType": "LOCATION_PDP",
+             "section": {"title": "Where you\u{2019}ll be", "subtitle": null}}
+        ]));
+        let detail = parse_detail_response(&json, "1", "https://www.airbnb.com").unwrap();
+        assert_eq!(detail.location, "");
+    }
+
+    #[test]
+    fn room_counts_keep_half_baths_and_are_not_overwritten() {
+        let json = sections_json(&serde_json::json!([
+            {"sectionComponentType": "BOOK_IT_SIDEBAR", "section": {"maxGuestCapacity": 4}},
+            {"sectionComponentType": "SBUI_SENTINEL", "sectionId": "OVERVIEW_DEFAULT_V2",
+             "section": {"detailItems": [{"title": "Studio"}, {"title": "3 beds"}, {"title": "1.5 baths"}]}},
+            {"sectionComponentType": "OVERVIEW_DEFAULT",
+             "section": {"detailItems": [{"title": "16+ guests"}, {"title": "2 bedrooms"}]}}
+        ]));
+        let detail = parse_detail_response(&json, "1", "https://www.airbnb.com").unwrap();
+        assert_eq!(
+            (
+                detail.max_guests,
+                detail.bedrooms,
+                detail.beds,
+                detail.bathrooms
+            ),
+            (Some(4), Some(0), Some(3), Some(1.5))
+        );
+    }
+
+    #[test]
+    fn description_line_breaks_and_entities_survive() {
+        let json = sections_json(&serde_json::json!([
+            {"sectionComponentType": "DESCRIPTION_DEFAULT",
+             "section": {"htmlDescription": {"htmlText": "Near metro<br />Walk to Louvre &amp; Seine"}}}
+        ]));
+        let detail = parse_detail_response(&json, "1", "https://www.airbnb.com").unwrap();
+        assert_eq!(detail.description, "Near metro\nWalk to Louvre & Seine");
+    }
+
+    #[test]
+    fn host_fields_come_from_meet_your_host_whatever_the_section_order() {
+        let json = sections_json(&serde_json::json!([
+            {"sectionComponentType": "HOST_OVERVIEW_DEFAULT", "section": {"title": "Hosted by Alice"}},
+            {"sectionComponentType": "MEET_YOUR_HOST",
+             "section": {"cardData": {"name": "Alice", "userId": "555", "isSuperhost": true}}},
+            {"sectionComponentType": "HOST_PROFILE_DEFAULT", "section": {}}
+        ]));
+        let detail = parse_detail_response(&json, "1", "https://www.airbnb.com").unwrap();
+        assert_eq!(detail.host_name.as_deref(), Some("Alice"));
+        assert_eq!(detail.host_id.as_deref(), Some("555"));
+        assert_eq!(detail.host_is_superhost, Some(true));
+    }
+
+    #[test]
+    fn booking_sidebar_price_keeps_its_own_currency() {
+        let json = sections_json(&serde_json::json!([
+            {"sectionComponentType": "BOOK_IT_SIDEBAR",
+             "section": {"structuredDisplayPrice": {"primaryLine": {"price": "107\u{a0}\u{20ac}", "qualifier": "night"}}}}
+        ]));
+        let detail = parse_detail_response(&json, "1", "https://www.airbnb.com").unwrap();
+        assert_eq!(detail.known_price(), Some(107.0));
+        assert_eq!(detail.currency, "\u{20ac}");
+    }
+
+    #[test]
+    fn booking_sidebar_night_count_is_not_a_price() {
+        let json = sections_json(&serde_json::json!([
+            {"sectionComponentType": "BOOK_IT_SIDEBAR",
+             "section": {"descriptionItems": [{"title": "2 nights minimum"}]}}
+        ]));
+        let detail = parse_detail_response(&json, "1", "https://www.airbnb.com").unwrap();
+        assert_eq!(detail.known_price(), None);
     }
 }

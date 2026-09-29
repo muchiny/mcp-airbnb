@@ -1,5 +1,9 @@
 # Feature Specification: Airbnb MCP Server
 
+> **Historical (February 2026).** Written for the first, scraping-only version
+> (rmcp 0.16, `serde_yaml`). Versions, tool counts and data-source details are
+> out of date; `README.md` and `src/README.md` describe the current design.
+
 **Feature Branch**: `001-airbnb-mcp-server`
 **Created**: 2026-02-23
 **Status**: Implemented

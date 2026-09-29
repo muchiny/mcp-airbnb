@@ -8,8 +8,8 @@ The **domain layer** contains pure data types with no I/O, no network calls, and
 
 | Type | Description |
 |------|-------------|
-| `Listing` | Search result summary — id, name, location, price, currency, rating, review count, URL |
-| `ListingDetail` | Full listing — extends Listing with description, amenities, house rules, photos, coordinates, capacity |
+| `Listing` | Search result summary — id, name, location, nightly price (`price_per_night`; `0.0` means unknown, read it with `known_price()`), currency, rating, review count, URL |
+| `ListingDetail` | Full listing — extends Listing with description, amenities, house rules, photos, coordinates, capacity; same `known_price()` rule |
 | `SearchResult` | Paginated collection of `Listing` with optional total count and next cursor |
 
 ### ⭐ Review Types (`review.rs`)
@@ -24,8 +24,8 @@ The **domain layer** contains pure data types with no I/O, no network calls, and
 
 | Type | Description |
 |------|-------------|
-| `CalendarDay` | Single day — date, optional price, availability flag, optional min nights |
-| `PriceCalendar` | Full calendar for a listing — listing ID, currency, collection of days |
+| `CalendarDay` | Single day — date, optional price (Airbnb currently publishes none, so usually `None`), availability flag, min/max nights, optional `UnavailabilityReason` (`PastDate` days are excluded from occupancy) |
+| `PriceCalendar` | Full calendar for a listing — listing ID, currency, days sorted by date (one per date); `contiguous_runs()` splits them at missing dates |
 
 ### 🔍 Search Parameters (`search_params.rs`)
 
@@ -33,9 +33,14 @@ The **domain layer** contains pure data types with no I/O, no network calls, and
 |------|-------------|
 | `SearchParams` | Validated search input — location, dates, guests, price range, property type, cursor |
 
-`SearchParams` contains the only behavior in the domain layer:
-- ✅ `validate()` — ensures location is non-empty, dates are paired, min_price ≤ max_price
-- 🔗 `to_query_pairs()` — converts parameters to URL query pairs
+Pure behaviour in the domain layer:
+- ✅ `SearchParams::validate()` / `validate_at(today)` — location required (at most 200 characters, no control characters, at least one letter or digit); dates paired, exactly `YYYY-MM-DD`, check-in from yesterday (UTC) up to 730 days ahead, checkout after checkin, at most 365 nights; at least one adult when dates are given, guest counts within `limits`; `min_price ≤ max_price`; a supported `property_type`; the cursor is at most 1024 characters. Out-of-range input is an error, never clamped.
+- 🔗 `SearchParams::to_query_pairs()` / `cache_key()` — URL query pairs, and a cache key made of every field that changes the response
+- 🆔 `listing_id::validate_listing_id()` — digits, no leading zero, at most 20 digits (`LISTING_ID_PATTERN`)
+- 📏 `limits` — the shared input limits (months 1-12, review pages 1-20, compare 2-10 ids or 2-100 listings, market 2-5 locations, …) used by the MCP schemas and the CLI
+- 💲 `Listing::known_price()` / `ListingDetail::known_price()` — `Some(p)` only for a finite, positive price
+- 📅 `PriceCalendar::classify_past_days(today)` — marks days before `today` as `UnavailabilityReason::PastDate`, which occupancy and revenue ignore
+- 📊 `analytics::compute_*` — the analytics listed below
 
 ### 📊 Analytics Types (`analytics.rs`)
 
@@ -46,7 +51,7 @@ The **domain layer** contains pure data types with no I/O, no network calls, and
 | `HostProfile` | 👤 Host info — name, superhost status, response rate/time, languages, bio, listing count |
 | `NeighborhoodStats` | 📊 Area stats — average/median price, rating, property type distribution, superhost % |
 | `PropertyTypeCount` | Property type with count and percentage |
-| `OccupancyEstimate` | 📈 Occupancy — overall rate, weekday/weekend avg prices, monthly breakdown |
+| `OccupancyEstimate` | 📈 Occupancy (future nights, upper bound) — overall rate, weekday/weekend avg prices, monthly breakdown |
 | `MonthlyOccupancy` | Per-month occupancy rate, days, and average price |
 
 #### 🧠 Analytical Tool Types
@@ -59,8 +64,8 @@ The **domain layer** contains pure data types with no I/O, no network calls, and
 | `MonthlyPriceSummary` | 📉 Monthly average price with min/max, available days, and occupancy |
 | `DayOfWeekPrice` | 📉 Average price by day of week |
 | `PriceTrends` | 📉 Seasonal pricing — monthly averages, weekend premium, volatility, peak/off-peak |
-| `CalendarGap` | 🕳️ Single booking gap with start/end dates, duration, and surrounding prices |
-| `GapFinderResult` | 🕳️ Full gap analysis with orphan nights, lost revenue estimate |
+| `CalendarGap` | 🕳️ Single 1-3 night gap between unavailable nights, with start/end dates, duration, min-stay check and nightly prices when published |
+| `GapFinderResult` | 🕳️ Full gap analysis: gaps, min-stay suggestion, revenue only when nightly prices are published |
 | `MonthlyRevenue` | 💵 Projected revenue for a single month |
 | `RevenueEstimate` | 💵 Full revenue projection — ADR, occupancy, monthly/annual revenue, neighborhood comparison |
 | `CategoryScore` | 🏆 Score for a single category (0-100) with label and suggestions |
@@ -70,11 +75,11 @@ The **domain layer** contains pure data types with no I/O, no network calls, and
 | `MarketSnapshot` | 🗺️ Stats for a single market in a comparison |
 | `MarketComparison` | 🗺️ Side-by-side comparison of 2-5 markets |
 | `PortfolioProperty` | 📂 Single property in a host's portfolio |
-| `HostPortfolio` | 📂 Full host portfolio — all properties, avg rating, pricing strategy, geographic spread |
+| `HostPortfolio` | 📂 The host's listings found on one search page of the listing's city, how they were matched, avg rating, price stats in the data currency |
 | `ReviewTheme` | 💬 Review theme with mention count, positive/negative counts, sample quotes |
 | `ReviewSentiment` | 💬 Full sentiment analysis — positive/negative/neutral percentages, themes, keywords |
 | `CompetitiveAxis` | 🎯 Single competitive axis with listing value, neighborhood avg, percentile, assessment |
-| `CompetitivePositioning` | 🎯 5-axis competitive score with overall competitiveness (0-100), strengths, weaknesses |
+| `CompetitivePositioning` | 🎯 Percentile ranks vs comparable listings (price, rating, amenities, reviews), overall competitiveness (0-100) over the ranked axes, strengths, weaknesses |
 | `PricingRecommendation` | 💲 Optimal pricing — recommended price, range, weekday/weekend split, reasoning, amenity premium |
 
 ### 🧮 Compute Functions
@@ -84,21 +89,21 @@ Analytics provides **pure compute functions** (no I/O, no async) that transform 
 #### 📡 Data Tool Compute
 
 - 📊 `compute_neighborhood_stats(location, listings)` → `NeighborhoodStats`
-- 📈 `compute_occupancy_estimate(listing_id, calendar)` → `OccupancyEstimate`
+- 📈 `compute_occupancy_estimate(listing_id, calendar)` → `OccupancyEstimate` (future nights only: past and host-blocked days excluded)
 
 #### 🧠 Analytical Tool Compute
 
-- 🔄 `compute_compare_listings(listings, location)` → `CompareListingsResult`
+- 🔄 `compute_compare_listings(listings, details)` → `CompareListingsResult`
 - 📉 `compute_price_trends(listing_id, calendar)` → `PriceTrends`
 - 🕳️ `compute_gap_finder(listing_id, calendar)` → `GapFinderResult`
-- 💵 `compute_revenue_estimate(id, location, calendar, neighborhood, occupancy)` → `RevenueEstimate`
+- 💵 `compute_revenue_estimate(id, location, listing, calendar, neighborhood)` → `Result<RevenueEstimate>`
 - 🏆 `compute_listing_score(detail, neighborhood)` → `ListingScore`
 - 🧩 `compute_amenity_analysis(detail, neighbors)` → `AmenityAnalysis`
 - 🗺️ `compute_market_comparison(stats)` → `MarketComparison`
-- 📂 `compute_host_portfolio(host, listings, detail)` → `HostPortfolio`
+- 📂 `compute_host_portfolio(anchor, search_location, candidates)` → `HostPortfolio`
 - 💬 `compute_review_sentiment(listing_id, reviews)` → `ReviewSentiment`
-- 🎯 `compute_competitive_positioning(detail, neighborhood, occupancy, amenities)` → `CompetitivePositioning`
-- 💲 `compute_optimal_pricing(detail, neighborhood, trends, amenities)` → `PricingRecommendation`
+- 🎯 `compute_competitive_positioning(detail, comparables, occupancy, amenities)` → `CompetitivePositioning`
+- 💲 `compute_optimal_pricing(detail, neighborhood, trends, amenities)` → `Result<PricingRecommendation>`
 
 ## 🗂️ Class Diagram
 
@@ -208,6 +213,8 @@ classDiagram
         +Option~f64~ average_rating
         +Vec~PropertyTypeCount~ property_type_distribution
         +Option~f64~ superhost_percentage
+        +Option~String~ currency
+        +u32 priced_listings
     }
 
     class OccupancyEstimate {
@@ -216,6 +223,9 @@ classDiagram
         +Option~f64~ average_weekday_price
         +Option~f64~ average_weekend_price
         +Vec~MonthlyOccupancy~ monthly_breakdown
+        +u32 past_days_excluded
+        +u32 blocked_days_excluded
+        +String currency
     }
 
     class PriceTrends {
@@ -224,6 +234,7 @@ classDiagram
         +Vec~DayOfWeekPrice~ day_of_week
         +Option~f64~ weekend_premium_pct
         +Option~f64~ volatility
+        +u32 priced_nights
     }
 
     class ListingScore {
@@ -240,6 +251,9 @@ classDiagram
         +Option~f64~ occupancy_rate
         +Vec~MonthlyRevenue~ monthly
         +Option~f64~ annual_revenue
+        +DataSource adr_source
+        +DataSource occupancy_source
+        +u32 occupancy_nights_measured
     }
 
     class ReviewSentiment {
@@ -251,19 +265,21 @@ classDiagram
         +Vec~ReviewTheme~ themes
         +Vec~Tuple~ top_positive_keywords
         +Vec~Tuple~ top_negative_keywords
+        +u32 skipped_non_english
     }
 
     class CompetitivePositioning {
         +String listing_id
         +Vec~CompetitiveAxis~ axes
-        +f64 overall_competitiveness
+        +Option~f64~ overall_competitiveness
         +Vec~String~ strengths
         +Vec~String~ weaknesses
     }
 
     class PricingRecommendation {
         +String listing_id
-        +f64 current_price
+        +Option~f64~ current_price
+        +String current_price_currency
         +f64 recommended_price
         +Tuple recommended_range
         +String currency

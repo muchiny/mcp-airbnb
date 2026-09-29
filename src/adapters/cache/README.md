@@ -25,7 +25,7 @@ flowchart LR
 - 📦 Wraps `lru::LruCache<String, CacheEntry>` inside a `RwLock`
 - ⏰ Each `CacheEntry` stores `value: String` + `expires_at: Instant`
 - 🔍 On `get()`: checks expiration, evicts if expired, returns `None`
-- 💾 On `set()`: inserts/overwrites with computed `expires_at = now + ttl`
+- 💾 On `set()`: inserts/overwrites with `expires_at = now + ttl`, computed with `Instant::checked_add` (30 days on overflow), so a huge TTL cannot abort the process
 - 🗑️ LRU eviction occurs automatically when capacity is reached
 - 🔒 Thread-safe: `RwLock` allows concurrent reads, exclusive writes
 
@@ -38,6 +38,7 @@ flowchart LR
 | `detail_ttl_secs` | `3600` (1 hour) | TTL for listing details |
 | `reviews_ttl_secs` | `3600` (1 hour) | TTL for reviews |
 | `calendar_ttl_secs` | `1800` (30 min) | TTL for price calendars |
+| `host_profile_ttl_secs` | `3600` (1 hour) | TTL for host profiles |
 
 ### 🧪 Tests
 

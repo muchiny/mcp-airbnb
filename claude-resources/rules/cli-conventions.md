@@ -30,11 +30,8 @@ duplicate code between the two `main` functions.
 
 3. **Add a match arm** in `src/cli/mod.rs::dispatch`. Choose the right
    pattern:
-   - Pure data tool → call `client.<method>(...)` directly and `output::render`
-   - Single-fetch analytical → call `client.<method>(...)` then a
-     `domain::analytics::compute_*` function inline
-   - Multi-fetch analytical → add a helper to
-     `src/application/analytical_handlers.rs` and call it from `dispatch`
+   - Data tool: validate the input (`validate_listing_id`, `SearchParams::validate`), call `client.<method>(...)`, then `output::render`.
+   - Analytical tool: call the `application::analytical_handlers::run_*` function the MCP tool uses. Add it there first if it does not exist. Never import `domain::analytics` in `src/cli/`.
 
 4. **Add an integration test** in `tests/cli_test.rs` using the inline
    `CliMock` struct. Assert on the rendered string (text mode) or parse
@@ -69,16 +66,14 @@ Every result type exposed by a subcommand **must** implement both
 a new one in `src/domain/`, add a `Display` impl next to the
 `Serialize` derive and cover it with a test in the same file.
 
-`render` returns a `String` rather than printing to stdout so `dispatch`
-stays testable. Only `run()` (in `src/cli/mod.rs`) should ever call
-`print!`/`println!`.
+`render` returns a `String` (text mode passes through `output::sanitize_for_terminal`). Only `run()` writes, through `output::write_output`, which treats a closed pipe as success. `run()` returns an `ExitCode`: 0 success, 1 runtime failure, 2 invalid input. In `--json` mode, errors are printed on stdout as `{"error":{"kind","message"}}` (`render_error`). That covers clap's own argument errors too: `run()` calls `Cli::try_parse_from`, and when the command line asks for `--json`/`-j` (`json_requested`), `usage_error_report` turns the error into kind `invalid_params`, exit code 2. `--help` and `--version` are left to clap. Any range enforced by a clap value parser therefore still reaches `| jq` as JSON.
 
 ## Stdout vs stderr
 
 Same discipline as the MCP server:
 
 - **Stdout**: command output (the rendered result)
-- **Stderr**: tracing logs, clap errors, panics
+- **Stderr**: tracing logs, clap errors in text mode, panics
 
 `init_tracing` in `src/cli/mod.rs` configures `tracing_subscriber::fmt`
 to write to `std::io::stderr`. Never route it to stdout — that would
@@ -86,12 +81,12 @@ corrupt pipe usage like `airbnb --json search Paris | jq .`.
 
 ## Config discovery precedence
 
-`application::find_config_path()`:
+`application::load_app_config()` (both binaries):
 
-1. `AIRBNB_CONFIG` env var (if set and file exists)
-2. `./config.yaml` in CWD
+1. `--config <path>` (CLI) or `AIRBNB_CONFIG`: explicit, must exist (error otherwise)
+2. `$XDG_CONFIG_HOME/mcp-airbnb/config.yaml` (default `~/.config/mcp-airbnb/config.yaml`)
 3. `config.yaml` next to the binary
-4. Falls back to `./config.yaml` (non-existent → loader returns defaults)
+4. Built-in defaults
 
-The `--config` flag on the CLI overrides all of the above. Do not add
-a fourth lookup path — three is already one more than most tools ship.
+The working directory is never searched: an MCP host sets it to whatever
+project is open. Do not add a fourth lookup path.

@@ -13,7 +13,7 @@ pub fn search_args_to_params(args: SearchArgs) -> SearchParams {
         location: args.location,
         checkin: args.checkin,
         checkout: args.checkout,
-        adults: Some(args.adults),
+        adults: args.adults,
         children: args.children,
         infants: args.infants,
         pets: args.pets,

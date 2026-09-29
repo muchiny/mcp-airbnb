@@ -133,6 +133,8 @@ fn sample_neighborhood(location: &str) -> NeighborhoodStats {
             percentage: 60.0,
         }],
         superhost_percentage: Some(40.0),
+        currency: Some("$".into()),
+        priced_listings: 0,
     }
 }
 
@@ -161,6 +163,9 @@ fn sample_occupancy(id: &str) -> OccupancyEstimate {
         occupied_days: 72,
         available_days: 18,
         occupancy_rate: 80.0,
+        past_days_excluded: 0,
+        blocked_days_excluded: 0,
+        currency: "$".into(),
         average_available_price: Some(165.0),
         weekend_avg_price: Some(185.0),
         weekday_avg_price: Some(155.0),
@@ -201,7 +206,7 @@ fn sample_reviews(id: &str) -> ReviewsPage {
                 is_translated: None,
             },
         ],
-        next_cursor: None,
+        next_cursor: Some("24".into()),
     }
 }
 
@@ -278,6 +283,19 @@ async fn search_json_output_is_valid_json() {
 }
 
 #[tokio::test]
+async fn search_text_output_shows_ids_and_urls() {
+    let cli = parse_cli(&["airbnb", "search", "Rome, Italy"]);
+    let out = dispatch(cli, mock()).await.unwrap();
+    for id in ["101", "102", "103"] {
+        assert!(out.contains(&format!("[ID {id}]")), "output: {out}");
+        assert!(
+            out.contains(&format!("https://www.airbnb.com/rooms/{id}")),
+            "output: {out}"
+        );
+    }
+}
+
+#[tokio::test]
 async fn listing_details_returns_full_detail() {
     let cli = parse_cli(&["airbnb", "listing", "12345"]);
     let out = dispatch(cli, mock()).await.unwrap();
@@ -320,6 +338,13 @@ async fn reviews_text_contains_author() {
     let cli = parse_cli(&["airbnb", "reviews", "12345"]);
     let out = dispatch(cli, mock()).await.unwrap();
     assert!(out.contains("Alice") || out.contains("Bob"));
+}
+
+#[tokio::test]
+async fn reviews_text_shows_next_cursor() {
+    let cli = parse_cli(&["airbnb", "reviews", "12345"]);
+    let out = dispatch(cli, mock()).await.unwrap();
+    assert!(out.contains("Next page cursor: 24"), "output: {out}");
 }
 
 #[tokio::test]
@@ -373,10 +398,26 @@ async fn review_sentiment_returns_json() {
 
 #[tokio::test]
 async fn market_comparison_two_locations() {
-    let cli = parse_cli(&["airbnb", "--json", "market-comparison", "Paris,Lyon"]);
+    let cli = parse_cli(&["airbnb", "--json", "market-comparison", "Paris", "Lyon"]);
     let out = dispatch(cli, mock()).await.unwrap();
     let parsed: serde_json::Value = serde_json::from_str(out.trim()).unwrap();
     assert_eq!(parsed["locations"].as_array().unwrap().len(), 2);
+}
+
+#[tokio::test]
+async fn market_comparison_city_country_pairs() {
+    let cli = parse_cli(&[
+        "airbnb",
+        "--json",
+        "market-comparison",
+        "Paris, France",
+        "Barcelona, Spain",
+    ]);
+    let out = dispatch(cli, mock()).await.unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(out.trim()).unwrap();
+    assert_eq!(parsed["locations"].as_array().unwrap().len(), 2);
+    assert_eq!(parsed["locations"][0]["location"], "Paris, France");
+    assert_eq!(parsed["locations"][1]["location"], "Barcelona, Spain");
 }
 
 // ---------------- Analytical: multi-fetch ----------------
@@ -395,6 +436,16 @@ async fn compare_via_ids() {
     let out = dispatch(cli, mock()).await.unwrap();
     let parsed: serde_json::Value = serde_json::from_str(out.trim()).unwrap();
     assert!(parsed["listings"].as_array().unwrap().len() >= 2);
+}
+
+#[tokio::test]
+async fn compare_via_ids_reports_bedrooms_and_amenities() {
+    let cli = parse_cli(&["airbnb", "--json", "compare", "--ids", "101,102"]);
+    let out = dispatch(cli, mock()).await.unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(out.trim()).unwrap();
+    // `sample_detail` has 2 bedrooms and 6 amenities.
+    assert_eq!(parsed["listings"][0]["bedrooms"], 2);
+    assert_eq!(parsed["listings"][0]["amenities_count"], 6);
 }
 
 #[tokio::test]
@@ -458,4 +509,102 @@ async fn optimal_pricing_returns_json() {
     let out = dispatch(cli, mock()).await.unwrap();
     let parsed: serde_json::Value = serde_json::from_str(out.trim()).unwrap();
     assert_eq!(parsed["listing_id"], "12345");
+}
+
+#[tokio::test]
+async fn revenue_location_only_returns_json() {
+    let cli = parse_cli(&["airbnb", "--json", "revenue", "--location", "Rome, Italy"]);
+    let out = dispatch(cli, mock()).await.unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(out.trim()).unwrap();
+    assert!(parsed["listing_id"].is_null());
+    assert_eq!(parsed["location"], "Rome, Italy");
+}
+
+#[tokio::test]
+async fn compare_via_location_reports_pages() {
+    let cli = parse_cli(&["airbnb", "compare", "--location", "Rome"]);
+    let out = dispatch(cli, mock()).await.unwrap();
+    assert!(
+        out.contains("Fetched 3 listings across 1 page(s)."),
+        "output: {out}"
+    );
+}
+
+fn airbnb_binary(args: &[&str]) -> std::process::Output {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let config = dir.path().join("config.yaml");
+    std::fs::write(&config, "scraper:\n  graphql_enabled: false\n").expect("write config");
+    let config_arg = config.to_str().expect("utf-8 path").to_string();
+    let mut full: Vec<&str> = vec!["--config", config_arg.as_str()];
+    full.extend_from_slice(args);
+    std::process::Command::new(env!("CARGO_BIN_EXE_airbnb"))
+        .args(&full)
+        .env_remove("AIRBNB_CONFIG")
+        .env("RUST_LOG", "off")
+        .output()
+        .expect("run airbnb")
+}
+
+#[test]
+fn json_mode_reports_errors_as_json_with_exit_code_2() {
+    let output = airbnb_binary(&["--json", "listing", "abc"]);
+    assert_eq!(output.status.code(), Some(2));
+    let body: serde_json::Value = serde_json::from_slice(&output.stdout).expect("stdout is JSON");
+    assert_eq!(body["error"]["kind"], "invalid_params");
+    assert!(
+        body["error"]["message"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("abc")
+    );
+}
+
+#[test]
+fn text_mode_reports_errors_on_stderr_with_exit_code_2() {
+    let output = airbnb_binary(&["listing", "abc"]);
+    assert_eq!(output.status.code(), Some(2));
+    assert!(output.stdout.is_empty());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("Error:"));
+}
+
+#[test]
+fn json_mode_reports_clap_range_errors_as_json_with_exit_code_2() {
+    // CLI-2: ranges enforced by clap value parsers must reach `| jq` as JSON too.
+    let cases: [&[&str]; 4] = [
+        &["--json", "price-trends", "42", "--months", "13"],
+        &["price-trends", "42", "--months", "13", "-j"],
+        &["-vj", "review-sentiment", "42", "--max-pages", "21"],
+        &["--json", "market-comparison", "Paris"],
+    ];
+    for args in cases {
+        let output = airbnb_binary(args);
+        assert_eq!(output.status.code(), Some(2), "{args:?}");
+        let body: serde_json::Value = serde_json::from_slice(&output.stdout)
+            .unwrap_or_else(|e| panic!("{args:?}: stdout is not JSON ({e})"));
+        assert_eq!(body["error"]["kind"], "invalid_params", "{args:?}");
+        let message = body["error"]["message"].as_str().unwrap_or_default();
+        assert!(message.starts_with("Invalid parameters: "), "{message}");
+        assert!(!message.contains("error: "), "{message}");
+        assert!(!message.contains('\n'), "{message}");
+    }
+}
+
+#[test]
+fn text_mode_keeps_clap_usage_errors_on_stderr() {
+    let output = airbnb_binary(&["price-trends", "42", "--months", "13"]);
+    assert_eq!(output.status.code(), Some(2));
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("--months"), "{stderr}");
+}
+
+#[test]
+fn json_mode_keeps_help_and_version_as_plain_text() {
+    let help = airbnb_binary(&["--json", "--help"]);
+    assert_eq!(help.status.code(), Some(0));
+    assert!(String::from_utf8_lossy(&help.stdout).contains("Usage:"));
+
+    let version = airbnb_binary(&["--json", "--version"]);
+    assert_eq!(version.status.code(), Some(0));
+    assert!(String::from_utf8_lossy(&version.stdout).starts_with("airbnb "));
 }

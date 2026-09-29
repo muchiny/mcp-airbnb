@@ -1,10 +1,12 @@
 use std::sync::Arc;
 
 use mcp_airbnb::adapters::cache::memory_cache::MemoryCache;
+use mcp_airbnb::adapters::rate_limiter::RateLimiter;
 use mcp_airbnb::adapters::scraper::client::AirbnbScraper;
 use mcp_airbnb::adapters::shared::ApiKeyManager;
 use mcp_airbnb::config::types::{CacheConfig, ScraperConfig};
 use mcp_airbnb::domain::search_params::SearchParams;
+use mcp_airbnb::error::AirbnbError;
 use mcp_airbnb::ports::airbnb_client::AirbnbClient;
 
 use wiremock::matchers::{method, path_regex};
@@ -35,7 +37,18 @@ fn test_api_key_manager(base_url: &str) -> Arc<ApiKeyManager> {
         .timeout(std::time::Duration::from_secs(5))
         .build()
         .unwrap();
-    Arc::new(ApiKeyManager::new(http, base_url.to_string(), 86400))
+    Arc::new(ApiKeyManager::new(
+        http,
+        base_url.to_string(),
+        86400,
+        test_limiter(),
+    ))
+}
+
+/// Fast pacing so tests do not sleep. Production builds one limiter in
+/// `application::build_client`.
+fn test_limiter() -> Arc<RateLimiter> {
+    Arc::new(RateLimiter::new(100.0))
 }
 
 fn search_html() -> String {
@@ -89,13 +102,13 @@ fn calendar_html() -> String {
     r#"<html><head><script id="__NEXT_DATA__" type="application/json">
     {"props":{"pageProps":{"calendarData":{
         "calendarMonths":[
-            {"month":3,"year":2026,"days":[
-                {"date":"2026-03-01","available":true,"price":{"amount":150.0},"minNights":2},
-                {"date":"2026-03-02","available":true,"price":{"amount":160.0},"minNights":2},
-                {"date":"2026-03-03","available":false,"price":{"amount":170.0},"minNights":2}
+            {"month":3,"year":2099,"days":[
+                {"date":"2099-03-01","available":true,"price":{"amount":150.0},"minNights":2},
+                {"date":"2099-03-02","available":true,"price":{"amount":160.0},"minNights":2},
+                {"date":"2099-03-03","available":false,"price":{"amount":170.0},"minNights":2}
             ]},
-            {"month":4,"year":2026,"days":[
-                {"date":"2026-04-01","available":true,"price":{"amount":140.0},"minNights":1}
+            {"month":4,"year":2099,"days":[
+                {"date":"2099-04-01","available":true,"price":{"amount":140.0},"minNights":1}
             ]}
         ],
         "currency":"USD"
@@ -151,6 +164,7 @@ async fn scraper_search_parses_html_response() {
         test_cache_config(),
         cache,
         api_key_mgr,
+        test_limiter(),
     )
     .unwrap();
 
@@ -191,6 +205,7 @@ async fn scraper_detail_parses_html_response() {
         test_cache_config(),
         cache,
         api_key_mgr,
+        test_limiter(),
     )
     .unwrap();
 
@@ -217,6 +232,7 @@ async fn scraper_caches_results() {
         test_cache_config(),
         cache,
         api_key_mgr,
+        test_limiter(),
     )
     .unwrap();
 
@@ -254,6 +270,7 @@ async fn scraper_retries_on_server_error() {
         test_cache_config(),
         cache,
         api_key_mgr,
+        test_limiter(),
     )
     .unwrap();
 
@@ -275,7 +292,14 @@ async fn scraper_404_returns_listing_not_found() {
     let api_key_mgr = test_api_key_manager(&mock_server.uri());
     let mut config = fast_scraper_config(&mock_server.uri());
     config.max_retries = 0; // no retries for 404
-    let scraper = AirbnbScraper::new(config, test_cache_config(), cache, api_key_mgr).unwrap();
+    let scraper = AirbnbScraper::new(
+        config,
+        test_cache_config(),
+        cache,
+        api_key_mgr,
+        test_limiter(),
+    )
+    .unwrap();
 
     let result = scraper.get_listing_detail("99999999").await;
     assert!(result.is_err());
@@ -295,7 +319,14 @@ async fn scraper_429_returns_rate_limited() {
     let api_key_mgr = test_api_key_manager(&mock_server.uri());
     let mut config = fast_scraper_config(&mock_server.uri());
     config.max_retries = 0;
-    let scraper = AirbnbScraper::new(config, test_cache_config(), cache, api_key_mgr).unwrap();
+    let scraper = AirbnbScraper::new(
+        config,
+        test_cache_config(),
+        cache,
+        api_key_mgr,
+        test_limiter(),
+    )
+    .unwrap();
 
     let result = scraper.get_listing_detail("501").await;
     assert!(result.is_err());
@@ -318,6 +349,7 @@ async fn scraper_reviews_parses_response() {
         test_cache_config(),
         cache,
         api_key_mgr,
+        test_limiter(),
     )
     .unwrap();
 
@@ -369,6 +401,7 @@ async fn scraper_calendar_parses_response() {
         test_cache_config(),
         cache,
         api_key_mgr,
+        test_limiter(),
     )
     .unwrap();
 
@@ -376,27 +409,27 @@ async fn scraper_calendar_parses_response() {
 
     // Verify calendar metadata
     assert_eq!(calendar.listing_id, "501");
-    assert_eq!(calendar.currency, "USD");
+    assert_eq!(calendar.currency, "$");
 
     // Verify all days across both months were parsed
     assert_eq!(calendar.days.len(), 4);
 
     // Verify first month days
-    assert_eq!(calendar.days[0].date, "2026-03-01");
+    assert_eq!(calendar.days[0].date, "2099-03-01");
     assert!(calendar.days[0].available);
     assert_eq!(calendar.days[0].price, Some(150.0));
     assert_eq!(calendar.days[0].min_nights, Some(2));
 
-    assert_eq!(calendar.days[1].date, "2026-03-02");
+    assert_eq!(calendar.days[1].date, "2099-03-02");
     assert!(calendar.days[1].available);
     assert_eq!(calendar.days[1].price, Some(160.0));
 
-    assert_eq!(calendar.days[2].date, "2026-03-03");
+    assert_eq!(calendar.days[2].date, "2099-03-03");
     assert!(!calendar.days[2].available);
     assert_eq!(calendar.days[2].price, Some(170.0));
 
     // Verify second month day
-    assert_eq!(calendar.days[3].date, "2026-04-01");
+    assert_eq!(calendar.days[3].date, "2099-04-01");
     assert!(calendar.days[3].available);
     assert_eq!(calendar.days[3].price, Some(140.0));
     assert_eq!(calendar.days[3].min_nights, Some(1));
@@ -430,6 +463,7 @@ async fn scraper_host_profile_parses_response() {
         test_cache_config(),
         cache,
         api_key_mgr,
+        test_limiter(),
     )
     .unwrap();
 
@@ -460,4 +494,177 @@ async fn scraper_host_profile_parses_response() {
 
     // Verify identity verification
     assert_eq!(profile.identity_verified, Some(true));
+}
+
+#[tokio::test]
+async fn scraper_bot_challenge_page_is_upstream_schema_and_not_cached() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path_regex("/rooms/.*"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_string(
+                "<html><body><h1>Please verify you are a human</h1></body></html>",
+            ),
+        )
+        .expect(2) // not cached: the second call fetches again
+        .mount(&mock_server)
+        .await;
+
+    let cache = Arc::new(MemoryCache::new(100));
+    let api_key_mgr = test_api_key_manager(&mock_server.uri());
+    let scraper = AirbnbScraper::new(
+        fast_scraper_config(&mock_server.uri()),
+        test_cache_config(),
+        cache,
+        api_key_mgr,
+        test_limiter(),
+    )
+    .unwrap();
+
+    for _ in 0..2 {
+        let err = scraper.get_listing_detail("501").await.unwrap_err();
+        assert!(
+            matches!(err, AirbnbError::UpstreamSchema { .. }),
+            "got {err:?}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn scraper_server_error_is_reported_as_upstream_status() {
+    let mock_server = MockServer::start().await;
+
+    Mock::given(method("GET"))
+        .and(path_regex("/rooms/.*"))
+        .respond_with(ResponseTemplate::new(503))
+        .mount(&mock_server)
+        .await;
+
+    let api_key_mgr = test_api_key_manager(&mock_server.uri());
+    let mut config = fast_scraper_config(&mock_server.uri());
+    config.max_retries = 0;
+    let scraper = AirbnbScraper::new(
+        config,
+        test_cache_config(),
+        Arc::new(MemoryCache::new(100)),
+        api_key_mgr,
+        test_limiter(),
+    )
+    .unwrap();
+
+    let err = scraper.get_listing_detail("501").await.unwrap_err();
+    assert!(
+        matches!(err, AirbnbError::UpstreamStatus { status: 503, .. }),
+        "{err}"
+    );
+}
+
+#[tokio::test]
+async fn scraper_does_not_retry_forbidden_pages() {
+    let mock_server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex("/rooms/.*"))
+        .respond_with(ResponseTemplate::new(403).set_body_string("blocked"))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    let mut config = fast_scraper_config(&mock_server.uri());
+    config.max_retries = 2;
+    let scraper = AirbnbScraper::new(
+        config,
+        test_cache_config(),
+        Arc::new(MemoryCache::new(100)),
+        test_api_key_manager(&mock_server.uri()),
+        test_limiter(),
+    )
+    .unwrap();
+
+    let err = scraper.get_listing_detail("501").await.unwrap_err();
+    assert!(
+        matches!(err, AirbnbError::UpstreamStatus { status: 403, .. }),
+        "{err}"
+    );
+}
+
+#[tokio::test]
+async fn scraper_does_not_retry_429_without_retry_after() {
+    let mock_server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex("/rooms/.*"))
+        .respond_with(ResponseTemplate::new(429))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    let mut config = fast_scraper_config(&mock_server.uri());
+    config.max_retries = 2;
+    let scraper = AirbnbScraper::new(
+        config,
+        test_cache_config(),
+        Arc::new(MemoryCache::new(100)),
+        test_api_key_manager(&mock_server.uri()),
+        test_limiter(),
+    )
+    .unwrap();
+
+    let err = scraper.get_listing_detail("501").await.unwrap_err();
+    assert!(matches!(err, AirbnbError::RateLimited), "{err}");
+}
+
+#[tokio::test]
+async fn scraper_404_on_a_listing_is_listing_not_found() {
+    let mock_server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path_regex("/rooms/.*"))
+        .respond_with(ResponseTemplate::new(404))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    let scraper = AirbnbScraper::new(
+        fast_scraper_config(&mock_server.uri()),
+        test_cache_config(),
+        Arc::new(MemoryCache::new(100)),
+        test_api_key_manager(&mock_server.uri()),
+        test_limiter(),
+    )
+    .unwrap();
+
+    let err = scraper.get_listing_detail("99999999").await.unwrap_err();
+    assert!(
+        matches!(err, AirbnbError::ListingNotFound { ref id } if id == "99999999"),
+        "{err}"
+    );
+}
+
+#[tokio::test]
+async fn scraper_search_keeps_hostile_location_inside_the_search_path() {
+    let mock_server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(wiremock::matchers::path(
+            "/s/..%2F..%2Frooms%2F1%3Fx=1/homes",
+        ))
+        .respond_with(ResponseTemplate::new(200).set_body_string("<html><body></body></html>"))
+        .expect(1)
+        .mount(&mock_server)
+        .await;
+
+    let scraper = AirbnbScraper::new(
+        fast_scraper_config(&mock_server.uri()),
+        test_cache_config(),
+        Arc::new(MemoryCache::new(100)),
+        test_api_key_manager(&mock_server.uri()),
+        test_limiter(),
+    )
+    .unwrap();
+
+    let params = SearchParams {
+        location: "../../rooms/1?x=1".into(),
+        ..SearchParams::default()
+    };
+    // The outcome of parsing does not matter here; wiremock verifies on drop
+    // that exactly the encoded search path was requested.
+    let _ = scraper.search_listings(&params).await;
 }

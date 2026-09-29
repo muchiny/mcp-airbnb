@@ -756,6 +756,8 @@ impl AirbnbClient for AnalyticalMock {
                 },
             ],
             superhost_percentage: Some(superhost),
+            currency: Some("$".into()),
+            priced_listings: 0,
         })
     }
 
@@ -768,6 +770,9 @@ impl AirbnbClient for AnalyticalMock {
             occupied_days: 68,
             available_days: 24,
             occupancy_rate: 73.9,
+            past_days_excluded: 0,
+            blocked_days_excluded: 0,
+            currency: "$".into(),
             average_available_price: Some(112.0),
             weekend_avg_price: Some(138.0),
             weekday_avg_price: Some(95.0),

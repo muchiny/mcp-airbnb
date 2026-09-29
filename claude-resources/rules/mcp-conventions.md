@@ -19,20 +19,12 @@ JSON-RPC dispatch — always go through the macros.
 
 ## Tool handler shape
 
-A tool handler is a **thin wrapper** around an `AirbnbClient` trait call
-(or, for analytical tools, a `domain::analytics::compute_*` function). It
-must:
+A tool handler is a **thin wrapper**. It must:
 
-1. Take `Parameters(params): Parameters<MyToolParams>` where `MyToolParams`
-   is `#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]`
-2. Call `self.client.<method>(...)` (or a `compute_*` function)
-3. Format the result as text via the domain type's `Display` impl
-4. Store the result as an MCP resource via `self.resources.insert(uri, name, text.clone())`
-5. Return `CallToolResult::success(vec![Content::text(text)])`
-
-**Never** put business logic in a tool handler — it belongs in
-`src/domain/analytics.rs` as a pure `compute_*` function. Handlers orchestrate
-fetches + rendering, nothing else.
+1. Take `Parameters(params): Parameters<MyToolParams>`.
+2. Check every input with `check_input!(...)`: `validate_listing_id`, `limits::months`, `limits::count_in_range`, `SearchParams::validate`, … A failed check returns `isError` with the limit in the text. Nothing is clamped and nothing is fetched.
+3. Data tools call `self.client.<method>(...)`. Analytical tools call the `application::analytical_handlers::run_*` function that the CLI also calls. Never orchestrate fetches or call `domain::analytics::compute_*` in `src/mcp/` (`tests/parity_test.rs` checks this).
+4. Render with the result's `Display` and end with `Ok(self.finish(resource_uri::<kind>(…), name, text).await)`. `finish` fences the text as untrusted, stores it, and sends `resources/list_changed` when the URI is new.
 
 ## Parameter structs
 
@@ -42,27 +34,11 @@ fetches + rendering, nothing else.
 - Doc-comments on each field become the JSON schema `description` — write
   them as if the LLM will read them (it will)
 - Optional fields: `Option<T>` with no default
-- Numeric ranges: validate manually in the handler with `.clamp(min, max)`
-  — clap-style range validators don't exist in schemars
+- Ranges: declare them with `#[schemars(range(min = limits::X, max = limits::Y))]` / `#[schemars(length(...))]` / `#[schemars(pattern(LISTING_ID_PATTERN))]`, using the constants in `src/domain/limits.rs`, and enforce the same constants at runtime. Never `.clamp()`. Every parameter struct carries `#[serde(deny_unknown_fields)]`.
 
 ## Resource storage
 
-Every successful tool result is stored as an MCP resource so clients can
-reference previously-fetched data without re-scraping. URI conventions:
-
-| Data type         | URI pattern                                |
-|-------------------|--------------------------------------------|
-| Listing           | `airbnb://listing/{id}`                    |
-| Calendar          | `airbnb://listing/{id}/calendar`           |
-| Reviews           | `airbnb://listing/{id}/reviews`            |
-| Host profile      | `airbnb://listing/{id}/host`               |
-| Search result     | `airbnb://search/{location}`               |
-| Neighborhood      | `airbnb://neighborhood/{location}`         |
-| Analytics         | `airbnb://analysis/{kind}/{id_or_key}`     |
-
-The `ResourceStore` is a `RwLock<HashMap<String, ResourceEntry>>` — cheap
-inserts, no eviction. Don't worry about unbounded growth in v1; it's per-
-session and the MCP client decides when to `ReadResource`.
+Every successful tool result is stored through `finish`. URIs come only from the builders in `src/mcp/resource_uri.rs` (one RFC 6570 template per tool, 18 in total; every value percent-encoded; every result-changing input in the URI). `ResourceStore` is a bounded LRU: 256 entries, 8 MiB, 1 h TTL, URIs ≤ 16 KiB. `resources/list` returns pages of 100. Add a template to `TEMPLATES` whenever you add a tool.
 
 ## Error handling
 
@@ -71,10 +47,14 @@ rather than bubbling `McpError`. This gives the LLM a readable explanation
 instead of a protocol-level failure.
 
 ```rust
-match self.client.get_listing_detail(&id).await {
-    Ok(detail) => Ok(CallToolResult::success(vec![Content::text(detail.to_string())])),
+match self.client.get_listing_detail(&params.id).await {
+    Ok(detail) => {
+        let name = format!("Listing: {}", detail.name);
+        Ok(self.finish(resource_uri::listing(&params.id), name, detail.to_string()).await)
+    }
     Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
-        "Failed to get listing '{id}': {e}"
+        "Failed to get listing {}: {e}",
+        quote_input(&params.id)
     ))])),
 }
 ```

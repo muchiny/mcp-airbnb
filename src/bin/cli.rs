@@ -1,8 +1,9 @@
-//! `airbnb` CLI binary entry point — thin shim over `mcp_airbnb::cli::run`.
+//! `airbnb` CLI binary entry point: a thin shim over `mcp_airbnb::cli::run`.
+#![warn(clippy::unwrap_used, clippy::expect_used)]
 
-use anyhow::Result;
+use std::process::ExitCode;
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> ExitCode {
     mcp_airbnb::cli::run().await
 }

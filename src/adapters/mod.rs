@@ -1,5 +1,11 @@
 pub mod cache;
 pub mod composite;
 pub mod graphql;
+pub mod http;
+pub mod price;
+pub mod rate_limiter;
+pub mod request_locale;
 pub mod scraper;
 pub mod shared;
+pub mod stay_search;
+pub mod text;

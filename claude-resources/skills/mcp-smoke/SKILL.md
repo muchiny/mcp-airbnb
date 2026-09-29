@@ -53,3 +53,13 @@ initialize + tools/list, nothing more. For behavioural assertions, use
   first — do not skip this step even if you "just built".
 - This skill assumes you are in the `mcp-airbnb` repo root. If `cargo build`
   can't find `Cargo.toml`, print `not in an mcp-airbnb project` and stop.
+
+## Live behaviour
+
+This skill only checks the handshake. To exercise all 18 tools against the
+real site (opt-in, rate-limited, never in CI):
+
+```bash
+cargo build --release --bin mcp-airbnb
+python3 scripts/live_smoke.py --live --location "Lyon, France"
+```

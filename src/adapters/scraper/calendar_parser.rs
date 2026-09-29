@@ -1,219 +1,96 @@
-use scraper::{Html, Selector};
+use std::collections::BTreeMap;
 
+use chrono::{Datelike, NaiveDate};
+use scraper::Html;
+use serde_json::Value;
+
+use crate::adapters::price::{normalize_currency, parse_price_amount};
+use crate::adapters::scraper::deferred_state::{
+    deferred_state_json, next_data_json, niobe_payloads,
+};
 use crate::domain::calendar::{CalendarDay, PriceCalendar, UnavailabilityReason};
 use crate::error::{AirbnbError, Result};
 
-/// Parse price calendar from Airbnb listing page or calendar API response.
+/// Parse a price calendar from a listing page (HTML) or an API body (JSON).
 pub fn parse_price_calendar(html: &str, listing_id: &str) -> Result<PriceCalendar> {
-    // Try __NEXT_DATA__ JSON first
-    if let Some(calendar) = try_parse_next_data_calendar(html, listing_id) {
-        return Ok(calendar);
+    // API bodies are JSON: skip the HTML parser entirely.
+    if let Ok(data) = serde_json::from_str::<Value>(html) {
+        return parse_calendar_json(&data, listing_id);
     }
-
-    // Try deferred state (current format with niobeClientData)
-    if let Some(calendar) = try_parse_deferred_state_calendar(html, listing_id) {
-        return Ok(calendar);
-    }
-
-    // Try parsing as raw JSON (for API responses)
-    if let Some(calendar) = try_parse_json_response(html, listing_id) {
-        return Ok(calendar);
-    }
-
-    Err(AirbnbError::Parse {
-        reason: "could not extract calendar data from response".into(),
-    })
-}
-
-fn try_parse_next_data_calendar(html: &str, listing_id: &str) -> Option<PriceCalendar> {
     let document = Html::parse_document(html);
-    let selector = Selector::parse(r"script#__NEXT_DATA__").ok()?;
-    let script = document.select(&selector).next()?;
-    let json_text = script.text().collect::<String>();
-    let data: serde_json::Value = serde_json::from_str(&json_text).ok()?;
-
-    extract_calendar_from_json(&data, listing_id)
-}
-
-fn try_parse_deferred_state_calendar(html: &str, listing_id: &str) -> Option<PriceCalendar> {
-    let document = Html::parse_document(html);
-    let selector =
-        Selector::parse("script[data-deferred-state], script[id^='data-deferred-state']").ok()?;
-
-    for script in document.select(&selector) {
-        let json_text = script.text().collect::<String>();
-        if let Ok(data) = serde_json::from_str::<serde_json::Value>(&json_text) {
-            // Try niobeClientData wrapper (current Airbnb format)
-            if let Some(entries) = data.get("niobeClientData").and_then(|v| v.as_array()) {
-                for entry in entries {
-                    if let Some(inner) = entry.as_array().and_then(|arr| arr.get(1)) {
-                        // Try PDP sections format for calendar metadata
-                        if let Some(calendar) =
-                            extract_calendar_from_pdp_sections(inner, listing_id)
-                        {
-                            return Some(calendar);
-                        }
-                        // Try legacy format
-                        if let Some(calendar) = extract_calendar_from_json(inner, listing_id) {
-                            return Some(calendar);
-                        }
-                    }
-                }
-            }
-            // Legacy: try direct JSON structure
-            if let Some(calendar) = extract_calendar_from_json(&data, listing_id) {
-                return Some(calendar);
-            }
-        }
-    }
-    None
-}
-
-/// Extract calendar info from current Airbnb PDP sections format.
-/// Note: The current Airbnb format loads calendar data dynamically via JavaScript,
-/// so day-by-day availability is not available in the initial HTML response.
-/// We extract what metadata is available from the `AVAILABILITY_CALENDAR_DEFAULT` section
-/// and the `BOOK_IT_SIDEBAR` section.
-fn extract_calendar_from_pdp_sections(
-    data: &serde_json::Value,
-    listing_id: &str,
-) -> Option<PriceCalendar> {
-    let pdp = data
-        .get("data")?
-        .get("presentation")?
-        .get("stayProductDetailPage")?;
-    let sections_container = pdp.get("sections")?;
-    let sections = sections_container.get("sections")?.as_array()?;
-
-    // Find BOOK_IT_SIDEBAR or BOOK_IT_CALENDAR_SHEET which may have pricing info
-    let book_section = sections.iter().find_map(|s| {
-        let stype = s
-            .get("sectionComponentType")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
-        if stype == "BOOK_IT_SIDEBAR" || stype == "BOOK_IT_CALENDAR_SHEET" {
-            s.get("section")
-        } else {
-            None
-        }
-    });
-
-    // Find calendar section for metadata
-    let calendar_section = sections.iter().find_map(|s| {
-        if s.get("sectionComponentType").and_then(|v| v.as_str())
-            == Some("AVAILABILITY_CALENDAR_DEFAULT")
-        {
-            s.get("section")
-        } else {
-            None
-        }
-    });
-
-    // If we have booking section with price description items, extract them
-    if let Some(book) = book_section
-        && let Some(items) = book.get("descriptionItems").and_then(|v| v.as_array())
+    if let Some(calendar) =
+        next_data_json(&document).and_then(|data| extract_calendar_from_json(&data, listing_id))
     {
-        let mut days = Vec::new();
-        for item in items {
-            if let Some(day) = extract_calendar_day_from_booking_item(item) {
-                days.push(day);
-            }
-        }
-        if !days.is_empty() {
-            let mut cal = PriceCalendar {
-                listing_id: listing_id.to_string(),
-                currency: "$".to_string(),
-                days,
-                average_price: None,
-                occupancy_rate: None,
-                min_price: None,
-                max_price: None,
-            };
-            cal.compute_stats();
-            return Some(cal);
-        }
+        return Ok(calendar);
     }
-
-    // Calendar data is loaded dynamically — not available in initial page HTML.
-    // Return None to let the caller know we couldn't extract day-by-day data.
-    // The calendar_section has metadata (title, maxGuestCapacity) but no day data.
-    let _ = calendar_section;
-    None
+    let states = deferred_state_json(&document);
+    states
+        .iter()
+        .flat_map(niobe_payloads)
+        .chain(states.iter())
+        .find_map(|data| extract_calendar_from_json(data, listing_id))
+        .ok_or_else(no_calendar_error)
 }
 
-fn extract_calendar_day_from_booking_item(item: &serde_json::Value) -> Option<CalendarDay> {
-    let title = item.get("title")?.as_str()?;
-    // Check if this looks like a date/price item
-    if title.contains("night") || title.contains("price") {
-        return None; // This is a label, not a calendar day
+/// Parse a calendar from decoded JSON: the GraphQL `PdpAvailabilityCalendar`
+/// response or a legacy v2 body.
+pub fn parse_calendar_json(data: &Value, listing_id: &str) -> Result<PriceCalendar> {
+    extract_calendar_from_json(data, listing_id).ok_or_else(no_calendar_error)
+}
+
+fn no_calendar_error() -> AirbnbError {
+    AirbnbError::UpstreamSchema {
+        operation: "PdpAvailabilityCalendar".into(),
+        detail: "no calendar days with an ISO date and an explicit availability flag".into(),
     }
-    // This is metadata like "Private room" or "1 bed" — not a calendar day
-    None
 }
 
-fn try_parse_json_response(text: &str, listing_id: &str) -> Option<PriceCalendar> {
-    let data: serde_json::Value = serde_json::from_str(text).ok()?;
-    extract_calendar_from_json(&data, listing_id)
-}
-
-fn extract_calendar_from_json(data: &serde_json::Value, listing_id: &str) -> Option<PriceCalendar> {
+fn extract_calendar_from_json(data: &Value, listing_id: &str) -> Option<PriceCalendar> {
     let calendar_data = find_calendar_data(data)?;
-    let mut days = Vec::new();
+    // Keyed by date: sorted, one entry per date. A date listed by two months
+    // (week-padded grids) keeps the entry of the month it belongs to.
+    let mut by_date: BTreeMap<NaiveDate, (CalendarDay, bool)> = BTreeMap::new();
 
-    // Calendar data might be organized by months (camelCase or snake_case)
     if let Some(months) = calendar_data
         .get("calendarMonths")
         .or_else(|| calendar_data.get("calendar_months"))
-        .and_then(|v| v.as_array())
+        .and_then(Value::as_array)
     {
         for month in months {
-            if let Some(month_days) = month.get("days").and_then(|v| v.as_array()) {
-                for day in month_days {
-                    if let Some(calendar_day) = extract_calendar_day(day) {
-                        days.push(calendar_day);
-                    }
-                }
+            let owner = month_of(month);
+            for day in month
+                .get("days")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+            {
+                insert_day(&mut by_date, day, owner);
             }
         }
     }
-
-    // Or it might be a flat array of days
-    if days.is_empty()
-        && let Some(arr) = calendar_data.as_array()
-    {
-        for day in arr {
-            if let Some(calendar_day) = extract_calendar_day(day) {
-                days.push(calendar_day);
-            }
+    if by_date.is_empty() {
+        let flat = calendar_data
+            .as_array()
+            .or_else(|| calendar_data.get("days").and_then(Value::as_array));
+        for day in flat.into_iter().flatten() {
+            insert_day(&mut by_date, day, None);
         }
     }
-
-    // Or nested under "days" key
-    if days.is_empty()
-        && let Some(arr) = calendar_data.get("days").and_then(|v| v.as_array())
-    {
-        for day in arr {
-            if let Some(calendar_day) = extract_calendar_day(day) {
-                days.push(calendar_day);
-            }
-        }
-    }
-
-    if days.is_empty() {
+    if by_date.is_empty() {
         return None;
     }
 
     let currency = calendar_data
         .get("currency")
         .or_else(|| calendar_data.get("priceCurrency"))
-        .and_then(|v| v.as_str())
-        .unwrap_or("$")
-        .to_string();
+        .and_then(Value::as_str)
+        .map(normalize_currency)
+        .unwrap_or_default();
 
     let mut cal = PriceCalendar {
         listing_id: listing_id.to_string(),
         currency,
-        days,
+        days: by_date.into_values().map(|(day, _)| day).collect(),
         average_price: None,
         occupancy_rate: None,
         min_price: None,
@@ -221,6 +98,34 @@ fn extract_calendar_from_json(data: &serde_json::Value, listing_id: &str) -> Opt
     };
     cal.compute_stats();
     Some(cal)
+}
+
+/// `(year, month)` a `calendarMonths` entry covers, when it says so.
+fn month_of(month: &Value) -> Option<(i32, u32)> {
+    let year = i32::try_from(month.get("year")?.as_i64()?).ok()?;
+    let number = u32::try_from(month.get("month")?.as_u64()?).ok()?;
+    Some((year, number))
+}
+
+fn insert_day(
+    by_date: &mut BTreeMap<NaiveDate, (CalendarDay, bool)>,
+    raw: &Value,
+    owner: Option<(i32, u32)>,
+) {
+    let Some(day) = extract_calendar_day(raw) else {
+        return;
+    };
+    let Ok(date) = NaiveDate::parse_from_str(&day.date, "%Y-%m-%d") else {
+        return;
+    };
+    let in_own_month =
+        owner.is_some_and(|(year, month)| date.year() == year && date.month() == month);
+    let replace = by_date
+        .get(&date)
+        .is_none_or(|(_, existing_in_own_month)| in_own_month && !*existing_in_own_month);
+    if replace {
+        by_date.insert(date, (day, in_own_month));
+    }
 }
 
 fn find_calendar_data(data: &serde_json::Value) -> Option<&serde_json::Value> {
@@ -255,71 +160,62 @@ fn find_calendar_data(data: &serde_json::Value) -> Option<&serde_json::Value> {
     deep_find_calendar(data, 20)
 }
 
-fn deep_find_calendar(data: &serde_json::Value, max_depth: u32) -> Option<&serde_json::Value> {
+fn deep_find_calendar(data: &Value, max_depth: u32) -> Option<&Value> {
     if max_depth == 0 {
         return None;
     }
     match data {
-        serde_json::Value::Object(map) => {
-            // Look for "calendarMonths" / "calendar_months" keys
+        Value::Object(map) => {
             if map.contains_key("calendarMonths") || map.contains_key("calendar_months") {
                 return Some(data);
             }
-            if let Some(days) = map.get("days")
-                && days.is_array()
+            if map
+                .get("days")
+                .and_then(Value::as_array)
+                .is_some_and(|days| is_day_list(days))
             {
-                let arr = days.as_array().unwrap();
-                let has_calendar_data = arr
-                    .iter()
-                    .any(|item| item.get("date").is_some() || item.get("calendarDate").is_some());
-                if has_calendar_data {
-                    return Some(data);
-                }
-            }
-            for value in map.values() {
-                if let Some(result) = deep_find_calendar(value, max_depth - 1) {
-                    return Some(result);
-                }
-            }
-            None
-        }
-        serde_json::Value::Array(arr) => {
-            // Check if this array contains day-like objects
-            let has_day_data = arr
-                .iter()
-                .any(|item| item.get("date").is_some() || item.get("calendarDate").is_some());
-            if has_day_data && !arr.is_empty() {
                 return Some(data);
             }
-            for item in arr {
-                if let Some(result) = deep_find_calendar(item, max_depth - 1) {
-                    return Some(result);
-                }
+            map.values()
+                .find_map(|value| deep_find_calendar(value, max_depth - 1))
+        }
+        Value::Array(items) => {
+            if is_day_list(items) {
+                return Some(data);
             }
-            None
+            items
+                .iter()
+                .find_map(|item| deep_find_calendar(item, max_depth - 1))
         }
         _ => None,
     }
 }
 
-/// Parse a price string like "$150", "€120.50", "120" into f64.
-fn parse_price_string(s: &str) -> Option<f64> {
-    let digits: String = s
-        .chars()
-        .filter(|c| c.is_ascii_digit() || *c == '.')
-        .collect();
-    digits.parse::<f64>().ok()
+/// A list is a calendar only when every entry has an ISO date and an explicit
+/// availability flag (a review list with `date` keys is not).
+fn is_day_list(items: &[Value]) -> bool {
+    !items.is_empty() && items.iter().all(is_calendar_day)
 }
 
-/// Infer why a day is unavailable from JSON fields and the date itself.
-fn infer_unavailability_reason(data: &serde_json::Value, date: &str) -> UnavailabilityReason {
-    // Check if the date is in the past
-    if let Ok(parsed) = chrono::NaiveDate::parse_from_str(date, "%Y-%m-%d")
-        && parsed < chrono::Utc::now().date_naive()
-    {
-        return UnavailabilityReason::PastDate;
-    }
+fn is_calendar_day(item: &Value) -> bool {
+    let has_iso_date = item
+        .get("date")
+        .or_else(|| item.get("calendarDate"))
+        .and_then(Value::as_str)
+        .is_some_and(|date| NaiveDate::parse_from_str(date.trim(), "%Y-%m-%d").is_ok());
+    let has_flag = item
+        .get("available")
+        .or_else(|| item.get("isAvailable"))
+        .is_some_and(Value::is_boolean);
+    has_iso_date && has_flag
+}
 
+/// Infer why a day is unavailable from its JSON fields.
+///
+/// Past-date labelling is not done here. Adapters call
+/// `PriceCalendar::classify_past_days` with one explicit reference date, so
+/// parsing stays a pure function of its input.
+fn infer_unavailability_reason(data: &serde_json::Value) -> UnavailabilityReason {
     // Check for booking status indicators (various Airbnb JSON formats)
     if let Some(status) = data
         .get("bookingStatusType")
@@ -368,17 +264,23 @@ fn infer_unavailability_reason(data: &serde_json::Value, date: &str) -> Unavaila
 
 #[allow(clippy::cast_possible_truncation)]
 fn extract_calendar_day(data: &serde_json::Value) -> Option<CalendarDay> {
-    let date = data
+    let raw_date = data
         .get("date")
         .or_else(|| data.get("calendarDate"))
-        .and_then(|v| v.as_str())?
+        .and_then(Value::as_str)?;
+    // Only ISO dates: analytics compare and slice them as YYYY-MM-DD, and a
+    // byte slice of a non-ASCII string would abort the process.
+    let date = NaiveDate::parse_from_str(raw_date.trim(), "%Y-%m-%d")
+        .ok()?
+        .format("%Y-%m-%d")
         .to_string();
 
+    // A day without an explicit availability flag is not a calendar day
+    // (for example a review with a `date` key).
     let available = data
         .get("available")
         .or_else(|| data.get("isAvailable"))
-        .and_then(serde_json::Value::as_bool)
-        .unwrap_or(false);
+        .and_then(Value::as_bool)?;
 
     let price = data
         .get("price")
@@ -391,20 +293,26 @@ fn extract_calendar_day(data: &serde_json::Value) -> Option<CalendarDay> {
                 .or_else(|| p.get("local_price").and_then(serde_json::Value::as_f64))
                 // v2 format: {"price": {"native_price": 120.0}}
                 .or_else(|| p.get("native_price").and_then(serde_json::Value::as_f64))
+                // Merlin calendar (2026): {"price": {"localPriceFormatted": "$95"}}, null when hidden
+                .or_else(|| {
+                    p.get("localPriceFormatted")
+                        .and_then(serde_json::Value::as_str)
+                        .and_then(parse_price_amount)
+                })
                 // String format: {"price": "$150"}
-                .or_else(|| p.as_str().and_then(parse_price_string))
+                .or_else(|| p.as_str().and_then(parse_price_amount))
         })
         // v3 fallback: {"localPriceFormatted": "$95"}
         .or_else(|| {
             data.get("localPriceFormatted")
                 .and_then(|v| v.as_str())
-                .and_then(parse_price_string)
+                .and_then(parse_price_amount)
         })
         // v2 fallback: {"price_string": "$120"}
         .or_else(|| {
             data.get("price_string")
                 .and_then(|v| v.as_str())
-                .and_then(parse_price_string)
+                .and_then(parse_price_amount)
         });
 
     let min_nights = data
@@ -433,7 +341,7 @@ fn extract_calendar_day(data: &serde_json::Value) -> Option<CalendarDay> {
     let unavailability_reason = if available {
         None
     } else {
-        Some(infer_unavailability_reason(data, &date))
+        Some(infer_unavailability_reason(data))
     };
 
     Some(CalendarDay {
@@ -515,7 +423,7 @@ mod tests {
 
         let calendar = parse_price_calendar(html, "3").unwrap();
         assert_eq!(calendar.days.len(), 1);
-        assert_eq!(calendar.currency, "EUR");
+        assert_eq!(calendar.currency, "\u{20ac}");
         assert_eq!(calendar.days[0].min_nights, Some(3));
     }
 
@@ -529,11 +437,10 @@ mod tests {
     }
 
     #[test]
-    fn calendar_day_unavailable_default() {
+    fn calendar_day_without_availability_flag_is_rejected() {
         let data: serde_json::Value =
             serde_json::from_str(r#"{"date":"2025-10-01","price":100.0}"#).unwrap();
-        let day = extract_calendar_day(&data).unwrap();
-        assert!(!day.available);
+        assert!(extract_calendar_day(&data).is_none());
     }
 
     #[test]
@@ -695,15 +602,6 @@ mod tests {
     }
 
     #[test]
-    fn parse_price_string_helper() {
-        assert_eq!(parse_price_string("$150"), Some(150.0));
-        assert_eq!(parse_price_string("€120.50"), Some(120.50));
-        assert_eq!(parse_price_string("120"), Some(120.0));
-        assert_eq!(parse_price_string("¥15000"), Some(15000.0));
-        assert_eq!(parse_price_string(""), None);
-    }
-
-    #[test]
     fn v2_full_response_with_conditions() {
         // Simulates the actual v2 REST API response with _format=with_conditions
         let json = r#"{
@@ -752,5 +650,129 @@ mod tests {
         assert_eq!(calendar.days[0].max_nights, Some(14));
         // Stats should be computed
         assert!(calendar.average_price.is_some());
+    }
+
+    #[test]
+    fn merlin_nested_local_price_formatted_is_read() {
+        let json = r#"{"data":{"merlin":{"pdpAvailabilityCalendar":{"calendarMonths":[{"month":10,"year":2030,"days":[
+            {"calendarDate":"2030-10-01","available":true,"minNights":2,"price":{"__typename":"MerlinCalendarDayPrice","localPriceFormatted":"$95"}},
+            {"calendarDate":"2030-10-02","available":true,"minNights":2,"price":{"__typename":"MerlinCalendarDayPrice","localPriceFormatted":null}}
+        ]}]}}}}"#;
+        let cal = parse_price_calendar(json, "1").unwrap();
+        assert_eq!(cal.days[0].price, Some(95.0));
+        assert_eq!(cal.days[1].price, None);
+    }
+
+    #[test]
+    fn web_capture_2026_09_has_no_prices() {
+        let json =
+            crate::test_helpers::fixture_json("graphql/PdpAvailabilityCalendar.response.json");
+        let cal = parse_price_calendar(&json.to_string(), "38817969").unwrap();
+        assert_eq!(cal.days.len(), 365);
+        assert!(cal.days.iter().all(|d| d.price.is_none()));
+        assert!(cal.days.iter().all(|d| d.min_nights.is_some()));
+        assert!(cal.average_price.is_none());
+    }
+
+    #[test]
+    fn calendar_without_currency_is_unknown_not_dollar() {
+        let json = r#"{"calendarMonths":[{"days":[{"date":"2026-06-01","available":true}]}]}"#;
+        assert_eq!(parse_price_calendar(json, "1").unwrap().currency, "");
+    }
+
+    #[test]
+    fn real_calendar_fixture_is_sorted_unique_and_iso_dated() {
+        let json = crate::test_helpers::fixture_json("p1b/calendar.json");
+        let calendar = parse_calendar_json(&json, "38817969").unwrap();
+        let dates: Vec<&str> = calendar.days.iter().map(|d| d.date.as_str()).collect();
+        assert_eq!(
+            dates,
+            [
+                "2026-09-28",
+                "2026-09-29",
+                "2026-09-30",
+                "2026-10-13",
+                "2026-10-14",
+                "2026-10-15"
+            ]
+        );
+        assert!(calendar.days[4].available);
+        assert_eq!(calendar.contiguous_runs().len(), 2);
+    }
+
+    #[test]
+    fn padded_month_grids_are_deduplicated_in_favour_of_the_owning_month() {
+        // Legacy v2 grids repeat the neighbouring months' days as padding.
+        let json = serde_json::json!({"calendar_months": [
+            {"month": 10, "year": 2026, "days": [
+                {"date": "2026-10-31", "available": false},
+                {"date": "2026-11-01", "available": true}
+            ]},
+            {"month": 11, "year": 2026, "days": [
+                {"date": "2026-10-31", "available": true},
+                {"date": "2026-11-01", "available": false},
+                {"date": "2026-11-02", "available": false}
+            ]}
+        ]});
+        let calendar = parse_calendar_json(&json, "1").unwrap();
+        let days: Vec<(&str, bool)> = calendar
+            .days
+            .iter()
+            .map(|d| (d.date.as_str(), d.available))
+            .collect();
+        assert_eq!(
+            days,
+            [
+                ("2026-10-31", false),
+                ("2026-11-01", false),
+                ("2026-11-02", false)
+            ]
+        );
+    }
+
+    #[test]
+    fn non_iso_dates_are_dropped_before_analytics_can_slice_them() {
+        let json = serde_json::json!({"data": {"merlin": {"pdpAvailabilityCalendar": {"calendarMonths": [{"days": [
+            {"calendarDate": "2026-0\u{e9}-01", "available": true},
+            {"calendarDate": "\u{438}\u{44e}\u{43d}\u{44c} 2026", "available": true},
+            {"calendarDate": "2026-06-02", "available": true}
+        ]}]}}}});
+        let calendar = parse_calendar_json(&json, "1").unwrap();
+        assert_eq!(calendar.days.len(), 1);
+        assert_eq!(calendar.days[0].date, "2026-06-02");
+    }
+
+    #[test]
+    fn review_arrays_with_a_date_key_are_not_a_calendar() {
+        let reviews = serde_json::json!({"data": {"presentation": {"x": {"reviews": [
+            {"date": "2025-03-01", "comments": "Great"},
+            {"date": "2025-02-11", "comments": "Nice"}
+        ]}}}});
+        let html =
+            crate::test_helpers::niobe_page("niobeClientData", &[("StaysPdpReviews:{}", &reviews)]);
+        let err = parse_price_calendar(&html, "1").unwrap_err();
+        assert!(matches!(err, AirbnbError::UpstreamSchema { .. }), "{err}");
+    }
+
+    #[test]
+    fn listing_page_without_calendar_data_is_an_error_not_an_empty_calendar() {
+        let pdp = crate::test_helpers::fixture_json("p1b/pdp_apartment.json");
+        let html = crate::test_helpers::niobe_page(
+            "niobeMinimalClientData",
+            &[("StaysPdpSections:{}", &pdp)],
+        );
+        assert!(parse_price_calendar(&html, "38817969").is_err());
+    }
+
+    #[test]
+    fn parser_leaves_past_labelling_to_the_caller() {
+        let json = r#"{"calendarMonths":[{"days":[
+            {"date":"2020-01-01","available":false,"minNights":1}
+        ]}],"currency":"USD"}"#;
+        let calendar = parse_price_calendar(json, "1").unwrap();
+        assert_eq!(
+            calendar.days[0].unavailability_reason,
+            Some(UnavailabilityReason::Unknown)
+        );
     }
 }

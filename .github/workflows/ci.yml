@@ -9,29 +9,42 @@ on:
     - cron: '0 3 * * *'
   workflow_dispatch:
 
+# Least privilege: no job in this workflow writes to the repository.
+permissions:
+  contents: read
+
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -Dwarnings
 
+# Actions are pinned to full commit SHAs (audit CI-2). Dependabot
+# (.github/dependabot.yml) proposes SHA bumps; scripts/check_workflows.py
+# enforces the pinning rules in the `workflow-hygiene` job below.
+# The toolchain comes from rust-toolchain.toml (1.93 = MSRV, audit CI-1).
 jobs:
   check:
     name: Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
         with:
           toolchain: "1.93"
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo check --all-targets
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - run: cargo check --locked --all-targets
 
   fmt:
     name: Format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+        with:
+          toolchain: "1.93"
           components: rustfmt
       - run: cargo fmt --all -- --check
 
@@ -39,39 +52,79 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
         with:
           toolchain: "1.93"
           components: clippy
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --all-targets -- -D warnings
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - run: cargo clippy --locked --all-targets -- -D warnings
+
+  # Early warning for lints added by newer stable releases. It never blocks
+  # a merge: the blocking gate is the MSRV clippy job above.
+  clippy-latest:
+    name: Clippy (latest stable, advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+        with:
+          toolchain: stable
+          components: clippy
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - run: cargo +stable clippy --locked --all-targets -- -D warnings
+
+  doc:
+    name: Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+        with:
+          toolchain: "1.93"
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - run: cargo doc --locked --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
 
   test:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
         with:
           toolchain: "1.93"
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo test --all-targets
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - run: cargo test --locked --all-targets
 
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
         with:
           toolchain: "1.93"
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo install cargo-tarpaulin
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: taiki-e/install-action@4cef1412cce204788f482e778a0b9187f9626a29 # v2.87.21
+        with:
+          tool: cargo-tarpaulin@0.37.4
       - run: cargo tarpaulin --config tarpaulin.toml --out xml --skip-clean
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
         with:
           files: cobertura.xml
           fail_ci_if_error: false
@@ -80,24 +133,51 @@ jobs:
     name: Security Audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo install cargo-deny
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+        with:
+          toolchain: "1.93"
+      - uses: taiki-e/install-action@4cef1412cce204788f482e778a0b9187f9626a29 # v2.87.21
+        with:
+          tool: cargo-deny@0.20.2
       - run: cargo deny check
+
+  workflow-hygiene:
+    name: Workflow hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - run: python3 scripts/check_workflows.py
 
   fuzz:
     name: Fuzz Testing
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 60
+    env:
+      # Fuzzing looks for crashes, not lints: do not let a new nightly
+      # warning fail the job. cargo-fuzz appends its sanitizer flags.
+      RUSTFLAGS: ""
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@nightly
-      - uses: Swatinem/rust-cache@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+        with:
+          toolchain: nightly
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           workspaces: fuzz
-      - run: cargo install cargo-fuzz
-      - name: Run fuzz targets
+      # rust-toolchain.toml pins 1.93 for the repository, so every cargo
+      # call in this job names the nightly toolchain explicitly.
+      - run: cargo +nightly install cargo-fuzz --locked --version 0.13.2
+      - name: Run fuzz targets (committed seeds + dictionary, 120 s each)
         run: |
+          set -uo pipefail
           FUZZ_TARGETS=(
             fuzz_search_parser
             fuzz_detail_parser
@@ -107,9 +187,30 @@ jobs:
             fuzz_graphql_detail
             fuzz_graphql_review
             fuzz_graphql_host
+            fuzz_host_profile_html
+            fuzz_api_key
+            fuzz_calendar_analytics
+            fuzz_calendar_model
+            fuzz_input_validation
           )
+          status=0
           for target in "${FUZZ_TARGETS[@]}"; do
             echo "::group::Fuzzing $target"
-            cargo fuzz run "$target" -- -max_total_time=30
+            mkdir -p "$GITHUB_WORKSPACE/fuzz/corpus/$target"
+            if ! cargo +nightly fuzz run "$target" \
+                "$GITHUB_WORKSPACE/fuzz/corpus/$target" "$GITHUB_WORKSPACE/fuzz/seeds/$target" -- \
+                -dict="$GITHUB_WORKSPACE/fuzz/airbnb.dict" -max_total_time=120 -max_len=131072 -timeout=10; then
+              echo "::error title=fuzz::$target found a crash; the reproducer is in the fuzz-artifacts upload"
+              status=1
+            fi
             echo "::endgroup::"
           done
+          exit "$status"
+      - name: Upload crash reproducers
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: fuzz-artifacts
+          path: fuzz/artifacts/
+          if-no-files-found: ignore
+          retention-days: 30

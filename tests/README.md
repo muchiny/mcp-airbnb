@@ -1,69 +1,75 @@
 # 🧪 Tests
 
-Integration and unit tests for the mcp-airbnb server.
+Unit tests live next to the code (`#[cfg(test)] mod tests`). Integration tests live here, one crate per file. Nothing in this directory talks to the real Airbnb site.
 
 ## 📂 Files
 
-| File | Scope | Description |
-|------|-------|-------------|
-| `mcp_server_test.rs` | 📡 MCP layer | Tests MCP server: tool registration, instructions, capabilities |
-| `scraper_test.rs` | 🕷️ Scraper | Tests HTML parsing and scraping logic |
-| `graphql_test.rs` | 🔗 GraphQL | Tests GraphQL JSON response parsers |
-| `analytical_tools_test.rs` | 🧠 Analytics | Tests all 11 analytical tools with mock data |
-| `functional_verification_test.rs` | 🔄 End-to-end | Full workflow verification tests |
-| `proptest_tests.rs` | 🎲 Property | Property-based tests using proptest |
-| `fixtures/` | 📁 Test data | HTML fixtures for parser tests |
-
-## 🏛️ Test Architecture
-
-```mermaid
-flowchart TD
-    Tests["🧪 Integration Tests"]
-    Tests --> MockClient["🎭 MockAirbnbClient<br/>(from test_helpers.rs)"]
-    MockClient --> Server["📡 AirbnbMcpServer"]
-    Server --> Tools["🔧 18 Tool methods"]
-```
-
-> There are also 40+ inline unit tests in `src/mcp/server.rs` that test all 18 tools (7 data + 11 analytical) with mock clients.
+| File | Scope | What it checks |
+|------|-------|----------------|
+| `mcp_server_test.rs` | 📡 MCP protocol | Real rmcp client ↔ server over an in-memory duplex: initialize, `tools/list` (18 tools, annotations, schemas), resources list/read, every stored URI matched against the RFC 6570 templates, error propagation |
+| `mcp_resources_test.rs` | 📦 Resources | Encoded URIs, 18 templates, `text/plain`, tolerant reads, `resources/list_changed` |
+| `functional_verification_test.rs` | 🔄 End to end | All 18 tools called through the MCP protocol against a realistic mock |
+| `parity_test.rs` | ⚖️ Parity | The same recording mock through CLI and MCP must make identical upstream calls (ARCH-1) |
+| `cancellation_test.rs` | 🛑 MCP cancellation | A cancelled tool call drops its in-flight upstream work (MCP-8) |
+| `analytical_tools_test.rs` | 🧠 Analytics | The 11 analytical tools with mock data |
+| `analytics_fixture_test.rs` | 📊 Analytics | Analytics over an anonymized live calendar (2026-09-28): past days, occupancy, gaps, trends, revenue |
+| `scraper_test.rs` | 🕷️ Scraper | HTML scraper client against `wiremock` |
+| `graphql_test.rs` | 🔗 GraphQL | GraphQL client against wiremock: request contract (hashes, variables, headers), 2026-09 captures, drift errors (`UpstreamSchema`), cache keys |
+| `cli_test.rs` | 🖥️ CLI | `cli::dispatch` with an inline mock, plus the real `airbnb` binary for exit codes and JSON errors |
+| `proptest_tests.rs` | 🎲 Property | Invariants over generated inputs |
+| `fuzz_seed_replay_test.rs` | 🎲 Fuzz seeds | Replays `fuzz/seeds/<target>/*` through `mcp_airbnb::fuzz_support` on stable, and checks that every fuzz target is wired in `fuzz/Cargo.toml` and CI |
+| `docs_consistency_test.rs` | 📚 Docs | Tool, template and fuzz-target counts, documented commands, config keys and links in the Markdown docs |
+| `common/mod.rs` | 🧰 Helpers | `connect()` (duplex MCP client), `tool_call()`, `text_of()` |
+| `fixtures/airbnb/2026-09/` | 📁 Test data | Anonymized airbnb.com GraphQL captures (see its README; regenerate with `scripts/anonymize_fixtures.py`); also the source of the fuzz seeds |
 
 ## 🎭 Mock Infrastructure
 
-Tests use `MockAirbnbClient` from `src/test_helpers.rs`, which implements `AirbnbClient` with configurable behavior via closures:
-
-- `.with_search(|params| ...)` — 🔍 Mock search results
-- `.with_detail(|id| ...)` — 📋 Mock listing details
-- `.with_reviews(|id, cursor| ...)` — ⭐ Mock reviews
-- `.with_calendar(|id, months| ...)` — 📅 Mock calendar
-- `.with_host_profile(|id| ...)` — 👤 Mock host profiles
-- `.with_neighborhood(|params| ...)` — 📊 Mock neighborhood stats
-- `.with_occupancy(|id, months| ...)` — 📈 Mock occupancy estimates
+- Unit tests use `MockAirbnbClient` from `src/test_helpers.rs` (`#[cfg(test)]`, so it is visible only to unit tests). It is configured with closures (`.with_search(…)`, `.with_detail(…)`, `.with_reviews(…)`, `.with_calendar(…)`, `.with_host_profile(…)`, `.with_neighborhood(…)`, `.with_occupancy(…)`) and loads fixtures with `test_helpers::fixture_json("<file>")`.
+- Integration tests define their own `AirbnbClient` mocks (`IntegrationMock` / `ErrorMock` in `mcp_server_test.rs`, `FunctionalMock` in `functional_verification_test.rs`, …), share transport helpers through `tests/common/`, and read fixtures with `include_str!`.
 
 ## 🎲 Fuzzing
 
-8 fuzz targets are available in the `fuzz/` directory, covering both HTML scraper and GraphQL parsers:
+13 fuzz targets in `fuzz/`, each a one-liner that calls a `mcp_airbnb::fuzz_support` function:
 
-| Fuzz Target | Parser |
-|-------------|--------|
-| `fuzz_search_parser` | 🕷️ HTML search parser |
-| `fuzz_detail_parser` | 🕷️ HTML detail parser |
-| `fuzz_calendar_parser` | 🕷️ HTML calendar parser |
-| `fuzz_review_parser` | 🕷️ HTML review parser |
-| `fuzz_graphql_search` | 🔗 GraphQL search parser |
-| `fuzz_graphql_detail` | 🔗 GraphQL detail parser |
-| `fuzz_graphql_review` | 🔗 GraphQL review parser |
-| `fuzz_graphql_host` | 🔗 GraphQL host parser |
+| Fuzz target | Harness | Reaches |
+|-------------|---------|---------|
+| `fuzz_search_parser` | `scraper_search_html` | 🕷️ HTML search parser |
+| `fuzz_detail_parser` | `scraper_detail_html` | 🕷️ HTML detail parser |
+| `fuzz_calendar_parser` | `scraper_calendar` | 🕷️ calendar parser (HTML or JSON) |
+| `fuzz_review_parser` | `scraper_reviews_html` | 🕷️ HTML review parser |
+| `fuzz_host_profile_html` | `scraper_host_profile_html` | 🕷️ `parse_host_profile` (`MEET_YOUR_HOST`) |
+| `fuzz_graphql_search` | `graphql_search` | 🔗 GraphQL search parser |
+| `fuzz_graphql_detail` | `graphql_detail` | 🔗 GraphQL detail parser |
+| `fuzz_graphql_review` | `graphql_reviews` | 🔗 GraphQL review parser |
+| `fuzz_graphql_host` | `graphql_host` | 🔗 GraphQL host parser |
+| `fuzz_api_key` | `api_key` | 🔑 `extract_api_key` |
+| `fuzz_calendar_analytics` | `calendar_to_analytics` | 📅 calendar parser → occupancy / price trends / gaps |
+| `fuzz_calendar_model` | `calendar_model_analytics` | 📅 any `PriceCalendar` JSON → the same analytics |
+| `fuzz_input_validation` | `input_validation` | ✅ listing-id and search-parameter validation |
+
+Seeds: `fuzz/seeds/<target>/`, generated by `python3 fuzz/make_seeds.py` from `tests/fixtures/airbnb/2026-09/` (anonymized) plus synthetic inputs. `fuzz_seed_replay_test.rs` replays them on stable.
 
 ## ▶️ Running Tests
 
 ```bash
-cargo test                     # 🧪 Run all tests
-cargo test --test mcp_server   # 📡 MCP tests only
-cargo test --test scraper      # 🕷️ Scraper tests only
-cargo test --test graphql      # 🔗 GraphQL tests only
-cargo test --test analytical   # 🧠 Analytical tests only
-cargo test --test proptest     # 🎲 Property-based tests
-cargo test -- --nocapture      # 📝 Show output
+cargo test --all-targets                        # 🧪 everything
+cargo test --lib <module::path>                 # 🧩 one unit-test module
+cargo test --test mcp_server_test               # 📡 MCP protocol
+cargo test --test mcp_resources_test            # 📦 MCP resources
+cargo test --test functional_verification_test  # 🔄 end to end
+cargo test --test parity_test                   # ⚖️ CLI/MCP parity
+cargo test --test cancellation_test             # 🛑 cancellation
+cargo test --test scraper_test                  # 🕷️ scraper
+cargo test --test graphql_test                  # 🔗 GraphQL
+cargo test --test analytical_tools_test         # 🧠 analytics
+cargo test --test analytics_fixture_test        # 📅 analytics on the live-capture fixture
+cargo test --test cli_test                      # 🖥️ CLI
+cargo test --test proptest_tests                # 🎲 property-based
+cargo test --test fuzz_seed_replay_test         # 🎲 fuzz seeds on stable
+cargo test --test docs_consistency_test         # 📚 docs vs code
+cargo test --all-targets -- --nocapture         # 📝 show output
 
-# Fuzzing (requires nightly)
+# Fuzzing (nightly + cargo-fuzz)
+just fuzz fuzz_calendar_model 60
 cargo +nightly fuzz run fuzz_search_parser
 ```

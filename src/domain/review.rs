@@ -86,8 +86,12 @@ impl std::fmt::Display for ReviewsPage {
         for review in &self.reviews {
             writeln!(f, "{review}")?;
         }
-        if self.next_cursor.is_some() {
-            writeln!(f, "\n[More reviews available — use cursor to paginate]")?;
+        if let Some(ref cursor) = self.next_cursor {
+            writeln!(f, "\nNext page cursor: {cursor}")?;
+            writeln!(
+                f,
+                "[More reviews available — pass this cursor to get the next page]"
+            )?;
         }
         Ok(())
     }
@@ -96,6 +100,30 @@ impl std::fmt::Display for ReviewsPage {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reviews_page_display_prints_next_cursor() {
+        let page = ReviewsPage {
+            listing_id: "42".into(),
+            summary: None,
+            reviews: vec![],
+            next_cursor: Some("48".into()),
+        };
+        let s = page.to_string();
+        assert!(s.contains("Next page cursor: 48"), "{s}");
+        assert!(s.contains("More reviews available"), "{s}");
+    }
+
+    #[test]
+    fn reviews_page_display_has_no_cursor_on_last_page() {
+        let page = ReviewsPage {
+            listing_id: "42".into(),
+            summary: None,
+            reviews: vec![],
+            next_cursor: None,
+        };
+        assert!(!page.to_string().contains("Next page cursor"));
+    }
 
     #[test]
     fn review_display_with_rating() {

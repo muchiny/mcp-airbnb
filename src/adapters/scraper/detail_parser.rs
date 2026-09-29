@@ -1,706 +1,105 @@
 use scraper::{Html, Selector};
+use serde_json::Value;
 
+use crate::adapters::graphql::parsers::{detail as pdp_detail, host as pdp_host};
+use crate::adapters::price::normalize_currency;
+use crate::adapters::scraper::deferred_state::{
+    deferred_state_json, next_data_json, niobe_payloads,
+};
 use crate::domain::analytics::HostProfile;
 use crate::domain::listing::ListingDetail;
 use crate::error::{AirbnbError, Result};
 
-/// Parse host profile from a listing page HTML.
-pub fn parse_host_profile(html: &str) -> Result<HostProfile> {
-    // Try deferred state (niobeClientData) first
-    if let Some(profile) = try_parse_host_from_deferred_state(html) {
-        return Ok(profile);
-    }
-    Err(AirbnbError::Parse {
-        reason: "could not extract host profile from listing page".into(),
-    })
+use super::page_markers;
+
+/// Everything the scraper extracts from one `/rooms/{id}` page.
+pub struct ListingPage {
+    /// The listing detail, or why it could not be extracted.
+    pub detail: Result<ListingDetail>,
+    /// The host profile, or why it could not be extracted.
+    pub host: Result<HostProfile>,
 }
 
-fn try_parse_host_from_deferred_state(html: &str) -> Option<HostProfile> {
+/// Parse a listing page once and extract both the detail and the host profile.
+///
+/// Detail tiers: legacy `__NEXT_DATA__`; the embedded `StaysPdpSections`
+/// payload (`niobeClientData` / `niobeMinimalClientData`), parsed by the same
+/// code as the GraphQL response; heuristic JSON search over every payload;
+/// CSS selectors. The structured payload is looked for in every entry before
+/// any heuristic runs.
+pub fn parse_listing_page(html: &str, listing_id: &str, base_url: &str) -> ListingPage {
     let document = Html::parse_document(html);
-    let selector =
-        Selector::parse("script[data-deferred-state], script[id^='data-deferred-state']").ok()?;
+    let next_data = next_data_json(&document);
+    let states = deferred_state_json(&document);
+    let payloads: Vec<&Value> = states.iter().flat_map(niobe_payloads).collect();
+    let pdp = payloads
+        .iter()
+        .copied()
+        .find(|payload| is_pdp_sections(payload));
 
-    for script in document.select(&selector) {
-        let json_text = script.text().collect::<String>();
-        if let Ok(data) = serde_json::from_str::<serde_json::Value>(&json_text)
-            && let Some(entries) = data.get("niobeClientData").and_then(|v| v.as_array())
-        {
-            for entry in entries {
-                if let Some(inner) = entry.as_array().and_then(|arr| arr.get(1))
-                    && let Some(profile) = extract_host_from_pdp_sections(inner)
-                {
-                    return Some(profile);
-                }
-            }
-        }
-    }
-    None
-}
-
-#[allow(clippy::cast_possible_truncation)]
-fn extract_host_from_pdp_sections(data: &serde_json::Value) -> Option<HostProfile> {
-    let pdp = data
-        .get("data")?
-        .get("presentation")?
-        .get("stayProductDetailPage")?;
-    let sections_container = pdp.get("sections")?;
-    let sections = sections_container.get("sections")?.as_array()?;
-
-    let host_section = find_section(sections, "MEET_YOUR_HOST")?;
-    let card_data = host_section.get("cardData")?;
-
-    let name = card_data
-        .get("name")
-        .and_then(|v| v.as_str())
-        .unwrap_or("Unknown")
-        .to_string();
-
-    let host_id = card_data
-        .get("userId")
-        .or_else(|| card_data.get("id"))
-        .or_else(|| card_data.get("hostId"))
-        .and_then(|v| {
-            v.as_str()
-                .map(String::from)
-                .or_else(|| v.as_u64().map(|n| n.to_string()))
-        });
-
-    let is_superhost = card_data
-        .get("isSuperhost")
-        .and_then(serde_json::Value::as_bool);
-
-    // Response rate/time: try cardData first, fall back to section level
-    let response_rate = card_data
-        .get("responseRate")
-        .or_else(|| host_section.get("hostResponseRate"))
-        .and_then(|v| v.as_str())
-        .map(String::from);
-
-    let response_time = card_data
-        .get("responseTime")
-        .and_then(|v| v.as_str())
-        .map(String::from)
+    let detail = next_data
+        .as_ref()
+        .and_then(|data| extract_detail_from_json(data, listing_id, base_url))
         .or_else(|| {
-            host_section
-                .get("hostRespondTimeCopy")
-                .and_then(|v| v.as_str())
-                .map(String::from)
-        });
-
-    // Member since: try cardData, then timeAsHost for years
-    let member_since = card_data
-        .get("memberSince")
-        .or_else(|| card_data.get("createdAt"))
-        .or_else(|| card_data.get("joinedDate"))
-        .and_then(|v| v.as_str())
-        .map(String::from)
-        .or_else(|| {
-            card_data
-                .get("timeAsHost")
-                .and_then(|t| t.get("years"))
-                .and_then(serde_json::Value::as_u64)
-                .map(|years| format!("{years} years hosting"))
-        });
-
-    // Languages: try cardData array, fall back to hostHighlights "Speaks ..." entries
-    let languages = card_data
-        .get("languages")
-        .and_then(|v| v.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|lang| lang.as_str().map(String::from))
-                .collect::<Vec<_>>()
+            pdp.and_then(|payload| {
+                pdp_detail::parse_detail_response(payload, listing_id, base_url).ok()
+            })
         })
-        .filter(|v| !v.is_empty())
-        .unwrap_or_else(|| extract_languages_from_highlights(host_section));
+        .or_else(|| {
+            payloads
+                .iter()
+                .copied()
+                .chain(states.iter())
+                .find_map(|data| extract_detail_from_json(data, listing_id, base_url))
+        })
+        .map_or_else(
+            || parse_detail_css(&document, html, listing_id, base_url),
+            Ok,
+        );
 
-    let total_listings = card_data
-        .get("listingsCount")
-        .or_else(|| card_data.get("hostListingCount"))
-        .and_then(serde_json::Value::as_u64)
-        .map(|v| v as u32);
-
-    // Description: try cardData.about, then section-level about
-    let description = card_data
-        .get("about")
-        .or_else(|| card_data.get("description"))
-        .or_else(|| host_section.get("about"))
-        .and_then(|v| v.as_str())
-        .map(String::from);
-
-    // Profile picture: try multiple field names including profilePictureUrl
-    let profile_picture_url = card_data
-        .get("profilePictureUrl")
-        .or_else(|| card_data.get("profilePicture"))
-        .or_else(|| card_data.get("avatarUrl"))
-        .or_else(|| card_data.get("pictureUrl"))
-        .and_then(|v| v.as_str())
-        .map(String::from);
-
-    let identity_verified = card_data
-        .get("isIdentityVerified")
-        .or_else(|| card_data.get("identityVerified"))
-        .or_else(|| card_data.get("isVerified"))
-        .and_then(serde_json::Value::as_bool);
-
-    Some(HostProfile {
-        host_id,
-        name,
-        is_superhost,
-        response_rate,
-        response_time,
-        member_since,
-        languages,
-        total_listings,
-        description,
-        profile_picture_url,
-        identity_verified,
-    })
-}
-
-/// Extract languages from hostHighlights (e.g. "Speaks English and French").
-fn extract_languages_from_highlights(section: &serde_json::Value) -> Vec<String> {
-    let Some(highlights) = section.get("hostHighlights").and_then(|v| v.as_array()) else {
-        return Vec::new();
-    };
-
-    for highlight in highlights {
-        if let Some(title) = highlight.get("title").and_then(|v| v.as_str()) {
-            let lower = title.to_lowercase();
-            if lower.starts_with("speaks ") || lower.starts_with("language") {
-                // Parse "Speaks English and French" or "Speaks English, French, and Spanish"
-                let after_speaks = if lower.starts_with("speaks ") {
-                    &title[7..]
-                } else {
-                    title
-                };
-                return after_speaks
-                    .split([',', '&'])
-                    .flat_map(|s| s.split(" and "))
-                    .map(|s| s.trim().to_string())
-                    .filter(|s| !s.is_empty())
-                    .collect();
-            }
-        }
+    ListingPage {
+        detail,
+        host: host_from_pdp(pdp),
     }
-
-    Vec::new()
 }
 
 /// Parse listing detail page HTML into a `ListingDetail`.
 pub fn parse_listing_detail(html: &str, listing_id: &str, base_url: &str) -> Result<ListingDetail> {
-    // Try __NEXT_DATA__ JSON first
-    if let Some(detail) = try_parse_next_data_detail(html, listing_id, base_url) {
-        return Ok(detail);
-    }
-
-    // Try deferred state (current format with niobeClientData)
-    if let Some(detail) = try_parse_deferred_state_detail(html, listing_id, base_url) {
-        return Ok(detail);
-    }
-
-    // CSS fallback
-    parse_detail_css(html, listing_id, base_url)
+    parse_listing_page(html, listing_id, base_url).detail
 }
 
-fn try_parse_next_data_detail(
-    html: &str,
-    listing_id: &str,
-    base_url: &str,
-) -> Option<ListingDetail> {
+/// Parse the host profile from a listing page HTML.
+///
+/// Returns [`AirbnbError::HostProfileUnavailable`] for business listings and
+/// [`AirbnbError::UpstreamSchema`] when the page embeds no `StaysPdpSections`
+/// payload.
+pub fn parse_host_profile(html: &str) -> Result<HostProfile> {
     let document = Html::parse_document(html);
-    let selector = Selector::parse(r"script#__NEXT_DATA__").ok()?;
-    let script = document.select(&selector).next()?;
-    let json_text = script.text().collect::<String>();
-    let data: serde_json::Value = serde_json::from_str(&json_text).ok()?;
-
-    extract_detail_from_json(&data, listing_id, base_url)
+    let states = deferred_state_json(&document);
+    host_from_pdp(
+        states
+            .iter()
+            .flat_map(niobe_payloads)
+            .find(|payload| is_pdp_sections(payload)),
+    )
 }
 
-fn try_parse_deferred_state_detail(
-    html: &str,
-    listing_id: &str,
-    base_url: &str,
-) -> Option<ListingDetail> {
-    let document = Html::parse_document(html);
-    let selector =
-        Selector::parse("script[data-deferred-state], script[id^='data-deferred-state']").ok()?;
-
-    for script in document.select(&selector) {
-        let json_text = script.text().collect::<String>();
-        if let Ok(data) = serde_json::from_str::<serde_json::Value>(&json_text) {
-            // Try niobeClientData wrapper (current Airbnb format)
-            if let Some(entries) = data.get("niobeClientData").and_then(|v| v.as_array()) {
-                for entry in entries {
-                    if let Some(inner) = entry.as_array().and_then(|arr| arr.get(1)) {
-                        // Try PDP sections format
-                        if let Some(detail) =
-                            extract_detail_from_pdp_sections(inner, listing_id, base_url)
-                        {
-                            return Some(detail);
-                        }
-                        // Try legacy JSON format
-                        if let Some(detail) = extract_detail_from_json(inner, listing_id, base_url)
-                        {
-                            return Some(detail);
-                        }
-                    }
-                }
-            }
-            // Legacy: try direct JSON structure
-            if let Some(detail) = extract_detail_from_json(&data, listing_id, base_url) {
-                return Some(detail);
-            }
-        }
-    }
-    None
-}
-
-/// Extract listing detail from current Airbnb PDP sections format.
-#[allow(clippy::too_many_lines, clippy::cast_possible_truncation)]
-fn extract_detail_from_pdp_sections(
-    data: &serde_json::Value,
-    listing_id: &str,
-    base_url: &str,
-) -> Option<ListingDetail> {
-    let pdp = data
-        .get("data")?
-        .get("presentation")?
-        .get("stayProductDetailPage")?;
-    let sections_container = pdp.get("sections")?;
-    let sections = sections_container.get("sections")?.as_array()?;
-    let metadata = sections_container.get("metadata")?;
-
-    // Extract from metadata.sharingConfig
-    let sharing = metadata.get("sharingConfig");
-    let logging = metadata
-        .get("loggingContext")
-        .and_then(|lc| lc.get("eventDataLogging"));
-
-    // Name: from sharingConfig.title or section AVAILABILITY_CALENDAR_DEFAULT.listingTitle
-    let name = sharing
-        .and_then(|s| s.get("title"))
-        .and_then(|v| v.as_str())
-        .or_else(|| find_section_field(sections, "AVAILABILITY_CALENDAR_DEFAULT", "listingTitle"))
-        .unwrap_or("Unknown listing")
-        .to_string();
-
-    // Location
-    let location = sharing
-        .and_then(|s| s.get("location"))
-        .and_then(|v| v.as_str())
-        .or_else(|| find_section_field(sections, "LOCATION_PDP", "subtitle"))
-        .unwrap_or("")
-        .to_string();
-
-    // Description: from DESCRIPTION_DEFAULT section
-    let description = find_section(sections, "DESCRIPTION_DEFAULT")
-        .and_then(|sec| {
-            sec.get("htmlDescription")
-                .and_then(|hd| hd.get("htmlText"))
-                .and_then(|v| v.as_str())
-        })
-        .map(strip_html_tags)
-        .unwrap_or_default();
-
-    // Price: try BOOK_IT_SIDEBAR structuredDisplayPrice, then metadata
-    let price_per_night = find_section(sections, "BOOK_IT_SIDEBAR")
-        .and_then(|sec| {
-            sec.pointer("/structuredDisplayPrice/primaryLine/discountedPrice")
-                .or_else(|| sec.pointer("/structuredDisplayPrice/primaryLine/originalPrice"))
-                .or_else(|| sec.pointer("/structuredDisplayPrice/primaryLine/price"))
-                .or_else(|| sec.pointer("/structuredStayDisplayPrice/primaryLine/price"))
-                .and_then(serde_json::Value::as_str)
-                .and_then(extract_price_number)
-        })
-        .or_else(|| {
-            logging
-                .and_then(|l| l.get("listingPrice"))
-                .and_then(serde_json::Value::as_f64)
-        })
-        .unwrap_or(0.0);
-
-    // Currency
-    let currency = "$".to_string();
-
-    // Rating
-    let rating = find_section(sections, "REVIEWS_DEFAULT")
-        .and_then(|sec| sec.get("overallRating"))
-        .and_then(serde_json::Value::as_f64)
-        .or_else(|| {
-            sharing
-                .and_then(|s| s.get("starRating"))
-                .and_then(serde_json::Value::as_f64)
-        })
-        .or_else(|| {
-            logging
-                .and_then(|l| l.get("guestSatisfactionOverall"))
-                .and_then(serde_json::Value::as_f64)
-        });
-
-    // Review count
-    let review_count = find_section(sections, "REVIEWS_DEFAULT")
-        .and_then(|sec| sec.get("overallCount"))
-        .and_then(serde_json::Value::as_u64)
-        .or_else(|| {
-            sharing
-                .and_then(|s| s.get("reviewCount"))
-                .and_then(serde_json::Value::as_u64)
-        })
-        .unwrap_or(0) as u32;
-
-    // Property type
-    let property_type = sharing
-        .and_then(|s| s.get("propertyType"))
-        .and_then(|v| v.as_str())
-        .or_else(|| {
-            logging
-                .and_then(|l| l.get("roomType"))
-                .and_then(|v| v.as_str())
-        })
-        .map(String::from);
-
-    // Host name: from MEET_YOUR_HOST section
-    let host_name = find_section(sections, "MEET_YOUR_HOST")
-        .and_then(|sec| {
-            sec.get("cardData")
-                .and_then(|cd| cd.get("name"))
-                .and_then(|v| v.as_str())
-                .or_else(|| sec.get("titleText").and_then(|v| v.as_str()))
-        })
-        .map(String::from);
-
-    // Amenities: from AMENITIES_DEFAULT section
-    let amenities = find_section(sections, "AMENITIES_DEFAULT")
-        .and_then(|sec| sec.get("previewAmenitiesGroups"))
-        .and_then(|v| v.as_array())
-        .map(|groups| {
-            groups
-                .iter()
-                .flat_map(|group| {
-                    group
-                        .get("amenities")
-                        .and_then(|v| v.as_array())
-                        .into_iter()
-                        .flatten()
-                        .filter_map(|amenity| {
-                            amenity
-                                .get("title")
-                                .and_then(|v| v.as_str())
-                                .map(String::from)
-                        })
-                })
-                .collect()
-        })
-        .unwrap_or_default();
-
-    // House rules: from POLICIES_DEFAULT section
-    let house_rules = find_section(sections, "POLICIES_DEFAULT")
-        .and_then(|sec| sec.get("houseRules"))
-        .and_then(|v| v.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|rule| rule.get("title").and_then(|v| v.as_str()).map(String::from))
-                .collect()
-        })
-        .unwrap_or_default();
-
-    // Coordinates
-    let latitude = find_section(sections, "LOCATION_PDP")
-        .and_then(|sec| sec.get("lat"))
-        .and_then(serde_json::Value::as_f64)
-        .or_else(|| {
-            logging
-                .and_then(|l| l.get("listingLat"))
-                .and_then(serde_json::Value::as_f64)
-        });
-
-    let longitude = find_section(sections, "LOCATION_PDP")
-        .and_then(|sec| sec.get("lng"))
-        .and_then(serde_json::Value::as_f64)
-        .or_else(|| {
-            logging
-                .and_then(|l| l.get("listingLng"))
-                .and_then(serde_json::Value::as_f64)
-        });
-
-    // Photos
-    let photos = sharing
-        .and_then(|s| s.get("imageUrl"))
-        .and_then(|v| v.as_str())
-        .map(|url| vec![url.to_string()])
-        .unwrap_or_default();
-
-    // Capacity info
-    let max_guests = find_section(sections, "AVAILABILITY_CALENDAR_DEFAULT")
-        .and_then(|sec| sec.get("maxGuestCapacity"))
-        .and_then(serde_json::Value::as_u64)
-        .or_else(|| {
-            sharing
-                .and_then(|s| s.get("personCapacity"))
-                .and_then(serde_json::Value::as_u64)
-        })
-        .or_else(|| {
-            logging
-                .and_then(|l| l.get("personCapacity"))
-                .and_then(serde_json::Value::as_u64)
-        })
-        .map(|v| v as u32);
-
-    // Bedrooms/beds/bathrooms from sharingConfig.title or descriptionItems
-    let (bedrooms, beds, bathrooms) =
-        extract_room_info_from_sharing_title(sharing).unwrap_or((None, None, None));
-
-    // Check-in/out times from POLICIES_DEFAULT
-    let (check_in_time, check_out_time) = extract_check_times(sections);
-
-    // Host info from MEET_YOUR_HOST section cardData
-    let host_section = find_section(sections, "MEET_YOUR_HOST");
-    let card_data = host_section.and_then(|sec| sec.get("cardData"));
-
-    let host_id = logging
-        .and_then(|l| l.get("hostId"))
-        .and_then(|v| v.as_str().or_else(|| v.as_u64().map(|_| "")))
-        .map(String::from)
-        .or_else(|| {
-            card_data.and_then(|cd| cd.get("id")).and_then(|v| {
-                v.as_str()
-                    .map(String::from)
-                    .or_else(|| v.as_u64().map(|n| n.to_string()))
+fn host_from_pdp(pdp: Option<&Value>) -> Result<HostProfile> {
+    pdp.map_or_else(
+        || {
+            Err(AirbnbError::UpstreamSchema {
+                operation: "listing page".into(),
+                detail: "no StaysPdpSections data in the page".into(),
             })
-        });
-
-    let host_is_superhost = card_data
-        .and_then(|cd| cd.get("isSuperhost"))
-        .and_then(serde_json::Value::as_bool)
-        .or_else(|| {
-            card_data
-                .and_then(|cd| cd.get("badges"))
-                .and_then(|b| b.as_array())
-                .and_then(|arr| {
-                    if arr
-                        .iter()
-                        .any(|badge| badge.as_str().is_some_and(|s| s.contains("uperhost")))
-                    {
-                        Some(true)
-                    } else {
-                        None
-                    }
-                })
-        });
-
-    let host_response_rate = card_data
-        .and_then(|cd| cd.get("responseRate"))
-        .and_then(|v| v.as_str())
-        .map(String::from);
-
-    let host_response_time = card_data
-        .and_then(|cd| cd.get("responseTime"))
-        .and_then(|v| v.as_str())
-        .map(String::from);
-
-    let host_joined = card_data
-        .and_then(|cd| {
-            cd.get("memberSince")
-                .or_else(|| cd.get("createdAt"))
-                .or_else(|| cd.get("joinedDate"))
-        })
-        .and_then(|v| v.as_str())
-        .map(String::from);
-
-    let host_total_listings = card_data
-        .and_then(|cd| cd.get("listingsCount"))
-        .and_then(serde_json::Value::as_u64)
-        .map(|v| v as u32);
-
-    let host_languages = card_data
-        .and_then(|cd| cd.get("languages"))
-        .and_then(|v| v.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|lang| lang.as_str().map(String::from))
-                .collect()
-        })
-        .unwrap_or_default();
-
-    // Cancellation policy from POLICIES_DEFAULT
-    let cancellation_policy = find_section(sections, "POLICIES_DEFAULT")
-        .and_then(|sec| {
-            sec.get("cancellationPolicy")
-                .and_then(|cp| cp.get("title").or_else(|| cp.get("policyName")))
-                .and_then(|v| v.as_str())
-                .or_else(|| {
-                    sec.get("cancellationPolicyForDisplay")
-                        .and_then(|v| v.as_str())
-                })
-        })
-        .map(String::from);
-
-    // Neighborhood from LOCATION_PDP subtitle
-    let neighborhood = find_section(sections, "LOCATION_PDP")
-        .and_then(|sec| sec.get("subtitle").or_else(|| sec.get("neighborhoodName")))
-        .and_then(|v| v.as_str())
-        .map(String::from);
-
-    // Instant book from logging context
-    let instant_book = logging
-        .and_then(|l| l.get("instantBook").or_else(|| l.get("isInstantBook")))
-        .and_then(serde_json::Value::as_bool);
-
-    Some(ListingDetail {
-        id: listing_id.to_string(),
-        name,
-        location,
-        description,
-        price_per_night,
-        currency,
-        rating,
-        review_count,
-        property_type,
-        host_name,
-        url: format!("{base_url}/rooms/{listing_id}"),
-        amenities,
-        house_rules,
-        latitude,
-        longitude,
-        photos,
-        bedrooms,
-        beds,
-        bathrooms,
-        max_guests,
-        check_in_time,
-        check_out_time,
-        host_id,
-        host_is_superhost,
-        host_response_rate,
-        host_response_time,
-        host_joined,
-        host_total_listings,
-        host_languages,
-        cancellation_policy,
-        instant_book,
-        cleaning_fee: None,
-        service_fee: None,
-        neighborhood,
-    })
+        },
+        pdp_host::parse_host_response,
+    )
 }
 
-/// Find a section by its `sectionComponentType`.
-fn find_section<'a>(
-    sections: &'a [serde_json::Value],
-    component_type: &str,
-) -> Option<&'a serde_json::Value> {
-    sections.iter().find_map(|s| {
-        if s.get("sectionComponentType").and_then(|v| v.as_str()) == Some(component_type) {
-            s.get("section")
-        } else {
-            None
-        }
-    })
-}
-
-/// Find a string field within a section by component type.
-fn find_section_field<'a>(
-    sections: &'a [serde_json::Value],
-    component_type: &str,
-    field: &str,
-) -> Option<&'a str> {
-    find_section(sections, component_type)
-        .and_then(|sec| sec.get(field))
-        .and_then(|v| v.as_str())
-}
-
-/// Extract a numeric price from a string like "$150", "€120.50".
-fn extract_price_number(s: &str) -> Option<f64> {
-    let cleaned: String = s
-        .chars()
-        .filter(|c| c.is_ascii_digit() || *c == '.')
-        .collect();
-    cleaned.parse().ok()
-}
-
-/// Strip HTML tags from a string.
-fn strip_html_tags(html: &str) -> String {
-    html.replace("<br />", "\n")
-        .replace("<br/>", "\n")
-        .replace("<br>", "\n")
-        .replace("&amp;", "&")
-        .replace("&lt;", "<")
-        .replace("&gt;", ">")
-        .replace("&quot;", "\"")
-        .replace("&#39;", "'")
-        .split('<')
-        .enumerate()
-        .map(|(i, part)| {
-            if i == 0 {
-                part.to_string()
-            } else if let Some(idx) = part.find('>') {
-                part[(idx + 1)..].to_string()
-            } else {
-                part.to_string()
-            }
-        })
-        .collect::<String>()
-        .trim()
-        .to_string()
-}
-
-/// Parse bedroom/bed/bathroom info from sharing title like "... · 1 bedroom · 1 bed · 1 shared bath"
-fn extract_room_info_from_sharing_title(
-    sharing: Option<&serde_json::Value>,
-) -> Option<(Option<u32>, Option<u32>, Option<f64>)> {
-    let title = sharing?.get("title")?.as_str()?;
-    let parts: Vec<&str> = title.split('·').map(str::trim).collect();
-
-    let mut bedrooms = None;
-    let mut beds = None;
-    let mut bathrooms = None;
-
-    for part in &parts {
-        let lower = part.to_lowercase();
-        if lower.contains("bedroom") || lower.contains("studio") {
-            bedrooms = extract_number_from_part(part);
-            if lower.contains("studio") && bedrooms.is_none() {
-                bedrooms = Some(0);
-            }
-        } else if lower.contains("bed") && !lower.contains("bedroom") {
-            beds = extract_number_from_part(part);
-        } else if lower.contains("bath") {
-            bathrooms = extract_number_from_part(part).map(f64::from);
-        }
-    }
-
-    Some((bedrooms, beds, bathrooms))
-}
-
-fn extract_number_from_part(part: &str) -> Option<u32> {
-    part.split_whitespace()
-        .find_map(|word| word.parse::<u32>().ok())
-}
-
-/// Extract check-in/check-out times from `POLICIES_DEFAULT` houseRules
-fn extract_check_times(sections: &[serde_json::Value]) -> (Option<String>, Option<String>) {
-    let Some(rules) = find_section(sections, "POLICIES_DEFAULT")
-        .and_then(|sec| sec.get("houseRules"))
-        .and_then(|v| v.as_array())
-    else {
-        return (None, None);
-    };
-
-    let mut check_in = None;
-    let mut check_out = None;
-
-    for rule in rules {
-        let title = rule.get("title").and_then(|v| v.as_str()).unwrap_or("");
-        let lower = title.to_lowercase();
-        if lower.starts_with("check-in") || lower.starts_with("checkin") {
-            check_in = Some(title.to_string());
-        } else if lower.starts_with("checkout") || lower.starts_with("check out") {
-            check_out = Some(title.to_string());
-        }
-    }
-
-    (check_in, check_out)
+fn is_pdp_sections(payload: &Value) -> bool {
+    payload
+        .pointer("/data/presentation/stayProductDetailPage/sections/sections")
+        .is_some_and(Value::is_array)
 }
 
 #[allow(clippy::too_many_lines, clippy::cast_possible_truncation)]
@@ -753,8 +152,8 @@ fn extract_detail_from_json(
     let currency = listing
         .get("priceCurrency")
         .and_then(|v| v.as_str())
-        .unwrap_or("$")
-        .to_string();
+        .map(normalize_currency)
+        .unwrap_or_default();
 
     let rating = listing
         .get("avgRating")
@@ -962,8 +361,23 @@ fn deep_find_listing(data: &serde_json::Value, max_depth: u32) -> Option<&serde_
     }
 }
 
-fn parse_detail_css(html: &str, listing_id: &str, base_url: &str) -> Result<ListingDetail> {
-    let document = Html::parse_document(html);
+fn parse_detail_css(
+    document: &Html,
+    html: &str,
+    listing_id: &str,
+    base_url: &str,
+) -> Result<ListingDetail> {
+    // Structured data was not found: only a page that identifies itself as this
+    // listing may be read through CSS; anything else (bot challenge, consent wall,
+    // error page served with HTTP 200) is upstream drift, never a fake listing.
+    if !page_markers::is_listing_page(document, html, listing_id) {
+        return Err(AirbnbError::UpstreamSchema {
+            operation: "listing page (HTML)".into(),
+            detail: format!(
+                "no listing data and no canonical /rooms/{listing_id} marker (bot challenge, consent wall or changed page layout)"
+            ),
+        });
+    }
 
     let title_selector =
         Selector::parse("h1, [data-testid='listing-title']").map_err(|e| AirbnbError::Parse {
@@ -981,7 +395,7 @@ fn parse_detail_css(html: &str, listing_id: &str, base_url: &str) -> Result<List
         location: String::new(),
         description: String::new(),
         price_per_night: 0.0,
-        currency: "$".into(),
+        currency: String::new(),
         rating: None,
         review_count: 0,
         property_type: None,
@@ -1044,9 +458,19 @@ mod tests {
 
     #[test]
     fn css_fallback_extracts_title() {
-        let html = "<html><body><h1>Beach Paradise</h1></body></html>";
+        let html = r#"<html><head><link rel="canonical" href="https://www.airbnb.com/rooms/999"></head><body><h1>Beach Paradise</h1></body></html>"#;
         let detail = parse_listing_detail(html, "999", "https://www.airbnb.com").unwrap();
         assert_eq!(detail.name, "Beach Paradise");
+    }
+
+    #[test]
+    fn css_fallback_rejects_bot_challenge_page() {
+        let html = "<html><body><h1>Please verify you are a human</h1></body></html>";
+        let err = parse_listing_detail(html, "999", "https://www.airbnb.com").unwrap_err();
+        assert!(
+            matches!(err, AirbnbError::UpstreamSchema { .. }),
+            "got {err:?}"
+        );
     }
 
     #[test]
@@ -1221,8 +645,8 @@ mod tests {
         </script></head><body></body></html>"#;
 
         let detail = parse_listing_detail(html, "123", "https://www.airbnb.com").unwrap();
-        assert!(detail.name.contains("Paris"));
-        assert_eq!(detail.location, "Paris");
+        assert_eq!(detail.name, "Cozy Room");
+        assert_eq!(detail.location, "Paris, France");
         assert!(detail.description.contains("lovely"));
         assert!(detail.description.contains("room"));
         assert!(!detail.description.contains("<b>"));
@@ -1245,23 +669,145 @@ mod tests {
     }
 
     #[test]
-    fn strip_html_tags_works() {
+    fn legacy_detail_currency_is_normalized_or_left_unknown() {
+        let with_iso = r#"<html><head><script id="__NEXT_DATA__" type="application/json">
+        {"props":{"pageProps":{"listing":{"name":"Iso","description":"x","price":90.0,"priceCurrency":"EUR"}}}}
+        </script></head><body></body></html>"#;
         assert_eq!(
-            strip_html_tags("Hello <b>world</b><br />Next line"),
-            "Hello world\nNext line"
+            parse_listing_detail(with_iso, "1", "https://www.airbnb.com")
+                .unwrap()
+                .currency,
+            "\u{20ac}"
+        );
+        let without = r#"<html><head><script id="__NEXT_DATA__" type="application/json">
+        {"props":{"pageProps":{"listing":{"name":"None","description":"x","price":90.0}}}}
+        </script></head><body></body></html>"#;
+        assert_eq!(
+            parse_listing_detail(without, "1", "https://www.airbnb.com")
+                .unwrap()
+                .currency,
+            ""
+        );
+    }
+
+    use crate::test_helpers::{fixture_json, niobe_page};
+
+    fn pdp_page(wrapper: &str, payload: &serde_json::Value) -> String {
+        niobe_page(wrapper, &[("StaysPdpSections:{}", payload)])
+    }
+
+    #[test]
+    fn scraper_pdp_detail_keeps_every_amenity_and_photo() {
+        let html = pdp_page("niobeClientData", &fixture_json("p1b/pdp_apartment.json"));
+        let detail = parse_listing_detail(&html, "38817969", "https://www.airbnb.com").unwrap();
+        assert_eq!(
+            detail.amenities,
+            vec!["Hair dryer", "Shampoo", "Hot water", "Smoke alarm"]
+        );
+        assert!(
+            !detail
+                .amenities
+                .iter()
+                .any(|a| a == "Carbon monoxide alarm")
+        );
+        assert_eq!(detail.photos.len(), 4);
+        assert_eq!(detail.name, "Charming apartment - Lyon center");
+        assert_eq!(detail.host_id.as_deref(), Some("1000001"));
+        assert_eq!(detail.location, "Lyon, Auvergne-Rh\u{f4}ne-Alpes, France");
+    }
+
+    #[test]
+    fn scraper_pdp_price_keeps_the_currency_it_was_printed_with() {
+        let mut payload = fixture_json("p1b/pdp_apartment.json");
+        let sections = payload
+            .pointer_mut("/data/presentation/stayProductDetailPage/sections/sections")
+            .and_then(serde_json::Value::as_array_mut)
+            .unwrap();
+        let book_it = sections
+            .iter_mut()
+            .find(|s| s["sectionComponentType"] == "BOOK_IT_SIDEBAR")
+            .unwrap();
+        book_it["section"]["structuredDisplayPrice"] =
+            serde_json::json!({"primaryLine": {"price": "\u{20ac}120", "qualifier": "night"}});
+        let detail = parse_listing_detail(
+            &pdp_page("niobeClientData", &payload),
+            "38817969",
+            "https://www.airbnb.com",
+        )
+        .unwrap();
+        assert_eq!(detail.known_price(), Some(120.0));
+        assert_eq!(detail.currency, "\u{20ac}");
+    }
+
+    #[test]
+    fn pdp_without_metadata_is_parsed_from_its_sections() {
+        let mut payload = fixture_json("p1b/pdp_apartment.json");
+        payload
+            .pointer_mut("/data/presentation/stayProductDetailPage/sections")
+            .and_then(serde_json::Value::as_object_mut)
+            .unwrap()
+            .remove("metadata");
+        let detail = parse_listing_detail(
+            &pdp_page("niobeClientData", &payload),
+            "38817969",
+            "https://www.airbnb.com",
+        )
+        .unwrap();
+        assert_eq!(detail.name, "Charming apartment - Lyon center");
+        assert_eq!(detail.amenities.len(), 4);
+    }
+
+    #[test]
+    fn unrelated_entry_before_the_pdp_does_not_win() {
+        let promo =
+            serde_json::json!({"data": {"x": {"name": "Promo", "description": "Save 10%"}}});
+        let payload = fixture_json("p1b/pdp_apartment.json");
+        let html = niobe_page(
+            "niobeClientData",
+            &[("Other:{}", &promo), ("StaysPdpSections:{}", &payload)],
+        );
+        let detail = parse_listing_detail(&html, "38817969", "https://www.airbnb.com").unwrap();
+        assert_eq!(detail.name, "Charming apartment - Lyon center");
+    }
+
+    #[test]
+    fn niobe_minimal_wrapper_is_unwrapped_for_detail_and_host() {
+        let html = pdp_page(
+            "niobeMinimalClientData",
+            &fixture_json("p1b/pdp_apartment.json"),
+        );
+        let page = parse_listing_page(&html, "38817969", "https://www.airbnb.com");
+        assert_eq!(
+            page.detail.unwrap().name,
+            "Charming apartment - Lyon center"
+        );
+        assert_eq!(page.host.unwrap().name, "Host A");
+    }
+
+    #[test]
+    fn hotel_page_host_is_reported_as_unavailable() {
+        let html = pdp_page("niobeClientData", &fixture_json("p1b/pdp_hotel.json"));
+        let err = parse_host_profile(&html).unwrap_err();
+        assert!(
+            matches!(err, AirbnbError::HostProfileUnavailable { .. }),
+            "{err}"
         );
     }
 
     #[test]
-    fn extract_room_info_from_title() {
-        let sharing: serde_json::Value = serde_json::from_str(
-            r#"{"title":"Rental unit · ⭐5.0 · 2 bedrooms · 3 beds · 1 bath"}"#,
+    fn numeric_host_id_in_logging_is_kept_as_digits() {
+        let mut payload = fixture_json("p1b/pdp_hotel.json");
+        payload
+            .pointer_mut("/data/presentation/stayProductDetailPage/sections/metadata/loggingContext/eventDataLogging")
+            .and_then(serde_json::Value::as_object_mut)
+            .unwrap()
+            .insert("hostId".into(), serde_json::json!(12345));
+        let detail = parse_listing_detail(
+            &pdp_page("niobeClientData", &payload),
+            "1257736932578886647",
+            "https://www.airbnb.com",
         )
         .unwrap();
-        let (bedrooms, beds, bathrooms) =
-            extract_room_info_from_sharing_title(Some(&sharing)).unwrap();
-        assert_eq!(bedrooms, Some(2));
-        assert_eq!(beds, Some(3));
-        assert_eq!(bathrooms, Some(1.0));
+        assert_eq!(detail.host_id.as_deref(), Some("12345"));
     }
 }
