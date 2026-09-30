@@ -8,7 +8,7 @@ use crate::ports::cache::ListingCache;
 
 /// Longest time an entry may live; larger TTLs are capped instead of letting
 /// `Instant + ttl` overflow and abort the process (`panic = "abort"`).
-const MAX_ENTRY_TTL: Duration = Duration::from_secs(30 * 24 * 60 * 60);
+const MAX_ENTRY_TTL: Duration = Duration::from_hours(30 * 24);
 
 struct CacheEntry {
     value: String,

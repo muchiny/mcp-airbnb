@@ -83,7 +83,7 @@ impl Default for ResourceLimits {
         Self {
             max_entries: 256,
             max_bytes: 8 * 1024 * 1024,
-            ttl: Duration::from_secs(60 * 60),
+            ttl: Duration::from_hours(1),
         }
     }
 }
