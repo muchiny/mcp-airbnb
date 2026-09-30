@@ -6,6 +6,10 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    ignore:
+      # rmcp 2.x/3.x change the server API; migrating off 1.x is its own project.
+      - dependency-name: "rmcp"
+        update-types: ["version-update:semver-major"]
     groups:
       cargo-minor-and-patch:
         update-types: ["minor", "patch"]
