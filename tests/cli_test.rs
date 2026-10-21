@@ -563,7 +563,7 @@ fn json_mode_reports_errors_as_json_with_exit_code_2() {
 fn text_mode_reports_errors_on_stderr_with_exit_code_2() {
     let output = airbnb_binary(&["listing", "abc"]);
     assert_eq!(output.status.code(), Some(2));
-    assert!(output.stdout.is_empty());
+    assert_eq!(output.stdout, [] as [u8; 0]);
     assert!(String::from_utf8_lossy(&output.stderr).contains("Error:"));
 }
 
@@ -593,7 +593,7 @@ fn json_mode_reports_clap_range_errors_as_json_with_exit_code_2() {
 fn text_mode_keeps_clap_usage_errors_on_stderr() {
     let output = airbnb_binary(&["price-trends", "42", "--months", "13"]);
     assert_eq!(output.status.code(), Some(2));
-    assert!(output.stdout.is_empty());
+    assert_eq!(output.stdout, [] as [u8; 0]);
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("--months"), "{stderr}");
 }

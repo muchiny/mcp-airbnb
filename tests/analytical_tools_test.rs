@@ -913,7 +913,7 @@ async fn compare_listings_by_location() {
         result.is_error.is_none() || result.is_error == Some(false),
         "Expected success but got error: {text}"
     );
-    assert!(!text.is_empty());
+    assert_ne!(text, "");
     assert!(
         text.contains("Listing Comparison"),
         "Should contain comparison header, got: {text}"
@@ -969,7 +969,7 @@ async fn price_trends_success() {
         result.is_error.is_none() || result.is_error == Some(false),
         "Expected success but got error: {text}"
     );
-    assert!(!text.is_empty());
+    assert_ne!(text, "");
     assert!(
         text.contains("Price Trends"),
         "Should contain price trends header, got: {text}"
@@ -995,7 +995,7 @@ async fn gap_finder_success() {
         result.is_error.is_none() || result.is_error == Some(false),
         "Expected success but got error: {text}"
     );
-    assert!(!text.is_empty());
+    assert_ne!(text, "");
     assert!(
         text.contains("Gap Analysis"),
         "Should contain gap analysis header, got: {text}"
@@ -1021,7 +1021,7 @@ async fn revenue_estimate_by_id() {
         result.is_error.is_none() || result.is_error == Some(false),
         "Expected success but got error: {text}"
     );
-    assert!(!text.is_empty());
+    assert_ne!(text, "");
     assert!(
         text.contains("Revenue Estimate"),
         "Should contain revenue estimate header, got: {text}"
@@ -1047,7 +1047,7 @@ async fn revenue_estimate_by_location() {
         result.is_error.is_none() || result.is_error == Some(false),
         "Expected success but got error: {text}"
     );
-    assert!(!text.is_empty());
+    assert_ne!(text, "");
     assert!(
         text.contains("Revenue Estimate"),
         "Should contain revenue estimate header, got: {text}"
@@ -1073,7 +1073,7 @@ async fn listing_score_success() {
         result.is_error.is_none() || result.is_error == Some(false),
         "Expected success but got error: {text}"
     );
-    assert!(!text.is_empty());
+    assert_ne!(text, "");
     assert!(
         text.contains("Listing Score"),
         "Should contain listing score header, got: {text}"
@@ -1099,7 +1099,7 @@ async fn amenity_analysis_success() {
         result.is_error.is_none() || result.is_error == Some(false),
         "Expected success but got error: {text}"
     );
-    assert!(!text.is_empty());
+    assert_ne!(text, "");
     assert!(
         text.contains("Amenity Analysis"),
         "Should contain amenity analysis header, got: {text}"
@@ -1125,7 +1125,7 @@ async fn market_comparison_success() {
         result.is_error.is_none() || result.is_error == Some(false),
         "Expected success but got error: {text}"
     );
-    assert!(!text.is_empty());
+    assert_ne!(text, "");
     assert!(
         text.contains("Market Comparison"),
         "Should contain market comparison header, got: {text}"
@@ -1182,7 +1182,7 @@ async fn host_portfolio_success() {
         result.is_error.is_none() || result.is_error == Some(false),
         "Expected success but got error: {text}"
     );
-    assert!(!text.is_empty());
+    assert_ne!(text, "");
     assert!(
         text.contains("Host Portfolio"),
         "Should contain host portfolio header, got: {text}"
@@ -1212,7 +1212,7 @@ async fn review_sentiment_success() {
         result.is_error.is_none() || result.is_error == Some(false),
         "Expected success but got error: {text}"
     );
-    assert!(!text.is_empty());
+    assert_ne!(text, "");
     assert!(
         text.to_lowercase().contains("sentiment") || text.contains("Review"),
         "Should contain sentiment analysis content, got: {text}"
@@ -1238,7 +1238,7 @@ async fn competitive_positioning_success() {
         result.is_error.is_none() || result.is_error == Some(false),
         "Expected success but got error: {text}"
     );
-    assert!(!text.is_empty());
+    assert_ne!(text, "");
     assert!(
         text.contains("Competitive")
             || text.contains("Positioning")
@@ -1266,7 +1266,7 @@ async fn optimal_pricing_success() {
         result.is_error.is_none() || result.is_error == Some(false),
         "Expected success but got error: {text}"
     );
-    assert!(!text.is_empty());
+    assert_ne!(text, "");
     assert!(
         text.to_lowercase().contains("pricing") || text.to_lowercase().contains("price"),
         "Should contain pricing recommendation content, got: {text}"

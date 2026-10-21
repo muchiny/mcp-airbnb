@@ -402,7 +402,7 @@ async fn out_of_range_input_is_rejected_by_both_entry_points() {
     )
     .await;
     assert_eq!(mcp_out.is_error, Some(true));
-    assert!(calls.is_empty());
+    assert_eq!(calls, [] as [std::string::String; 0]);
 
     assert!(
         Cli::try_parse_from(["airbnb", "market-comparison", "A", "B", "C", "D", "E", "F"]).is_err()
@@ -413,7 +413,7 @@ async fn out_of_range_input_is_rejected_by_both_entry_points() {
     )
     .await;
     assert_eq!(mcp_out.is_error, Some(true));
-    assert!(calls.is_empty());
+    assert_eq!(calls, [] as [std::string::String; 0]);
 }
 
 #[tokio::test]

@@ -496,7 +496,10 @@ mod tests {
             uuids_in(text),
             vec!["12345678-9abc-def0-1234-56789abcdef0", ZERO_UUID]
         );
-        assert!(uuids_in("é00000000-0000-0000-0000-00000000000").is_empty());
+        assert_eq!(
+            uuids_in("é00000000-0000-0000-0000-00000000000"),
+            [] as [&str; 0]
+        );
     }
 
     #[test]
