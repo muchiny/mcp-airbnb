@@ -4353,8 +4353,14 @@ mod tests {
         assert!((sentiment.positive_pct - 66.66).abs() < 1.0);
         assert!((sentiment.negative_pct - 33.33).abs() < 1.0);
         assert!((sentiment.neutral_pct - 0.0).abs() < 0.01);
-        assert!(!sentiment.top_positive_keywords.is_empty());
-        assert!(!sentiment.top_negative_keywords.is_empty());
+        assert_ne!(
+            sentiment.top_positive_keywords,
+            [] as [(std::string::String, u32); 0]
+        );
+        assert_ne!(
+            sentiment.top_negative_keywords,
+            [] as [(std::string::String, u32); 0]
+        );
         // Themes should include Cleanliness (clean, dirty) and Communication (host, friendly)
         assert!(sentiment.themes.iter().any(|t| t.theme == "Cleanliness"));
     }
@@ -4420,8 +4426,14 @@ mod tests {
         assert!((sentiment.negative_pct - 0.0).abs() < 0.01);
         assert!((sentiment.neutral_pct - 0.0).abs() < 0.01);
         assert!(sentiment.themes.is_empty());
-        assert!(sentiment.top_positive_keywords.is_empty());
-        assert!(sentiment.top_negative_keywords.is_empty());
+        assert_eq!(
+            sentiment.top_positive_keywords,
+            [] as [(std::string::String, u32); 0]
+        );
+        assert_eq!(
+            sentiment.top_negative_keywords,
+            [] as [(std::string::String, u32); 0]
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -4458,7 +4470,7 @@ mod tests {
         assert!(rec.recommended_price > 0.0);
         assert!(rec.recommended_range.0 < rec.recommended_price);
         assert!(rec.recommended_range.1 > rec.recommended_price);
-        assert!(!rec.reasoning.is_empty());
+        assert_ne!(rec.reasoning, [] as [std::string::String; 0]);
         // With a higher-than-average rating, recommended should be above median
         assert!(rec.recommended_price > 95.0);
         // Weekend / weekday should be present since we have trends
@@ -4770,7 +4782,7 @@ mod tests {
         assert!(rec.weekend_recommendation.is_none());
         assert!(rec.amenity_premium_pct.is_none());
         assert!(rec.vs_neighborhood_median.is_none());
-        assert!(!rec.reasoning.is_empty());
+        assert_ne!(rec.reasoning, [] as [std::string::String; 0]);
     }
 
     #[test]

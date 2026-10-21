@@ -2323,7 +2323,10 @@ mod tests {
 
     #[test]
     fn resource_store_empty_initially() {
-        assert!(ResourceStore::default().list().is_empty());
+        assert_eq!(
+            ResourceStore::default().list(),
+            [] as [(std::string::String, std::string::String); 0]
+        );
     }
 
     #[test]
@@ -2413,7 +2416,10 @@ mod tests {
         let store = ResourceStore::with_limits(limits(10, 1_000, Duration::ZERO));
         store.insert("airbnb://listing/1".into(), "n".into(), "t".into());
         assert!(store.get("airbnb://listing/1").is_none());
-        assert!(store.list().is_empty());
+        assert_eq!(
+            store.list(),
+            [] as [(std::string::String, std::string::String); 0]
+        );
     }
 
     #[test]

@@ -698,7 +698,7 @@ mod tests {
         let composite = make_composite(gql, scraper);
         let detail = composite.get_listing_detail("42").await.unwrap();
         // GQL result returned as-is since scraper failed
-        assert!(detail.name.is_empty());
+        assert_eq!(detail.name, "");
         assert_eq!(detail.location, "GQL City");
     }
 

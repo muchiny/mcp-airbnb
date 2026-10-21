@@ -91,7 +91,7 @@ mod tests {
             config.scraper.graphql_hashes.stays_search,
             "custom_hash_abc"
         );
-        assert!(!config.scraper.graphql_hashes.stays_pdp_sections.is_empty());
+        assert_ne!(config.scraper.graphql_hashes.stays_pdp_sections, "");
     }
 
     #[test]

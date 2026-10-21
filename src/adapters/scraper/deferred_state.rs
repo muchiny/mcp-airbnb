@@ -65,6 +65,6 @@ mod tests {
             next_data_json(&document),
             Some(serde_json::json!({"props": {"x": 1}}))
         );
-        assert!(deferred_state_json(&document).is_empty());
+        assert_eq!(deferred_state_json(&document), [] as [serde_json::Value; 0]);
     }
 }

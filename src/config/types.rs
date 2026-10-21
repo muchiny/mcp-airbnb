@@ -382,7 +382,7 @@ mod tests {
 
     #[test]
     fn default_config_reports_no_deprecated_keys() {
-        assert!(Config::default().deprecated_keys().is_empty());
+        assert_eq!(Config::default().deprecated_keys(), [] as [&str; 0]);
     }
 
     #[test]

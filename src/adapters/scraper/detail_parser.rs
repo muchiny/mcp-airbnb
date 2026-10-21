@@ -552,9 +552,9 @@ mod tests {
         assert_eq!(detail.check_out_time, None);
         assert_eq!(detail.latitude, None);
         assert_eq!(detail.longitude, None);
-        assert!(detail.amenities.is_empty());
-        assert!(detail.house_rules.is_empty());
-        assert!(detail.photos.is_empty());
+        assert_eq!(detail.amenities, [] as [std::string::String; 0]);
+        assert_eq!(detail.house_rules, [] as [std::string::String; 0]);
+        assert_eq!(detail.photos, [] as [std::string::String; 0]);
     }
 
     #[test]
