@@ -67,7 +67,8 @@ fn extract_reviews_from_pdp_sections(
     let total_reviews = review_section
         .get("overallCount")
         .and_then(serde_json::Value::as_u64)
-        .unwrap_or(0) as u32;
+        .and_then(|v| u32::try_from(v).ok())
+        .unwrap_or(0);
 
     // Extract individual ratings
     let ratings = review_section
@@ -359,7 +360,8 @@ fn extract_reviews_summary(data: &serde_json::Value) -> Option<ReviewsSummary> {
                     .get("reviewsCount")
                     .or_else(|| current.get("totalReviews"))
                     .and_then(serde_json::Value::as_u64)
-                    .unwrap_or(0) as u32,
+                    .and_then(|v| u32::try_from(v).ok())
+                    .unwrap_or(0),
                 cleanliness: current
                     .get("cleanlinessRating")
                     .and_then(serde_json::Value::as_f64),
@@ -431,6 +433,27 @@ fn parse_reviews_css(document: &Html, html: &str, listing_id: &str) -> Result<Re
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn out_of_range_pdp_review_total_is_zero_not_truncated() {
+        let data = serde_json::json!({"data": {"presentation": {"stayProductDetailPage": {
+            "sections": {"sections": [{
+                "sectionComponentType": "REVIEWS_DEFAULT",
+                "section": {"overallRating": 4.8, "overallCount": u64::from(u32::MAX) + 2}
+            }]}
+        }}}});
+        let page = extract_reviews_from_pdp_sections(&data, "42").unwrap();
+        assert_eq!(page.summary.unwrap().total_reviews, 0);
+    }
+
+    #[test]
+    fn out_of_range_summary_review_total_is_zero_not_truncated() {
+        let data = serde_json::json!({"props": {"pageProps": {"listing": {
+            "avgRating": 4.8,
+            "reviewsCount": u64::from(u32::MAX) + 2
+        }}}});
+        assert_eq!(extract_reviews_summary(&data).unwrap().total_reviews, 0);
+    }
 
     #[test]
     fn parse_reviews_from_next_data() {
