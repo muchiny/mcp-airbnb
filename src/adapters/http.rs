@@ -525,15 +525,17 @@ mod tests {
 
         let limiter = fast_limiter();
         let request = client().get(server.uri());
+        // Timed from before the request: the pause starts when the 429
+        // arrives, so a slow run (tarpaulin) can only lengthen the wait.
+        let start = Instant::now();
         let err = send_with_policy(&request, &limiter, &fast_policy(3), "test page")
             .await
             .expect_err("429");
         assert!(matches!(err, AirbnbError::RateLimited), "{err}");
 
-        let start = Instant::now();
         limiter.wait().await;
         assert!(
-            start.elapsed() >= Duration::from_millis(250),
+            start.elapsed() >= fast_policy(3).rate_limited_cooldown,
             "limiter not paused after 429: {:?}",
             start.elapsed()
         );
