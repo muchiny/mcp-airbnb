@@ -31,7 +31,7 @@ cargo fmt --all -- --check
 cargo clippy --all-targets -- -D warnings
 cargo test --all-targets
 RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
-python3 scripts/check_workflows.py          # CI workflow hygiene (SHA pins, --locked, nightly fuzz)
+python3 scripts/check_workflows.py          # CI workflow hygiene (SHA pins, pinned runner images, --locked, nightly fuzz)
 just fuzz fuzz_calendar_analytics 60        # nightly + cargo-fuzz, committed seeds
 python3 scripts/live_smoke.py --live        # opt-in, real Airbnb, never in CI
 ```
