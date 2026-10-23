@@ -5,12 +5,15 @@
 
 from __future__ import annotations
 
+import contextlib
 import datetime as dt
+import os
 import sys
 import tempfile
 import textwrap
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -150,6 +153,50 @@ class StdioHarnessTests(unittest.TestCase):
                 dead.initialize(timeout=10)
         finally:
             dead.close()
+
+
+class JsonReportPathTests(unittest.TestCase):
+    """--json-report may only write inside the directory the harness runs from."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name).resolve()
+        self.work = self.root / "work"
+        self.work.mkdir()
+        self._cwd = contextlib.chdir(self.work)
+        self._cwd.__enter__()
+
+    def tearDown(self):
+        self._cwd.__exit__(None, None, None)
+        self._tmp.cleanup()
+
+    def report(self, json_path):
+        with open(os.devnull, "w", encoding="utf-8") as sink, contextlib.redirect_stdout(sink):
+            return ls.report([], [], Path("server.log"), json_path)
+
+    def test_report_inside_the_working_directory_is_written(self):
+        self.assertEqual(self.report("smoke.json"), 0)
+        self.assertIn('"flags": []', (self.work / "smoke.json").read_text(encoding="utf-8"))
+
+    def test_report_escaping_the_working_directory_is_refused(self):
+        for escape in ("../escaped.json", str(self.root / "escaped.json")):
+            with self.subTest(escape=escape), self.assertRaises(ls.HarnessError):
+                self.report(escape)
+        self.assertFalse((self.root / "escaped.json").exists())
+
+    def test_sibling_directory_sharing_the_prefix_is_refused(self):
+        (self.root / "work-evil").mkdir()
+        with self.assertRaises(ls.HarnessError):
+            self.report(str(self.root / "work-evil" / "r.json"))
+        self.assertFalse((self.root / "work-evil" / "r.json").exists())
+
+    def test_bad_report_path_is_refused_before_any_live_traffic(self):
+        with (
+            mock.patch.object(ls, "run_smoke", side_effect=AssertionError("live run started")),
+            open(os.devnull, "w", encoding="utf-8") as sink,
+            contextlib.redirect_stderr(sink),
+        ):
+            self.assertEqual(ls.main(["--live", "--json-report", "../escaped.json"]), 2)
 
 
 if __name__ == "__main__":
