@@ -2,5 +2,6 @@
 out = ["Html", "Lcov"]
 exclude-files = ["target/*", "fuzz/*"]
 timeout = "120"
+fail-under = 85.0
 run-types = ["Tests"]
 skip-clean = true

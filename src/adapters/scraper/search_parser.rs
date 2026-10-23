@@ -216,7 +216,8 @@ fn extract_listing_legacy_format(section: &serde_json::Value, base_url: &str) ->
     let review_count = listing_data
         .get("reviewsCount")
         .and_then(serde_json::Value::as_u64)
-        .unwrap_or(0) as u32;
+        .and_then(|v| u32::try_from(v).ok())
+        .unwrap_or(0);
 
     let thumbnail_url = listing_data
         .get("contextualPictures")
@@ -420,6 +421,17 @@ fn extract_id_from_url(url: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn out_of_range_review_count_is_zero_not_truncated() {
+        let section = serde_json::json!({"listing": {
+            "id": "42",
+            "name": "Flat",
+            "reviewsCount": u64::from(u32::MAX) + 2
+        }});
+        let listing = extract_listing_legacy_format(&section, "https://www.airbnb.com").unwrap();
+        assert_eq!(listing.review_count, 0);
+    }
 
     #[test]
     fn extract_id_from_valid_url() {

@@ -133,7 +133,8 @@ fn parse_summary(data: &Value) -> Option<ReviewsSummary> {
         .or_else(|| data.get("overallCount"))
         .or_else(|| data.pointer("/reviewSummary/totalReviews"))
         .and_then(Value::as_u64)
-        .unwrap_or(0) as u32;
+        .and_then(|n| u32::try_from(n).ok())
+        .unwrap_or(0);
 
     // Try multiple rating array field names: ratings (PDP), categoryRatings (reviews endpoint)
     let ratings = data
@@ -266,6 +267,13 @@ fn parse_single_review(review: &Value) -> Option<Review> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn out_of_range_review_total_is_zero_not_truncated() {
+        let data =
+            serde_json::json!({"overallRating": 4.8, "reviewsCount": u64::from(u32::MAX) + 2});
+        assert_eq!(parse_summary(&data).unwrap().total_reviews, 0);
+    }
 
     #[test]
     fn parse_reviews_basic() {

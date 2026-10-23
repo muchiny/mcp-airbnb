@@ -1,4 +1,5 @@
 [advisories]
+yanked = "deny"
 ignore = []
 
 [licenses]
@@ -17,8 +18,17 @@ allow = [
 ]
 
 [bans]
-multiple-versions = "warn"
+multiple-versions = "deny"
 wildcards = "deny"
+skip = [
+    { crate = "base64@0.22.1", reason = "doublon transitif, version plus ancienne ; revue avant 2027-01-19" },
+    { crate = "core-foundation@0.9.4", reason = "doublon transitif, version plus ancienne ; revue avant 2027-01-19" },
+    { crate = "hashbrown@0.16.1", reason = "doublon transitif, version plus ancienne ; revue avant 2027-01-19" },
+    { crate = "syn@2.0.117", reason = "doublon transitif, version plus ancienne ; revue avant 2027-01-19" },
+    { crate = "thiserror@1.0.69", reason = "doublon transitif, version plus ancienne ; revue avant 2027-01-19" },
+    { crate = "thiserror-impl@1.0.69", reason = "doublon transitif, version plus ancienne ; revue avant 2027-01-19" },
+    { crate = "windows-sys@0.45.0", reason = "doublon transitif, version plus ancienne ; revue avant 2027-01-19" },
+]
 
 [sources]
 unknown-registry = "deny"
