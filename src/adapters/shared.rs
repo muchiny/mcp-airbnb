@@ -357,11 +357,13 @@ mod tests {
         .await;
         let limiter = Arc::new(RateLimiter::from_interval(Duration::from_millis(300)));
         let mgr = ApiKeyManager::new(Client::new(), server.uri(), 3600, Arc::clone(&limiter));
-        limiter.wait().await; // another adapter just used the budget
+        // Timed from before the first slot, so a slow run can only lengthen
+        // the measured wait.
         let start = std::time::Instant::now();
+        limiter.wait().await; // another adapter just used the budget
         mgr.get_api_key().await.unwrap();
         assert!(
-            start.elapsed() >= Duration::from_millis(250),
+            start.elapsed() >= limiter.min_interval(),
             "key fetch bypassed the limiter: {:?}",
             start.elapsed()
         );

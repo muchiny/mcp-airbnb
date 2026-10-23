@@ -390,6 +390,20 @@ def resolve_binary(explicit: str | None) -> Path:
     raise HarnessError("no mcp-airbnb binary: run `cargo build --release --bin mcp-airbnb` or pass --binary")
 
 
+def confined_path(path: str) -> str:
+    """Canonical `path`, refused unless it lies inside the current directory.
+
+    --json-report is the only file the harness writes; this stops it from
+    overwriting anything outside the directory the harness was started from.
+    """
+    resolved = os.path.realpath(path)
+    base_dir = os.path.realpath(os.getcwd())
+    prefix = base_dir if base_dir.endswith(os.sep) else base_dir + os.sep
+    if not resolved.startswith(prefix):
+        raise HarnessError(f"--json-report {path!r} is outside the current directory {base_dir}")
+    return resolved
+
+
 def report(runs: list[ToolRun], global_flags: list[Flag], stderr_log: Path, json_path: str | None) -> int:
     total = len(global_flags) + sum(len(r.flags) for r in runs)
     print(f"mcp-airbnb live smoke — {dt.date.today().isoformat()}")
@@ -415,7 +429,8 @@ def report(runs: list[ToolRun], global_flags: list[Flag], stderr_log: Path, json
             ],
             "flags": [f.__dict__ for f in global_flags],
         }
-        Path(json_path).write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+        report_file = Path(confined_path(json_path))  # main() checked it too, before any traffic
+        report_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
     return 1 if total else 0
 
 
@@ -475,7 +490,9 @@ def parse_args(argv=None):
     parser.add_argument("--listing-id", help="listing to analyse (default: first search result)")
     parser.add_argument("--pause", type=float, default=3.0, help="seconds between tool calls (default 3)")
     parser.add_argument("--timeout", type=float, default=240.0, help="seconds per call (default 240)")
-    parser.add_argument("--json-report", help="write flags (no tool output) to this JSON file")
+    parser.add_argument(
+        "--json-report", help="write flags (no tool output) to this JSON file, inside the current directory"
+    )
     return parser.parse_args(argv)
 
 
@@ -485,6 +502,9 @@ def main(argv=None) -> int:
         print("refusing to run: pass --live to send real requests to Airbnb (never run this in CI)", file=sys.stderr)
         return 2
     try:
+        if args.json_report:
+            # Refuse a bad path now, not after minutes of live calls.
+            args.json_report = confined_path(args.json_report)
         return run_smoke(args)
     except HarnessError as exc:
         print(f"harness error: {exc}", file=sys.stderr)
