@@ -320,14 +320,14 @@ fn extract_calendar_day(data: &serde_json::Value) -> Option<CalendarDay> {
         .or_else(|| data.get("minimumNights"))
         .or_else(|| data.get("min_nights"))
         .and_then(serde_json::Value::as_u64)
-        .map(|v| v as u32);
+        .and_then(|v| u32::try_from(v).ok());
 
     let max_nights = data
         .get("maxNights")
         .or_else(|| data.get("maximumNights"))
         .or_else(|| data.get("max_nights"))
         .and_then(serde_json::Value::as_u64)
-        .map(|v| v as u32);
+        .and_then(|v| u32::try_from(v).ok());
 
     let closed_to_arrival = data
         .get("closedToArrival")
@@ -359,6 +359,20 @@ fn extract_calendar_day(data: &serde_json::Value) -> Option<CalendarDay> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn out_of_range_night_limits_are_unknown_not_truncated() {
+        let too_big = u64::from(u32::MAX) + 2;
+        let day = extract_calendar_day(&serde_json::json!({
+            "date": "2026-11-01",
+            "available": true,
+            "minNights": too_big,
+            "maxNights": too_big
+        }))
+        .unwrap();
+        assert_eq!(day.min_nights, None);
+        assert_eq!(day.max_nights, None);
+    }
 
     #[test]
     fn parse_calendar_from_json() {

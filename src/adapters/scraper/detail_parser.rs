@@ -164,7 +164,8 @@ fn extract_detail_from_json(
         .get("reviewsCount")
         .or_else(|| listing.get("visibleReviewCount"))
         .and_then(serde_json::Value::as_u64)
-        .unwrap_or(0) as u32;
+        .and_then(|v| u32::try_from(v).ok())
+        .unwrap_or(0);
 
     let property_type = listing
         .get("roomType")
@@ -236,13 +237,13 @@ fn extract_detail_from_json(
         .get("bedrooms")
         .or_else(|| listing.get("bedroomCount"))
         .and_then(serde_json::Value::as_u64)
-        .map(|v| v as u32);
+        .and_then(|v| u32::try_from(v).ok());
 
     let beds = listing
         .get("beds")
         .or_else(|| listing.get("bedCount"))
         .and_then(serde_json::Value::as_u64)
-        .map(|v| v as u32);
+        .and_then(|v| u32::try_from(v).ok());
 
     let bathrooms = listing
         .get("bathrooms")
@@ -253,7 +254,7 @@ fn extract_detail_from_json(
         .get("personCapacity")
         .or_else(|| listing.get("maxGuests"))
         .and_then(serde_json::Value::as_u64)
-        .map(|v| v as u32);
+        .and_then(|v| u32::try_from(v).ok());
 
     let check_in_time = listing
         .get("checkIn")
@@ -430,6 +431,23 @@ fn parse_detail_css(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn out_of_range_counts_are_unknown_not_truncated() {
+        let too_big = u64::from(u32::MAX) + 2;
+        let data = serde_json::json!({"props": {"pageProps": {"listing": {
+            "name": "Test Villa",
+            "reviewsCount": too_big,
+            "bedrooms": too_big,
+            "beds": too_big,
+            "personCapacity": too_big
+        }}}});
+        let detail = extract_detail_from_json(&data, "789", "https://www.airbnb.com").unwrap();
+        assert_eq!(detail.review_count, 0);
+        assert_eq!(detail.bedrooms, None);
+        assert_eq!(detail.beds, None);
+        assert_eq!(detail.max_guests, None);
+    }
 
     #[test]
     fn parse_next_data_detail() {

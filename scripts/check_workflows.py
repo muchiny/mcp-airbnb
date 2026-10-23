@@ -10,7 +10,8 @@ Rules (one line per violation; exit status 1 when any rule fails):
   R6  `cargo build|check|clippy|doc|test` always uses `--locked`;
   R7  `cargo fuzz` always runs on nightly (`cargo +nightly fuzz`);
   R8  rust-toolchain.toml `channel` equals Cargo.toml `rust-version` (the MSRV);
-  R9  a numeric `toolchain:` input in a workflow equals the MSRV.
+  R9  a numeric `toolchain:` input in a workflow equals the MSRV;
+  R10 runner images name an OS version (`ubuntu-24.04`), never a moving `*-latest` label.
 
 Standard library only, so it runs locally and on any GitHub runner.
 Usage: python3 scripts/check_workflows.py [WORKFLOW.yml ...]
@@ -30,6 +31,7 @@ CARGO_INSTALL_RE = re.compile(r"\bcargo\s+(?:\+\S+\s+)?install\b")
 CARGO_LOCKED_CMD_RE = re.compile(r"\bcargo\s+(?:\+\S+\s+)?(?:build|check|clippy|doc|test)\b")
 CARGO_FUZZ_RE = re.compile(r"\bcargo\s+(?:\+(?P<toolchain>\S+)\s+)?fuzz\b")
 TOOLCHAIN_INPUT_RE = re.compile(r"^\s*toolchain:\s*\"?(?P<version>\d+\.\d+(?:\.\d+)?)\"?\s*$")
+FLOATING_RUNNER_RE = re.compile(r"\b(?P<label>(?:ubuntu|macos|windows)-latest(?:-[a-z0-9]+)?)\b")
 
 
 def read_msrv() -> tuple[str | None, list[str]]:
@@ -81,6 +83,9 @@ def check_file(path: Path, msrv: str | None) -> list[str]:
         toolchain = TOOLCHAIN_INPUT_RE.match(line)
         if toolchain and toolchain.group("version") != msrv:
             errors.append(f"{where}: R9 toolchain {toolchain.group('version')} != MSRV {msrv}")
+        runner = FLOATING_RUNNER_RE.search(line)
+        if runner:
+            errors.append(f"{where}: R10 floating runner label {runner.group('label')}: pin an OS version")
     return errors
 
 

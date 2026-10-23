@@ -471,7 +471,7 @@ mcp-airbnb/
 │   ├── rules/               #    mcp-conventions, scraping-conventions, cli-conventions
 │   ├── skills/              #    /mcp-smoke, /cli-demo, /fixtures
 │   └── agents/              #    mcp-tool-builder, scraper-debugger
-├── .github/workflows/       # 🔄 CI (check, fmt, clippy, doc, test, coverage, security, workflow hygiene, nightly fuzz) + release
+├── .github/workflows/       # 🔄 CI (check, fmt, clippy, doc, test, coverage, SonarCloud, security, workflow hygiene, nightly fuzz) + release
 ├── .github/dependabot.yml   # 🔄 Weekly Cargo + GitHub Actions update PRs
 ├── config.yaml              # Example configuration (pass it with AIRBNB_CONFIG or airbnb --config)
 ├── justfile                 # Recipes: check, lint, test, fuzz, fuzz-seeds, smoke, …
