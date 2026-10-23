@@ -30,3 +30,6 @@ mutants.out.old/
 # Python bytecode (scripts/ self-tests)
 __pycache__/
 *.pyc
+
+# Playwright MCP console logs and snapshots (machine-local)
+.playwright-mcp/
