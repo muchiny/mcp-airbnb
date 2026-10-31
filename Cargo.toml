@@ -47,7 +47,7 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 
 # Cache
 # 0.18.2+ fixes RUSTSEC-2026-0253 (pop() panic safety); 0.16.4 does not.
-lru = "0.18.5"
+lru = "0.19.0"
 
 # CLI
 clap = { version = "4.6.0", features = ["derive", "env"] }

@@ -549,7 +549,7 @@ version = "0.4.29"
 criteria = "safe-to-deploy"
 
 [[exemptions.lru]]
-version = "0.18.5"
+version = "0.19.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.lru-slab]]
