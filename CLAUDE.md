@@ -129,6 +129,6 @@ Airbnb no longer publishes per-day calendar prices (`price.localPriceFormatted: 
 
 ## Dependencies
 - `rmcp` 1.4 — official MCP Rust SDK (server over stdio; client in tests)
-- `tokio`, `reqwest` 0.13 (cookies, JSON), `scraper` 0.26 (HTML + CSS selectors)
+- `tokio`, `reqwest` 0.13 (cookies, JSON), `scraper` 0.29 (HTML + CSS selectors)
 - `serde` / `serde_json`, `serde-saphyr` (YAML, deserialize only), `schemars` 1 (tool input schemas), `lru`, `clap` 4, `chrono`, `url`, `percent-encoding` (resource URIs), `base64`
 - Dev: `wiremock`, `proptest`, `tempfile`, `insta`, `pretty_assertions`. Fuzzing: `cargo-fuzz` + `libfuzzer-sys` in the separate `fuzz/` crate
