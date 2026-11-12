@@ -1,13 +1,13 @@
-#![allow(clippy::cast_precision_loss)] // Counts are small enough for f64
-
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap, HashSet};
+use std::hash::Hash;
 
 use chrono::{Datelike, NaiveDate, Weekday};
 use serde::{Deserialize, Serialize};
 
 use super::calendar::{CalendarDay, DayStatus, PriceCalendar};
 use super::listing::{Listing, ListingDetail};
+use super::num::{count_f64, count_u32};
 use super::review::Review;
 use crate::error::AirbnbError;
 
@@ -28,6 +28,12 @@ pub struct HostProfile {
     pub description: Option<String>,
     pub profile_picture_url: Option<String>,
     pub identity_verified: Option<bool>,
+    /// Average guest rating of the host across their listings.
+    #[serde(default)]
+    pub rating: Option<f64>,
+    /// Number of reviews the host received across their listings.
+    #[serde(default)]
+    pub review_count: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -68,6 +74,22 @@ pub struct MonthlyOccupancy {
     pub average_price: Option<f64>,
 }
 
+/// Shortest run of consecutive unavailable nights reported as a closed
+/// period. One booking this long is rare; a seasonal closure, or dates the
+/// host has not opened yet, is the usual cause.
+pub const LONG_CLOSURE_NIGHTS: u32 = 45;
+
+/// A run of [`LONG_CLOSURE_NIGHTS`] or more consecutive unavailable nights.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ClosedPeriod {
+    /// First night of the run (`YYYY-MM-DD`).
+    pub start: String,
+    /// Last night of the run (`YYYY-MM-DD`).
+    pub end: String,
+    /// Nights in the run.
+    pub nights: u32,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OccupancyEstimate {
     pub listing_id: String,
@@ -91,6 +113,14 @@ pub struct OccupancyEstimate {
     /// Host-blocked or stay-rule days, left out of every figure.
     #[serde(default)]
     pub blocked_days_excluded: u32,
+    /// Long runs of unavailable nights: seasonal closures or dates not
+    /// opened yet. They are part of `occupied_days` and `occupancy_rate`.
+    #[serde(default)]
+    pub closed_periods: Vec<ClosedPeriod>,
+    /// Occupancy over the nights outside `closed_periods` (percent). `None`
+    /// without a closed period, or when no night is left outside them.
+    #[serde(default)]
+    pub open_season_rate: Option<f64>,
     /// Currency of the calendar prices.
     #[serde(default)]
     pub currency: String,
@@ -296,6 +326,15 @@ pub struct RevenueEstimate {
     /// Future calendar nights behind a measured occupancy (0 when assumed).
     #[serde(default)]
     pub occupancy_nights_measured: u32,
+    /// Measured nights that sit in closed periods (see
+    /// [`OccupancyEstimate::closed_periods`]). They count as occupied in
+    /// `projected_occupancy_pct`, so the projection overstates a listing
+    /// that is closed for a season.
+    #[serde(default)]
+    pub closed_nights: u32,
+    /// Measured occupancy outside the closed periods, when there are any.
+    #[serde(default)]
+    pub open_season_occupancy_pct: Option<f64>,
     pub projected_monthly_revenue: f64,
     pub projected_annual_revenue: f64,
     pub vs_neighborhood_avg_price_pct: Option<f64>,
@@ -488,6 +527,9 @@ pub struct CompetitiveAxis {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompetitivePositioning {
     pub listing_id: String,
+    /// Currency of the price axis (the listing's own).
+    #[serde(default)]
+    pub currency: String,
     pub axes: Vec<CompetitiveAxis>,
     /// Mean of the ranked axes. `None` when no axis could be ranked.
     pub overall_competitiveness: Option<f64>,
@@ -537,8 +579,20 @@ impl std::fmt::Display for HostProfile {
         if let Some(ref time) = self.response_time {
             writeln!(f, "Response time: {time}")?;
         }
+        if let Some(rating) = self.rating {
+            write!(f, "Host rating: {rating:.2}")?;
+            if let Some(count) = self.review_count {
+                write!(f, " ({count} reviews)")?;
+            }
+            writeln!(f)?;
+        }
         if let Some(ref since) = self.member_since {
-            writeln!(f, "Member since: {since}")?;
+            // Airbnb publishes either a join date or a tenure ("8 years hosting").
+            if since.contains("hosting") {
+                writeln!(f, "Experience: {since}")?;
+            } else {
+                writeln!(f, "Member since: {since}")?;
+            }
         }
         if !self.languages.is_empty() {
             writeln!(f, "Languages: {}", self.languages.join(", "))?;
@@ -611,6 +665,47 @@ impl std::fmt::Display for NeighborhoodStats {
     }
 }
 
+impl OccupancyEstimate {
+    /// Nights inside the closed periods.
+    fn closed_nights(&self) -> u32 {
+        self.closed_periods
+            .iter()
+            .fold(0u32, |sum, period| sum.saturating_add(period.nights))
+    }
+
+    /// The open-season lines: the rate outside the closed periods, then the
+    /// periods. Nothing when the calendar has no closed period.
+    fn write_open_season(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.closed_periods.is_empty() {
+            return Ok(());
+        }
+        let closed = self.closed_nights();
+        let open_nights = self.total_days.saturating_sub(closed);
+        match self.open_season_rate {
+            Some(rate) => writeln!(
+                f,
+                "Open-season occupancy: {rate:.1}% of {open_nights} nights, leaving out {closed} nights in {} closed period(s)",
+                self.closed_periods.len()
+            )?,
+            None => writeln!(
+                f,
+                "Open-season occupancy: unknown (all {closed} nights considered are in closed periods)"
+            )?,
+        }
+        for period in &self.closed_periods {
+            writeln!(
+                f,
+                "  Closed: {} to {} ({} nights)",
+                period.start, period.end, period.nights
+            )?;
+        }
+        writeln!(
+            f,
+            "  A closed period is {LONG_CLOSURE_NIGHTS}+ consecutive unavailable nights: a seasonal closure or dates not opened yet, more likely than one booking."
+        )
+    }
+}
+
 impl std::fmt::Display for OccupancyEstimate {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "# Occupancy: listing {}", self.listing_id)?;
@@ -631,6 +726,7 @@ impl std::fmt::Display for OccupancyEstimate {
                 "Occupancy rate: {:.1}% (upper bound: Airbnb does not distinguish booked nights from host-blocked nights)",
                 self.occupancy_rate
             )?;
+            self.write_open_season(f)?;
         }
         if self.past_days_excluded > 0 {
             writeln!(f, "Past days excluded: {}", self.past_days_excluded)?;
@@ -690,6 +786,15 @@ impl std::fmt::Display for OccupancyEstimate {
     }
 }
 
+/// `text` cut to `max` characters, the last one an ellipsis when it was cut.
+fn ellipsize(text: &str, max: usize) -> String {
+    if text.chars().count() <= max {
+        return text.to_string();
+    }
+    let kept: String = text.chars().take(max.saturating_sub(1)).collect();
+    format!("{}\u{2026}", kept.trim_end())
+}
+
 impl std::fmt::Display for CompareListingsResult {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(
@@ -722,22 +827,16 @@ impl std::fmt::Display for CompareListingsResult {
         writeln!(f, "Superhosts: {}\n", self.summary.superhost_count)?;
         writeln!(
             f,
-            "{:<8} {:<30} {:>10} {:>8} {:>10} {:>12} {:>10}",
+            "{:<20} {:<32} {:>10} {:>8} {:>8} {:<18} {:>7}",
             "ID", "Name", "Price", "Rating", "Reviews", "Type", "Price%"
         )?;
-        writeln!(f, "{}", "-".repeat(94))?;
+        writeln!(f, "{}", "-".repeat(109))?;
         for l in &self.listings {
             let rating = l
                 .rating
-                .map_or_else(|| "-".to_string(), |r| format!("{r:.1}"));
-            let ptype = l
-                .property_type
-                .as_deref()
-                .unwrap_or("-")
-                .chars()
-                .take(12)
-                .collect::<String>();
-            let name: String = l.name.chars().take(28).collect();
+                .map_or_else(|| "-".to_string(), |r| format!("{r:.2}"));
+            let ptype = ellipsize(l.property_type.as_deref().unwrap_or("-"), 18);
+            let name = ellipsize(&l.name, 32);
             let price = if l.price_per_night.is_finite() && l.price_per_night > 0.0 {
                 money(Some(l.currency.as_str()), l.price_per_night)
             } else {
@@ -748,7 +847,7 @@ impl std::fmt::Display for CompareListingsResult {
                 .map_or_else(|| "-".to_string(), |p| format!("{p:.0}%"));
             writeln!(
                 f,
-                "{:<8} {:<30} {:>10} {:>8} {:>10} {:>12} {:>10}",
+                "{:<20} {:<32} {:>10} {:>8} {:>8} {:<18} {:>7}",
                 l.id, name, price, rating, l.review_count, ptype, percentile,
             )?;
         }
@@ -914,6 +1013,17 @@ impl std::fmt::Display for RevenueEstimate {
                 "Projected occupancy: {:.1}% (measured over {} future calendar nights; upper bound, because Airbnb does not distinguish bookings from host blocks)",
                 self.projected_occupancy_pct, self.occupancy_nights_measured
             )?;
+            if self.closed_nights > 0 {
+                let outside = self.open_season_occupancy_pct.map_or_else(
+                    || "no night is left outside them".to_string(),
+                    |rate| format!("occupancy outside them is {rate:.1}%"),
+                );
+                writeln!(
+                    f,
+                    "CAUTION: {} of those nights are in closed periods ({LONG_CLOSURE_NIGHTS}+ consecutive unavailable nights: a seasonal closure or dates not opened yet); {outside}. They count as occupied here, so the revenue below is overstated if the listing is closed then.",
+                    self.closed_nights
+                )?;
+            }
         } else {
             writeln!(
                 f,
@@ -962,7 +1072,21 @@ impl std::fmt::Display for RevenueEstimate {
 impl std::fmt::Display for ListingScore {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "# Listing Score: {}", self.listing_id)?;
-        writeln!(f, "Overall score: {:.0}/100\n", self.overall_score)?;
+        let scored = self
+            .category_scores
+            .iter()
+            .filter(|cat| cat.score.is_some())
+            .count();
+        if scored == self.category_scores.len() {
+            writeln!(f, "Overall score: {:.0}/100\n", self.overall_score)?;
+        } else {
+            writeln!(
+                f,
+                "Overall score: {:.0}/100 (over {scored} of {} categories; the others have no data)\n",
+                self.overall_score,
+                self.category_scores.len()
+            )?;
+        }
         for cat in &self.category_scores {
             let score = cat
                 .score
@@ -979,11 +1103,27 @@ impl std::fmt::Display for ListingScore {
     }
 }
 
+/// Longest amenity list printed by the amenity analysis (the JSON output
+/// keeps every entry).
+const AMENITY_LIST_LIMIT: usize = 15;
+
+/// `"  … and N more"` when a list of `total` entries was cut at the limit.
+fn write_more(f: &mut std::fmt::Formatter<'_>, total: usize) -> std::fmt::Result {
+    match total.checked_sub(AMENITY_LIST_LIMIT) {
+        Some(more) if more > 0 => writeln!(f, "  \u{2026} and {more} more"),
+        _ => Ok(()),
+    }
+}
+
 impl std::fmt::Display for AmenityAnalysis {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "# Amenity Analysis: listing {}", self.listing_id)?;
         let Some(score) = self.amenity_score_pct else {
-            writeln!(f, "Your amenities: {}", self.listing_amenity_count)?;
+            writeln!(
+                f,
+                "Your amenities: {} distinct (similar labels are grouped)",
+                self.listing_amenity_count
+            )?;
             writeln!(
                 f,
                 "Amenity score: unavailable (no comparable listing with amenity data could be analyzed)"
@@ -992,7 +1132,7 @@ impl std::fmt::Display for AmenityAnalysis {
         };
         writeln!(
             f,
-            "Your amenities: {} (average of {} comparable listings: {:.1})",
+            "Your amenities: {} distinct, similar labels grouped (average of {} comparable listings: {:.1})",
             self.listing_amenity_count,
             self.comparables_analyzed,
             self.neighborhood_avg_amenity_count
@@ -1000,23 +1140,29 @@ impl std::fmt::Display for AmenityAnalysis {
         writeln!(f, "Amenity score: {score:.0}% of the comparable average\n")?;
         if !self.missing_popular_amenities.is_empty() {
             writeln!(f, "Missing popular amenities:")?;
-            for a in &self.missing_popular_amenities {
+            for a in self
+                .missing_popular_amenities
+                .iter()
+                .take(AMENITY_LIST_LIMIT)
+            {
                 writeln!(
                     f,
                     "  - {} ({:.0}% of comparables have it)",
                     a.amenity, a.neighborhood_frequency_pct
                 )?;
             }
+            write_more(f, self.missing_popular_amenities.len())?;
         }
         if !self.present_rare_amenities.is_empty() {
             writeln!(f, "\nYour unique/rare amenities:")?;
-            for a in &self.present_rare_amenities {
+            for a in self.present_rare_amenities.iter().take(AMENITY_LIST_LIMIT) {
                 writeln!(
                     f,
                     "  + {} (only {:.0}% of comparables)",
                     a.amenity, a.neighborhood_frequency_pct
                 )?;
             }
+            write_more(f, self.present_rare_amenities.len())?;
         }
         Ok(())
     }
@@ -1106,7 +1252,7 @@ impl std::fmt::Display for HostPortfolio {
         writeln!(f, "Total reviews: {}", self.total_reviews)?;
         if !self.properties.is_empty() {
             writeln!(f, "\nProperties:")?;
-            for (i, p) in self.properties.iter().enumerate() {
+            for (rank, p) in (1_usize..).zip(&self.properties) {
                 let rating = p
                     .rating
                     .map_or_else(|| "-".to_string(), |r| format!("{r:.1}"));
@@ -1117,12 +1263,8 @@ impl std::fmt::Display for HostPortfolio {
                 );
                 writeln!(
                     f,
-                    "  {}. {} (ID: {}) — {} — {price}, {rating} ({} reviews) [{ptype}]",
-                    i + 1,
-                    p.name,
-                    p.id,
-                    p.location,
-                    p.review_count,
+                    "  {rank}. {} (ID: {}) — {} — {price}, {rating} ({} reviews) [{ptype}]",
+                    p.name, p.id, p.location, p.review_count,
                 )?;
             }
         }
@@ -1134,7 +1276,7 @@ impl std::fmt::Display for ReviewSentiment {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(
             f,
-            "=== Review Sentiment Analysis: listing {} ===",
+            "# Review Sentiment Analysis: listing {}",
             self.listing_id
         )?;
         writeln!(
@@ -1159,7 +1301,7 @@ impl std::fmt::Display for ReviewSentiment {
             )?;
         }
         if !self.themes.is_empty() {
-            writeln!(f, "\n--- Themes ---")?;
+            writeln!(f, "\n## Themes")?;
             for theme in &self.themes {
                 writeln!(
                     f,
@@ -1172,13 +1314,13 @@ impl std::fmt::Display for ReviewSentiment {
             }
         }
         if !self.top_positive_keywords.is_empty() {
-            writeln!(f, "\n--- Top Positive Keywords ---")?;
+            writeln!(f, "\n## Top Positive Keywords")?;
             for (word, count) in &self.top_positive_keywords {
                 writeln!(f, "  {word} ({count})")?;
             }
         }
         if !self.top_negative_keywords.is_empty() {
-            writeln!(f, "\n--- Top Negative Keywords ---")?;
+            writeln!(f, "\n## Top Negative Keywords")?;
             for (word, count) in &self.top_negative_keywords {
                 writeln!(f, "  {word} ({count})")?;
             }
@@ -1187,13 +1329,22 @@ impl std::fmt::Display for ReviewSentiment {
     }
 }
 
+/// A figure of a competitive axis with its unit: a price per night in the
+/// listing's currency, a rating, a percentage, or a count (one decimal for
+/// an average of counts).
+fn axis_figure(axis: &str, value: f64, currency: &str, is_average: bool) -> String {
+    match axis {
+        "Price Value" => format!("{}/night", money(Some(currency), value)),
+        "Rating" => format!("{value:.2}"),
+        "Occupancy" => format!("{value:.0}%"),
+        _ if is_average => format!("{value:.1}"),
+        _ => format!("{value:.0}"),
+    }
+}
+
 impl std::fmt::Display for CompetitivePositioning {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(
-            f,
-            "=== Competitive Positioning: listing {} ===",
-            self.listing_id
-        )?;
+        writeln!(f, "# Competitive Positioning: listing {}", self.listing_id)?;
         match self.overall_competitiveness {
             Some(overall) => writeln!(
                 f,
@@ -1205,14 +1356,20 @@ impl std::fmt::Display for CompetitivePositioning {
             )?,
         }
         if !self.axes.is_empty() {
-            writeln!(f, "\n--- Axes ---")?;
+            writeln!(f, "\n## Axes")?;
             for axis in &self.axes {
-                let value = axis
-                    .listing_value
-                    .map_or_else(|| "unknown".to_string(), |v| format!("{v:.1}"));
+                let value = axis.listing_value.map_or_else(
+                    || "unknown".to_string(),
+                    |v| axis_figure(&axis.axis, v, &self.currency, false),
+                );
                 let average = axis.neighborhood_avg.map_or_else(
                     || "no comparable figure".to_string(),
-                    |a| format!("comparable avg: {a:.1}"),
+                    |a| {
+                        format!(
+                            "comparable avg: {}",
+                            axis_figure(&axis.axis, a, &self.currency, true)
+                        )
+                    },
                 );
                 let rank = axis.percentile.map_or_else(
                     || "not ranked".to_string(),
@@ -1237,11 +1394,7 @@ impl std::fmt::Display for CompetitivePositioning {
 
 impl std::fmt::Display for PricingRecommendation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(
-            f,
-            "=== Pricing Recommendation: listing {} ===",
-            self.listing_id
-        )?;
+        writeln!(f, "# Pricing Recommendation: listing {}", self.listing_id)?;
         let currency = Some(self.currency.as_str());
         match self.current_price {
             Some(price) => writeln!(
@@ -1305,7 +1458,7 @@ fn mean(values: &[f64]) -> Option<f64> {
     if finite.is_empty() {
         None
     } else {
-        Some(finite.iter().sum::<f64>() / finite.len() as f64)
+        Some(finite.iter().sum::<f64>() / count_f64(finite.len()))
     }
 }
 
@@ -1393,13 +1546,21 @@ fn pricing_category(
     )
 }
 
+/// Count one more occurrence of `key`.
+fn tally<K: Eq + Hash>(counts: &mut HashMap<K, u32>, key: K) {
+    let count = counts.entry(key).or_insert(0);
+    *count = count.saturating_add(1);
+}
+
 /// Median of an ascending slice.
 fn median_sorted(sorted: &[f64]) -> Option<f64> {
     let mid = sorted.len() / 2;
-    match sorted.len() {
-        0 => None,
-        n if n.is_multiple_of(2) => Some(f64::midpoint(sorted[mid - 1], sorted[mid])),
-        _ => Some(sorted[mid]),
+    let upper = *sorted.get(mid)?;
+    if sorted.len().is_multiple_of(2) {
+        let lower = *sorted.get(mid.checked_sub(1)?)?;
+        Some(f64::midpoint(lower, upper))
+    } else {
+        Some(upper)
     }
 }
 
@@ -1415,21 +1576,20 @@ fn percentile_rank(sample: &[f64], value: f64) -> Option<f64> {
     let mut below = 0usize;
     let mut equal = 0usize;
     for candidate in sample.iter().filter(|v| v.is_finite()) {
-        total += 1;
+        total = total.saturating_add(1);
         match candidate.total_cmp(&value) {
-            Ordering::Less => below += 1,
-            Ordering::Equal => equal += 1,
+            Ordering::Less => below = below.saturating_add(1),
+            Ordering::Equal => equal = equal.saturating_add(1),
             Ordering::Greater => {}
         }
     }
     if total == 0 {
         return None;
     }
-    Some((below as f64 + 0.5 * equal as f64) / total as f64 * 100.0)
+    Some((count_f64(below) + 0.5 * count_f64(equal)) / count_f64(total) * 100.0)
 }
 
 /// A competitive axis ranked against `sample_size` comparables.
-#[allow(clippy::cast_possible_truncation)]
 fn ranked_axis(
     axis: &str,
     value: f64,
@@ -1443,7 +1603,7 @@ fn ranked_axis(
         listing_value: Some(value),
         neighborhood_avg,
         percentile: Some(percentile),
-        sample_size: sample_size as u32,
+        sample_size: count_u32(sample_size),
         assessment: assessment.to_string(),
     }
 }
@@ -1487,7 +1647,7 @@ fn prices_in_dominant_currency(priced: &[(&str, f64)]) -> Option<(String, Vec<f6
         if *count == 0 {
             order.push(currency);
         }
-        *count += 1;
+        *count = count.saturating_add(1);
     }
     let mut best: Option<(&str, usize)> = None;
     for currency in order {
@@ -1597,9 +1757,8 @@ fn select_host_siblings<'a>(
 /// currency (`priced_listings` of `total_listings`). The superhost share is
 /// the share of listings flagged superhost, and is `None` when no listing
 /// reports the flag at all.
-#[allow(clippy::cast_possible_truncation)]
 pub fn compute_neighborhood_stats(location: &str, listings: &[Listing]) -> NeighborhoodStats {
-    let total_listings = listings.len() as u32;
+    let total_listings = count_u32(listings.len());
 
     let priced: Vec<(&str, f64)> = listings
         .iter()
@@ -1623,7 +1782,7 @@ pub fn compute_neighborhood_stats(location: &str, listings: &[Listing]) -> Neigh
             .property_type
             .clone()
             .unwrap_or_else(|| "Unknown".to_string());
-        *type_counts.entry(property_type).or_insert(0) += 1;
+        tally(&mut type_counts, property_type);
     }
     let mut property_type_distribution: Vec<PropertyTypeCount> = type_counts
         .into_iter()
@@ -1644,7 +1803,7 @@ pub fn compute_neighborhood_stats(location: &str, listings: &[Listing]) -> Neigh
             .iter()
             .filter(|l| l.is_superhost == Some(true))
             .count();
-        Some(flagged as f64 / f64::from(total_listings) * 100.0)
+        Some(count_f64(flagged) / f64::from(total_listings) * 100.0)
     } else {
         None
     };
@@ -1662,8 +1821,54 @@ pub fn compute_neighborhood_stats(location: &str, listings: &[Listing]) -> Neigh
         property_type_distribution,
         superhost_percentage,
         currency,
-        priced_listings: prices.len() as u32,
+        priced_listings: count_u32(prices.len()),
     }
+}
+
+/// Runs of [`LONG_CLOSURE_NIGHTS`] or more consecutive unavailable nights in
+/// `nights` (`(date, unavailable)`, sorted by date). A missing date ends a run.
+fn closed_periods(nights: &[(NaiveDate, bool)]) -> Vec<ClosedPeriod> {
+    fn close(run: Option<(NaiveDate, NaiveDate, u32)>) -> Option<ClosedPeriod> {
+        let (start, end, nights) = run?;
+        (nights >= LONG_CLOSURE_NIGHTS).then(|| ClosedPeriod {
+            start: start.format("%Y-%m-%d").to_string(),
+            end: end.format("%Y-%m-%d").to_string(),
+            nights,
+        })
+    }
+    let mut periods = Vec::new();
+    let mut run: Option<(NaiveDate, NaiveDate, u32)> = None;
+    for &(date, unavailable) in nights {
+        run = match run {
+            Some((start, end, count)) if unavailable && end.succ_opt() == Some(date) => {
+                Some((start, date, count.saturating_add(1)))
+            }
+            ended => {
+                periods.extend(close(ended));
+                unavailable.then_some((date, date, 1))
+            }
+        };
+    }
+    periods.extend(close(run));
+    periods
+}
+
+/// Assessment of the occupancy axis: what the figure measures, and how much
+/// of it is closed periods rather than bookings.
+fn occupancy_axis_assessment(estimate: &OccupancyEstimate) -> String {
+    const BASE: &str = "Measured share of future nights unavailable (booked or host-blocked); no neighborhood benchmark, so not ranked";
+    let closed = estimate.closed_nights();
+    if closed == 0 {
+        return BASE.to_string();
+    }
+    let outside = estimate.open_season_rate.map_or_else(
+        || "no night is left outside them".to_string(),
+        |rate| format!("{rate:.0}% outside them"),
+    );
+    format!(
+        "{BASE}. {closed} of {} nights are in closed periods (seasonal closure or dates not opened yet): {outside}",
+        estimate.total_days
+    )
 }
 
 /// Estimate occupancy from a calendar. This is the single occupancy
@@ -1676,7 +1881,9 @@ pub fn compute_neighborhood_stats(location: &str, listings: &[Listing]) -> Neigh
 /// * Every other unavailable night counts as occupied. Airbnb does not say
 ///   whether it is booked or blocked, so the rate is an upper bound.
 /// * Days whose date does not parse are ignored.
-#[allow(clippy::cast_possible_truncation)]
+/// * Runs of [`LONG_CLOSURE_NIGHTS`] or more consecutive unavailable nights
+///   are also listed in `closed_periods`, and `open_season_rate` is the rate
+///   over the nights outside them.
 pub fn compute_occupancy_estimate(listing_id: &str, calendar: &PriceCalendar) -> OccupancyEstimate {
     let mut past_days_excluded = 0u32;
     let mut blocked_days_excluded = 0u32;
@@ -1686,18 +1893,20 @@ pub fn compute_occupancy_estimate(listing_id: &str, calendar: &PriceCalendar) ->
             continue;
         };
         match day.status() {
-            DayStatus::Past => past_days_excluded += 1,
-            DayStatus::Blocked => blocked_days_excluded += 1,
+            DayStatus::Past => past_days_excluded = past_days_excluded.saturating_add(1),
+            DayStatus::Blocked => blocked_days_excluded = blocked_days_excluded.saturating_add(1),
             status => considered.push((day, date, status)),
         }
     }
 
-    let total_days = considered.len() as u32;
-    let occupied_days = considered
-        .iter()
-        .filter(|(_, _, status)| *status == DayStatus::Occupied)
-        .count() as u32;
-    let available_days = total_days - occupied_days;
+    let total_days = count_u32(considered.len());
+    let occupied_days = count_u32(
+        considered
+            .iter()
+            .filter(|(_, _, status)| *status == DayStatus::Occupied)
+            .count(),
+    );
+    let available_days = total_days.saturating_sub(occupied_days);
     let occupancy_rate = if total_days > 0 {
         f64::from(occupied_days) / f64::from(total_days) * 100.0
     } else {
@@ -1716,14 +1925,28 @@ pub fn compute_occupancy_estimate(listing_id: &str, calendar: &PriceCalendar) ->
     let first_date = considered.iter().map(|(_, date, _)| *date).min();
     let last_date = considered.iter().map(|(_, date, _)| *date).max();
 
+    let mut nights: Vec<(NaiveDate, bool)> = considered
+        .iter()
+        .map(|(_, date, status)| (*date, *status == DayStatus::Occupied))
+        .collect();
+    nights.sort_by_key(|(date, _)| *date);
+    let closed_periods = closed_periods(&nights);
+    let closed_nights = closed_periods
+        .iter()
+        .fold(0u32, |sum, period| sum.saturating_add(period.nights));
+    let open_nights = total_days.saturating_sub(closed_nights);
+    let open_season_rate = (!closed_periods.is_empty() && open_nights > 0).then(|| {
+        f64::from(occupied_days.saturating_sub(closed_nights)) / f64::from(open_nights) * 100.0
+    });
+
     let mut monthly: BTreeMap<String, (u32, u32, Vec<f64>)> = BTreeMap::new();
     for (day, date, status) in &considered {
         let entry = monthly
             .entry(date.format("%Y-%m").to_string())
             .or_insert((0, 0, Vec::new()));
-        entry.0 += 1;
+        entry.0 = entry.0.saturating_add(1);
         if *status == DayStatus::Occupied {
-            entry.1 += 1;
+            entry.1 = entry.1.saturating_add(1);
         } else if let Some(price) = known_day_price(day) {
             entry.2.push(price);
         }
@@ -1734,7 +1957,7 @@ pub fn compute_occupancy_estimate(listing_id: &str, calendar: &PriceCalendar) ->
             month,
             total_days: total,
             occupied_days: occupied,
-            available_days: total - occupied,
+            available_days: total.saturating_sub(occupied),
             occupancy_rate: f64::from(occupied) / f64::from(total) * 100.0,
             average_price: mean(&prices),
         })
@@ -1750,6 +1973,8 @@ pub fn compute_occupancy_estimate(listing_id: &str, calendar: &PriceCalendar) ->
         occupancy_rate,
         past_days_excluded,
         blocked_days_excluded,
+        closed_periods,
+        open_season_rate,
         currency: calendar.currency.clone(),
         average_available_price,
         weekend_avg_price,
@@ -1767,7 +1992,10 @@ pub fn compute_occupancy_estimate(listing_id: &str, calendar: &PriceCalendar) ->
 /// Past days are left out. When Airbnb publishes no price for any open night
 /// (every calendar observed since 2026-09), every price field is `None` and
 /// the result only describes availability.
-#[allow(clippy::too_many_lines, clippy::cast_possible_truncation)]
+#[expect(
+    clippy::too_many_lines,
+    reason = "one pass builds the overall, monthly and weekday sections from the same priced nights"
+)]
 pub fn compute_price_trends(listing_id: &str, calendar: &PriceCalendar) -> PriceTrends {
     let days: Vec<(&CalendarDay, NaiveDate)> = calendar
         .days
@@ -1789,7 +2017,7 @@ pub fn compute_price_trends(listing_id: &str, calendar: &PriceCalendar) -> Price
     let price_volatility = match overall_avg {
         Some(avg) if prices.len() > 1 => {
             let variance =
-                prices.iter().map(|p| (p - avg).powi(2)).sum::<f64>() / prices.len() as f64;
+                prices.iter().map(|p| (p - avg).powi(2)).sum::<f64>() / count_f64(prices.len());
             Some(variance.sqrt() / avg)
         }
         _ => None,
@@ -1829,8 +2057,8 @@ pub fn compute_price_trends(listing_id: &str, calendar: &PriceCalendar) -> Price
                 max_price: month_prices.iter().copied().reduce(f64::max),
                 weekend_avg,
                 weekday_avg,
-                available_days: open_days as u32,
-                total_days: month_days.len() as u32,
+                available_days: count_u32(open_days),
+                total_days: count_u32(month_days.len()),
             }
         })
         .collect();
@@ -1865,7 +2093,7 @@ pub fn compute_price_trends(listing_id: &str, calendar: &PriceCalendar) -> Price
             mean(prices).map(|avg| DayOfWeekPrice {
                 day: weekday.to_string(),
                 avg_price: avg,
-                sample_count: prices.len() as u32,
+                sample_count: count_u32(prices.len()),
             })
         })
     })
@@ -1888,7 +2116,7 @@ pub fn compute_price_trends(listing_id: &str, calendar: &PriceCalendar) -> Price
         off_peak_month,
         monthly,
         day_of_week,
-        priced_nights: prices.len() as u32,
+        priced_nights: count_u32(prices.len()),
     }
 }
 
@@ -1907,31 +2135,34 @@ const MAX_GAP_NIGHTS: usize = 3;
 /// stretch next to them is not a gap. Longer stretches are unsold
 /// inventory, not gaps. Each gap is compared with the minimum stay of its
 /// first night, and the suggestion only ever lowers that minimum.
-#[allow(clippy::cast_possible_truncation)]
 pub fn compute_gap_finder(listing_id: &str, calendar: &PriceCalendar) -> GapFinderResult {
+    let is_open = |day: &CalendarDay| day.status() == DayStatus::Open;
     let mut gaps = Vec::new();
 
     for run in calendar.contiguous_runs() {
-        let mut i = 0;
-        while i < run.len() {
-            if run[i].status() != DayStatus::Open {
-                i += 1;
-                continue;
-            }
-            let start = i;
-            while i < run.len() && run[i].status() == DayStatus::Open {
-                i += 1;
-            }
-            let bordered_before = start > 0 && run[start - 1].status() == DayStatus::Occupied;
-            let bordered_after = i < run.len() && run[i].status() == DayStatus::Occupied;
-            let open = &run[start..i];
-            if !bordered_before || !bordered_after || open.len() > MAX_GAP_NIGHTS {
-                continue;
-            }
-            let (Some(first), Some(last)) = (open.first(), open.last()) else {
+        // Maximal stretches of open and of not-open days, alternating. A gap
+        // is an open stretch with a stretch on each side, so an open stretch
+        // at either end of the run is never one.
+        let stretches: Vec<&[CalendarDay]> =
+            run.chunk_by(|a, b| is_open(a) == is_open(b)).collect();
+        for window in stretches.windows(3) {
+            let [before, open, after] = window else {
                 continue;
             };
-            let nights = open.len() as u32;
+            let (Some(previous), Some(first), Some(last), Some(next)) =
+                (before.last(), open.first(), open.last(), after.first())
+            else {
+                continue;
+            };
+            // Occupied neighbours belong to not-open stretches, so the
+            // stretch between them is an open one.
+            if previous.status() != DayStatus::Occupied
+                || next.status() != DayStatus::Occupied
+                || open.len() > MAX_GAP_NIGHTS
+            {
+                continue;
+            }
+            let nights = count_u32(open.len());
             let prices: Vec<f64> = open.iter().filter_map(known_day_price).collect();
             let avg_price = mean(&prices);
             let min_nights = first.min_nights;
@@ -1948,14 +2179,15 @@ pub fn compute_gap_finder(listing_id: &str, calendar: &PriceCalendar) -> GapFind
         }
     }
 
-    let total_gaps = gaps.len() as u32;
+    let total_gaps = count_u32(gaps.len());
     let total_gap_nights: u32 = gaps.iter().map(|g| g.nights).sum();
-    let orphan_nights = gaps.iter().filter(|g| g.gap_type == "orphan").count() as u32;
-    let short_gaps = gaps.iter().filter(|g| g.gap_type == "short_gap").count() as u32;
-    let unbookable_gaps = gaps
-        .iter()
-        .filter(|g| g.bookable_as_is == Some(false))
-        .count() as u32;
+    let orphan_nights = count_u32(gaps.iter().filter(|g| g.gap_type == "orphan").count());
+    let short_gaps = count_u32(gaps.iter().filter(|g| g.gap_type == "short_gap").count());
+    let unbookable_gaps = count_u32(
+        gaps.iter()
+            .filter(|g| g.bookable_as_is == Some(false))
+            .count(),
+    );
     let suggested_min_nights = gaps
         .iter()
         .filter(|g| g.bookable_as_is == Some(false))
@@ -2027,6 +2259,10 @@ pub fn compute_revenue_estimate(
         });
     };
 
+    let closed_nights = occupancy
+        .as_ref()
+        .map_or(0, OccupancyEstimate::closed_nights);
+    let open_season_occupancy_pct = occupancy.as_ref().and_then(|o| o.open_season_rate);
     let (projected_occupancy_pct, occupancy_source, occupancy_nights_measured) = match occupancy
         .as_ref()
     {
@@ -2078,6 +2314,8 @@ pub fn compute_revenue_estimate(
         projected_occupancy_pct,
         occupancy_source,
         occupancy_nights_measured,
+        closed_nights,
+        open_season_occupancy_pct,
         projected_monthly_revenue,
         projected_annual_revenue: projected_monthly_revenue * 12.0,
         vs_neighborhood_avg_price_pct,
@@ -2090,10 +2328,16 @@ pub fn compute_revenue_estimate(
 // Listing Score computation
 // ---------------------------------------------------------------------------
 
+/// Detail of a score category whose data the source did not return.
+const NOT_RETRIEVED: &str = "not retrieved from Airbnb (not scored)";
+
 /// Score a listing's quality (0-100) across photos, description, amenities,
 /// reviews, host and pricing. Categories without data are `None` and left
 /// out of the overall score.
-#[allow(clippy::too_many_lines, clippy::cast_possible_truncation)]
+#[expect(
+    clippy::too_many_lines,
+    reason = "six score categories, each a short block feeding the same category and suggestion lists"
+)]
 pub fn compute_listing_score(
     detail: &ListingDetail,
     neighborhood: Option<&NeighborhoodStats>,
@@ -2101,80 +2345,93 @@ pub fn compute_listing_score(
     let mut categories = Vec::new();
     let mut suggestions = Vec::new();
 
+    // A published listing always has photos, a description and amenities.
+    // An empty section therefore means the source did not return it (thin
+    // HTML fallback, upstream change): it is not scored, never scored 0.
+    let mut not_retrieved: Vec<&str> = Vec::new();
+
     // Photos score (0-100)
     let photo_count = detail.photos.len();
     let photo_score = match photo_count {
         0 => {
-            suggestions.push(
-                "Add photos to your listing — listings with 20+ photos perform best".to_string(),
-            );
-            0.0
+            not_retrieved.push("photos");
+            None
         }
         1..=4 => {
             suggestions.push("Add more photos (aim for 20+)".to_string());
-            25.0
+            Some(25.0)
         }
         5..=9 => {
             suggestions.push("Consider adding more photos (aim for 20+)".to_string());
-            50.0
+            Some(50.0)
         }
-        10..=19 => 75.0,
-        _ => 100.0,
+        10..=19 => Some(75.0),
+        _ => Some(100.0),
     };
     categories.push(CategoryScore {
         category: "Photos".to_string(),
-        score: Some(photo_score),
-        details: format!("{photo_count} photos"),
+        score: photo_score,
+        details: if photo_count == 0 {
+            NOT_RETRIEVED.to_string()
+        } else {
+            format!("{photo_count} photos")
+        },
     });
 
     // Description score, counted in characters (not UTF-8 bytes)
     let desc_len = detail.description.chars().count();
     let desc_score = match desc_len {
         0 => {
-            suggestions.push("Add a detailed description".to_string());
-            0.0
+            not_retrieved.push("description");
+            None
         }
         1..=99 => {
             suggestions.push("Expand your description (aim for 500+ characters)".to_string());
-            25.0
+            Some(25.0)
         }
         100..=299 => {
             suggestions.push("Consider adding more detail to your description".to_string());
-            50.0
+            Some(50.0)
         }
-        300..=499 => 75.0,
-        _ => 100.0,
+        300..=499 => Some(75.0),
+        _ => Some(100.0),
     };
     categories.push(CategoryScore {
         category: "Description".to_string(),
-        score: Some(desc_score),
-        details: format!("{desc_len} characters"),
+        score: desc_score,
+        details: if desc_len == 0 {
+            NOT_RETRIEVED.to_string()
+        } else {
+            format!("{desc_len} characters")
+        },
     });
 
     // Amenities score
     let amenity_count = detail.amenities.len();
     let amenity_score = match amenity_count {
         0 => {
-            suggestions.push(
-                "List your amenities — this significantly impacts search ranking".to_string(),
-            );
-            0.0
+            not_retrieved.push("amenities");
+            None
         }
         1..=5 => {
             suggestions.push("Add more amenities (top listings have 20+)".to_string());
-            25.0
+            Some(25.0)
         }
         6..=14 => {
             suggestions.push("Consider listing more amenities".to_string());
-            50.0
+            Some(50.0)
         }
-        15..=24 => 75.0,
-        _ => 100.0,
+        15..=24 => Some(75.0),
+        _ => Some(100.0),
     };
     categories.push(CategoryScore {
         category: "Amenities".to_string(),
-        score: Some(amenity_score),
-        details: format!("{amenity_count} amenities listed"),
+        score: amenity_score,
+        details: if amenity_count == 0 {
+            NOT_RETRIEVED.to_string()
+        } else {
+            format!("{amenity_count} amenities listed")
+        },
     });
 
     // Reviews: volume tier blended with the guest rating
@@ -2250,6 +2507,12 @@ pub fn compute_listing_score(
         details: pricing_details,
     });
 
+    if !not_retrieved.is_empty() {
+        suggestions.push(format!(
+            "Not scored: {} could not be read from Airbnb, so the overall score covers the other categories only. Check the sources (airbnb_status / `airbnb status`) and run the audit again.",
+            not_retrieved.join(", ")
+        ));
+    }
     let scored: Vec<f64> = categories.iter().filter_map(|c| c.score).collect();
     let overall_score = mean(&scored).unwrap_or(0.0);
 
@@ -2266,41 +2529,106 @@ pub fn compute_listing_score(
 // ---------------------------------------------------------------------------
 
 /// Normalize amenity names to canonical forms for consistent comparison.
+///
+/// Airbnb labels carry qualifiers (`Free washer – In unit`, `Coffee maker:
+/// Nespresso`, `Shared indoor pool - available seasonally, heated`, `55 inch
+/// HDTV with premium cable`). The qualifier is dropped, then the variants of
+/// one amenity are mapped to one name, so a listing is not reported as
+/// lacking a pool because its neighbours call theirs `Private pool`.
 fn normalize_amenity(name: &str) -> String {
-    let lowered = name.trim().to_lowercase();
-    match lowered.as_str() {
-        "wi-fi" | "wi fi" | "wireless internet" | "wifi included" | "free wifi" => {
-            "wifi".to_string()
-        }
+    let lowered = name.trim().to_lowercase().replace('\u{2019}', "'");
+    let base = amenity_base(&lowered);
+    exact_amenity(base)
+        .or_else(|| keyword_amenity(base))
+        .map_or_else(|| base.to_string(), str::to_string)
+}
+
+/// Label without its qualifier: the part before ` – `, ` - ` or `:`.
+fn amenity_base(lowered: &str) -> &str {
+    let cut = [" \u{2013} ", " \u{2014} ", " - ", ":"]
+        .iter()
+        .filter_map(|separator| lowered.find(separator))
+        .min();
+    cut.and_then(|index| lowered.get(..index))
+        .map_or(lowered, str::trim)
+}
+
+/// Canonical name of a label that is exactly a known variant.
+fn exact_amenity(base: &str) -> Option<&'static str> {
+    Some(match base {
+        "wi-fi" | "wi fi" | "wireless internet" | "wifi included" | "free wifi" => "wifi",
         "air conditioning" | "a/c" | "ac" | "central air" | "central air conditioning" => {
-            "air conditioning".to_string()
+            "air conditioning"
         }
-        "washer" | "washing machine" | "washer/dryer" => "washer".to_string(),
-        "dryer" | "clothes dryer" => "dryer".to_string(),
-        "tv" | "television" | "cable tv" | "hdtv" => "tv".to_string(),
-        "hot tub" | "jacuzzi" | "spa" => "hot tub".to_string(),
-        "bbq" | "bbq grill" | "barbecue" | "grill" => "bbq grill".to_string(),
-        "parking" | "free parking" | "free parking on premises" | "off-street parking" => {
-            "parking".to_string()
-        }
-        "pool" | "swimming pool" | "private pool" | "shared pool" => "pool".to_string(),
-        "gym" | "fitness center" | "exercise equipment" => "gym".to_string(),
-        "kitchen" | "full kitchen" | "kitchenette" => "kitchen".to_string(),
-        "self check-in" | "self-check-in" | "keypad" | "lockbox" | "smart lock" => {
-            "self check-in".to_string()
-        }
-        "heating" | "central heating" | "radiant heating" => "heating".to_string(),
-        "iron" | "iron & board" | "iron and board" => "iron".to_string(),
-        "hair dryer" | "hairdryer" | "blow dryer" => "hair dryer".to_string(),
-        "essentials" | "towels" | "bed linens" | "bed sheets" => "essentials".to_string(),
-        "smoke alarm" | "smoke detector" => "smoke alarm".to_string(),
+        "washer" | "washing machine" | "washer/dryer" => "washer",
+        "dryer" | "clothes dryer" => "dryer",
+        "tv" | "television" | "cable tv" | "hdtv" => "tv",
+        "hot tub" | "jacuzzi" | "spa" => "hot tub",
+        "bbq" | "bbq grill" | "barbecue" | "grill" => "bbq grill",
+        "parking" | "free parking" | "free parking on premises" | "off-street parking" => "parking",
+        "pool" | "swimming pool" | "private pool" | "shared pool" => "pool",
+        "gym" | "fitness center" | "exercise equipment" => "gym",
+        "kitchen" | "full kitchen" | "kitchenette" => "kitchen",
+        "self check-in" | "self-check-in" | "keypad" | "lockbox" | "smart lock" => "self check-in",
+        "heating" | "central heating" | "radiant heating" => "heating",
+        "iron" | "iron & board" | "iron and board" => "iron",
+        "hair dryer" | "hairdryer" | "blow dryer" => "hair dryer",
+        "essentials" | "towels" | "bed linens" | "bed sheets" => "essentials",
+        "smoke alarm" | "smoke detector" => "smoke alarm",
         "carbon monoxide alarm" | "carbon monoxide detector" | "co detector" => {
-            "carbon monoxide alarm".to_string()
+            "carbon monoxide alarm"
         }
-        "first aid kit" | "first-aid kit" => "first aid kit".to_string(),
-        "fire extinguisher" | "fire blanket" => "fire extinguisher".to_string(),
-        other => other.to_string(),
-    }
+        "first aid kit" | "first-aid kit" => "first aid kit",
+        "fire extinguisher" | "fire blanket" => "fire extinguisher",
+        _ => return None,
+    })
+}
+
+/// Canonical name of a label that contains a known amenity (`stainless steel
+/// oven`, `free carport on premises`, `55 inch hdtv with premium cable`).
+fn keyword_amenity(base: &str) -> Option<&'static str> {
+    let has = |needle: &str| base.contains(needle);
+    let word = |needle: &str| {
+        base.split(|c: char| !c.is_alphanumeric())
+            .any(|part| part == needle)
+    };
+    // Order matters: the first rule that matches names the amenity.
+    let rules: [(bool, &'static str); 22] = [
+        (has("pool table"), "pool table"),
+        (word("pool") || word("pools"), "pool"),
+        (has("hot tub") || has("jacuzzi"), "hot tub"),
+        (has("wifi") || has("wi-fi"), "wifi"),
+        (
+            has("air conditioning") || has("ac unit"),
+            "air conditioning",
+        ),
+        (has("heating"), "heating"),
+        (word("tv") || word("hdtv") || has("television"), "tv"),
+        (has("dishwasher"), "dishwasher"),
+        (has("washer") || has("washing machine"), "washer"),
+        (word("dryer") && !has("hair"), "dryer"),
+        (has("parking") || has("carport") || has("garage"), "parking"),
+        (word("oven"), "oven"),
+        (word("stove") || has("cooktop"), "stove"),
+        (has("refrigerator") || word("fridge"), "refrigerator"),
+        (
+            has("coffee maker") || has("coffee machine") || has("espresso"),
+            "coffee maker",
+        ),
+        (has("high chair"), "high chair"),
+        (word("crib"), "crib"),
+        (has("bbq") || word("grill"), "bbq grill"),
+        (
+            word("gym") || has("exercise equipment") || has("fitness"),
+            "gym",
+        ),
+        (has("sound system"), "sound system"),
+        (has("patio or balcony"), "patio or balcony"),
+        (has("backyard"), "backyard"),
+    ];
+    rules
+        .iter()
+        .find_map(|(matches, canonical)| matches.then_some(*canonical))
 }
 
 /// Distinct normalized amenities of a listing.
@@ -2320,13 +2648,12 @@ fn normalized_amenities(detail: &ListingDetail) -> HashSet<String> {
 /// exceed 100% and identical listings score 100%. Comparables without any
 /// amenity (typically parse failures) are ignored. With no usable
 /// comparable, `amenity_score_pct` is `None` instead of a fake 100%.
-#[allow(clippy::cast_possible_truncation)]
 pub fn compute_amenity_analysis(
     detail: &ListingDetail,
     neighborhood_details: &[ListingDetail],
 ) -> AmenityAnalysis {
     let listing_amenities = normalized_amenities(detail);
-    let listing_amenity_count = listing_amenities.len() as u32;
+    let listing_amenity_count = count_u32(listing_amenities.len());
 
     let neighbor_sets: Vec<HashSet<String>> = neighborhood_details
         .iter()
@@ -2334,9 +2661,11 @@ pub fn compute_amenity_analysis(
         .map(normalized_amenities)
         .filter(|set| !set.is_empty())
         .collect();
-    let comparables_analyzed = neighbor_sets.len() as u32;
-    let neighbor_amenity_counts: Vec<u32> =
-        neighbor_sets.iter().map(|set| set.len() as u32).collect();
+    let comparables_analyzed = count_u32(neighbor_sets.len());
+    let neighbor_amenity_counts: Vec<u32> = neighbor_sets
+        .iter()
+        .map(|set| count_u32(set.len()))
+        .collect();
     let counts: Vec<f64> = neighbor_amenity_counts
         .iter()
         .map(|&count| f64::from(count))
@@ -2346,7 +2675,7 @@ pub fn compute_amenity_analysis(
     let mut amenity_freq: HashMap<&str, u32> = HashMap::new();
     for set in &neighbor_sets {
         for amenity in set {
-            *amenity_freq.entry(amenity.as_str()).or_insert(0) += 1;
+            tally(&mut amenity_freq, amenity.as_str());
         }
     }
 
@@ -2416,12 +2745,11 @@ pub fn compute_amenity_analysis(
 /// the most common currency. Percentiles follow the mid-rank convention, so
 /// tied listings share one rank. When `details` holds the detail of a
 /// listing (same id), its bedroom and listed-amenity counts are reported.
-#[allow(clippy::cast_possible_truncation)]
 pub fn compute_compare_listings(
     listings: &[Listing],
     details: Option<&[ListingDetail]>,
 ) -> CompareListingsResult {
-    let count = listings.len() as u32;
+    let count = count_u32(listings.len());
     let detail_of = |id: &str| details.and_then(|all| all.iter().find(|d| d.id == id));
 
     let priced: Vec<(&str, f64)> = listings
@@ -2439,10 +2767,12 @@ pub fn compute_compare_listings(
         .filter_map(|l| l.rating)
         .filter(|r| r.is_finite())
         .collect();
-    let superhost_count = listings
-        .iter()
-        .filter(|l| l.is_superhost == Some(true))
-        .count() as u32;
+    let superhost_count = count_u32(
+        listings
+            .iter()
+            .filter(|l| l.is_superhost == Some(true))
+            .count(),
+    );
 
     let comparisons: Vec<ListingComparison> = listings
         .iter()
@@ -2464,7 +2794,7 @@ pub fn compute_compare_listings(
                 property_type: l.property_type.clone(),
                 is_superhost: l.is_superhost,
                 bedrooms: detail.and_then(|d| d.bedrooms),
-                amenities_count: detail.map(|d| d.amenities.len() as u32),
+                amenities_count: detail.map(|d| count_u32(d.amenities.len())),
                 price_percentile,
                 rating_percentile: l
                     .rating
@@ -2473,7 +2803,7 @@ pub fn compute_compare_listings(
         })
         .collect();
 
-    let priced_count = prices.len() as u32;
+    let priced_count = count_u32(prices.len());
     CompareListingsResult {
         listings: comparisons,
         summary: ComparisonSummary {
@@ -2528,7 +2858,6 @@ pub fn compute_market_comparison(stats: &[NeighborhoodStats]) -> MarketCompariso
 /// `None == None`). The queried listing is always included, exactly once.
 /// Only the first search page for `search_location` is examined, and the
 /// output says so.
-#[allow(clippy::cast_possible_truncation)]
 pub fn compute_host_portfolio(
     anchor: &ListingDetail,
     search_location: &str,
@@ -2578,7 +2907,7 @@ pub fn compute_host_portfolio(
         host_name: non_empty(anchor.host_name.as_deref())
             .map_or_else(|| "Unknown Host".to_string(), str::to_string),
         host_id: non_empty(anchor.host_id.as_deref()).map(str::to_string),
-        total_properties: properties.len() as u32,
+        total_properties: count_u32(properties.len()),
         avg_rating: mean(&ratings),
         avg_price: mean(&prices),
         price_range: match (prices.first(), prices.last()) {
@@ -2739,9 +3068,12 @@ fn score_clause(
         if !is_positive && !is_negative {
             continue;
         }
-        let window_start = index.saturating_sub(NEGATION_WINDOW);
-        let negated = tokens[window_start..index]
+        // The `NEGATION_WINDOW` tokens before the keyword, nearest first.
+        let negated = tokens
             .iter()
+            .take(index)
+            .rev()
+            .take(NEGATION_WINDOW)
             .any(|t| NEGATORS.contains(&t.as_str()));
         let label = if negated {
             format!("not {token}")
@@ -2749,11 +3081,11 @@ fn score_clause(
             token.clone()
         };
         if is_positive == negated {
-            negative += 1;
-            *negative_tally.entry(label).or_insert(0) += 1;
+            negative = negative.saturating_add(1);
+            tally(negative_tally, label);
         } else {
-            positive += 1;
-            *positive_tally.entry(label).or_insert(0) += 1;
+            positive = positive.saturating_add(1);
+            tally(positive_tally, label);
         }
     }
     (positive, negative)
@@ -2792,11 +3124,10 @@ fn top_keywords(tally: HashMap<String, u32>) -> Vec<(String, u32)> {
 /// negative, `never cold` as positive). Non-English reviews are skipped and
 /// counted in `skipped_non_english`. A theme's polarity comes from the
 /// clauses that mention it, not from the whole review.
-#[allow(clippy::cast_possible_truncation)]
 pub fn compute_review_sentiment(listing_id: &str, reviews: &[Review]) -> ReviewSentiment {
     let english: Vec<&Review> = reviews.iter().filter(|r| is_english_text(r)).collect();
-    let skipped_non_english = (reviews.len() - english.len()) as u32;
-    let total = english.len() as u32;
+    let skipped_non_english = count_u32(reviews.len().saturating_sub(english.len()));
+    let total = count_u32(english.len());
 
     let mut positive_count = 0u32;
     let mut negative_count = 0u32;
@@ -2814,27 +3145,31 @@ pub fn compute_review_sentiment(listing_id: &str, reviews: &[Review]) -> ReviewS
         for tokens in clauses(&review.comment) {
             let (positive, negative) =
                 score_clause(&tokens, &mut positive_tally, &mut negative_tally);
-            review_positive += positive;
-            review_negative += negative;
+            review_positive = review_positive.saturating_add(positive);
+            review_negative = review_negative.saturating_add(negative);
             for (net, (_, keywords)) in theme_net.iter_mut().zip(THEMES) {
                 if mentions(&tokens, keywords) {
-                    *net = Some(net.unwrap_or(0) + i64::from(positive) - i64::from(negative));
+                    *net = Some(
+                        net.unwrap_or(0)
+                            .saturating_add(i64::from(positive))
+                            .saturating_sub(i64::from(negative)),
+                    );
                 }
             }
         }
         match review_positive.cmp(&review_negative) {
-            Ordering::Greater => positive_count += 1,
-            Ordering::Less => negative_count += 1,
-            Ordering::Equal => neutral_count += 1,
+            Ordering::Greater => positive_count = positive_count.saturating_add(1),
+            Ordering::Less => negative_count = negative_count.saturating_add(1),
+            Ordering::Equal => neutral_count = neutral_count.saturating_add(1),
         }
         for (data, net) in theme_data.iter_mut().zip(&theme_net) {
             let Some(net) = *net else {
                 continue;
             };
-            data.0 += 1;
+            data.0 = data.0.saturating_add(1);
             match net.cmp(&0) {
-                Ordering::Greater => data.1 += 1,
-                Ordering::Less => data.2 += 1,
+                Ordering::Greater => data.1 = data.1.saturating_add(1),
+                Ordering::Less => data.2 = data.2.saturating_add(1),
                 Ordering::Equal => {}
             }
             if data.3.len() < 2 {
@@ -2990,7 +3325,7 @@ pub fn compute_competitive_positioning(
         }
         _ => unranked_axis(
             "Amenity Count",
-            Some(detail.amenities.len() as f64),
+            Some(count_f64(detail.amenities.len())),
             None,
             "No comparable listing with amenity data",
         ),
@@ -3017,15 +3352,17 @@ pub fn compute_competitive_positioning(
     });
 
     // 5. Occupancy: measured for this listing only, never ranked.
-    axes.push(match occupancy.and_then(OccupancyEstimate::measured_rate) {
-        Some(rate) => unranked_axis(
-            "Occupancy",
-            Some(rate),
-            None,
-            "Measured share of future nights unavailable (booked or host-blocked); no neighborhood benchmark, so not ranked",
-        ),
-        None => unranked_axis("Occupancy", None, None, "No occupancy data"),
-    });
+    axes.push(
+        match occupancy.and_then(|o| o.measured_rate().map(|rate| (o, rate))) {
+            Some((estimate, rate)) => unranked_axis(
+                "Occupancy",
+                Some(rate),
+                None,
+                &occupancy_axis_assessment(estimate),
+            ),
+            None => unranked_axis("Occupancy", None, None, "No occupancy data"),
+        },
+    );
 
     let ranked: Vec<f64> = axes.iter().filter_map(|a| a.percentile).collect();
     let overall_competitiveness = mean(&ranked);
@@ -3042,6 +3379,7 @@ pub fn compute_competitive_positioning(
 
     CompetitivePositioning {
         listing_id: detail.id.clone(),
+        currency: detail.currency.clone(),
         axes,
         overall_competitiveness,
         strengths,
@@ -3515,6 +3853,8 @@ mod tests {
             description: Some("Experienced host".to_string()),
             profile_picture_url: None,
             identity_verified: Some(true),
+            rating: None,
+            review_count: None,
         };
         let s = profile.to_string();
         assert!(s.contains("Host: Alice"));
@@ -3538,6 +3878,8 @@ mod tests {
             description: None,
             profile_picture_url: None,
             identity_verified: None,
+            rating: None,
+            review_count: None,
         };
         let s = profile.to_string();
         assert!(s.contains("Host: Bob"));
@@ -3741,6 +4083,34 @@ mod tests {
     }
 
     #[test]
+    fn gap_finder_reads_the_nights_touching_each_open_stretch() {
+        let booked = || Some(UnavailabilityReason::Booked);
+        let blocked = || Some(UnavailabilityReason::BlockedByHost);
+
+        // One run of consecutive dates with mixed not-open stretches.
+        let mut days = days_from("2026-10-01", 1, false, booked());
+        // Booked before, blocked after: not a gap.
+        days.extend(days_from("2026-10-02", 1, true, None));
+        days.extend(days_from("2026-10-03", 1, false, blocked()));
+        days.extend(days_from("2026-10-04", 1, false, booked()));
+        // Booked on both sides: the only gap.
+        days.extend(days_from("2026-10-05", 2, true, None));
+        days.extend(days_from("2026-10-07", 1, false, booked()));
+        days.extend(days_from("2026-10-08", 1, false, blocked()));
+        // Blocked before, booked after: not a gap.
+        days.extend(days_from("2026-10-09", 1, true, None));
+        days.extend(days_from("2026-10-10", 1, false, booked()));
+        let result = compute_gap_finder("42", &make_price_calendar("42", days));
+
+        let found: Vec<(&str, &str, u32)> = result
+            .gaps
+            .iter()
+            .map(|g| (g.start_date.as_str(), g.end_date.as_str(), g.nights))
+            .collect();
+        assert_eq!(found, vec![("2026-10-05", "2026-10-06", 2)]);
+    }
+
+    #[test]
     fn gap_finder_never_suggests_raising_min_stay_for_orphans() {
         let pattern = [false, true, false, true, false, true, false];
         let days: Vec<CalendarDay> = pattern
@@ -3884,6 +4254,8 @@ mod tests {
             projected_occupancy_pct: 70.0,
             occupancy_source: DataSource::Calendar,
             occupancy_nights_measured: 30,
+            closed_nights: 0,
+            open_season_occupancy_pct: None,
             projected_monthly_revenue: 3150.0,
             projected_annual_revenue: 37800.0,
             vs_neighborhood_avg_price_pct: Some(25.0),
@@ -4286,6 +4658,57 @@ mod tests {
     }
 
     #[test]
+    fn normalize_amenity_maps_real_airbnb_labels_with_qualifiers() {
+        let cases = [
+            (
+                "Shared indoor pool - available seasonally, open specific hours, heated",
+                "pool",
+            ),
+            ("Private outdoor pool", "pool"),
+            ("Pools", "pool"),
+            // A brand name is not a pool.
+            ("Whirlpool stainless steel oven", "oven"),
+            ("Whirlpool refrigerator", "refrigerator"),
+            ("Pool table", "pool table"),
+            ("Free washer \u{2013} In unit", "washer"),
+            ("Free dryer \u{2013} In unit", "dryer"),
+            ("Dishwasher", "dishwasher"),
+            ("Hair dryer", "hair dryer"),
+            ("Drying rack for clothing", "drying rack for clothing"),
+            ("Coffee maker: Nespresso", "coffee maker"),
+            ("Coffee", "coffee"),
+            ("55 inch HDTV with premium cable", "tv"),
+            ("TV", "tv"),
+            ("Heating - split type ductless system", "heating"),
+            ("Central air conditioning", "air conditioning"),
+            ("Free carport on premises \u{2013} 8 spaces", "parking"),
+            ("Free street parking", "parking"),
+            ("Paid parking off premises", "parking"),
+            ("Stainless steel oven", "oven"),
+            ("Microwave", "microwave"),
+            ("Samsung induction stove", "stove"),
+            (
+                "Clamp on table seat high chair - available upon request",
+                "high chair",
+            ),
+            (
+                "Pack \u{2019}n play/Travel crib - available upon request",
+                "crib",
+            ),
+            ("Crib", "crib"),
+            ("BBQ grill", "bbq grill"),
+            ("Barbecue utensils", "barbecue utensils"),
+            ("Private patio or balcony", "patio or balcony"),
+            ("Private backyard \u{2013} Fully fenced", "backyard"),
+            ("Fast wifi \u{2013} 300 Mbps", "wifi"),
+            ("Ethernet connection", "ethernet connection"),
+        ];
+        for (label, expected) in cases {
+            assert_eq!(normalize_amenity(label), expected, "{label}");
+        }
+    }
+
+    #[test]
     fn amenity_analysis_with_normalization() {
         let mut detail = make_listing_detail("42");
         detail.amenities = vec!["Wi-Fi".into(), "A/C".into()];
@@ -4575,17 +4998,53 @@ mod tests {
         detail.host_response_time = None;
 
         let score = compute_listing_score(&detail, None);
-        // Minimal listing: photos=0, desc=0, amenities=0, reviews=0, host=50, pricing=50
-        // Average should be low
+        // Photos, description and amenities came back empty: a published
+        // listing always has them, so they are "not retrieved", not 0.
+        for category in ["Photos", "Description", "Amenities"] {
+            let cat = score
+                .category_scores
+                .iter()
+                .find(|c| c.category == category)
+                .unwrap();
+            assert_eq!(cat.score, None, "{category}");
+            assert_eq!(cat.details, "not retrieved from Airbnb (not scored)");
+        }
+        // Reviews 0 and host 50 are real data; pricing has no price.
         assert!(
-            score.overall_score < 30.0,
-            "Minimal listing should score < 30, got {}",
+            (score.overall_score - 25.0).abs() < 1e-9,
+            "mean of the scored categories only, got {}",
             score.overall_score
         );
+        let text = score.to_string();
         assert!(
-            !score.suggestions.is_empty(),
-            "Minimal listing should have suggestions"
+            text.contains(
+                "Overall score: 25/100 (over 2 of 6 categories; the others have no data)"
+            ),
+            "{text}"
         );
+        assert!(
+            text.contains("  Photos: n/a — not retrieved from Airbnb"),
+            "{text}"
+        );
+        assert!(
+            text.contains("Not scored: photos, description, amenities could not be read"),
+            "{text}"
+        );
+        for misleading in [
+            "Add photos",
+            "Add a detailed description",
+            "List your amenities",
+        ] {
+            assert!(!text.contains(misleading), "{misleading}: {text}");
+        }
+    }
+
+    #[test]
+    fn listing_score_with_every_section_has_no_coverage_note() {
+        let score = compute_listing_score(&make_listing_detail("42"), None);
+        let text = score.to_string();
+        assert!(!text.contains("Not scored"), "{text}");
+        assert!(!text.contains("not retrieved"), "{text}");
     }
 
     // -----------------------------------------------------------------------
@@ -4859,6 +5318,113 @@ mod tests {
         assert!(s.contains("Nightly prices: not published"), "{s}");
         assert!(!s.contains("$0"), "{s}");
         assert!(!s.contains("0 $"), "{s}");
+    }
+
+    #[test]
+    fn positioning_axes_print_their_units() {
+        assert_eq!(axis_figure("Price Value", 621.3, "$", false), "$621/night");
+        assert_eq!(
+            axis_figure("Price Value", 540.0, "EUR", true),
+            "EUR 540/night"
+        );
+        assert_eq!(axis_figure("Rating", 4.9, "$", false), "4.90");
+        assert_eq!(axis_figure("Occupancy", 67.0, "$", false), "67%");
+        assert_eq!(axis_figure("Amenity Count", 67.0, "$", false), "67");
+        assert_eq!(axis_figure("Amenity Count", 41.26, "$", true), "41.3");
+        assert_eq!(axis_figure("Review Volume", 54.0, "$", false), "54");
+    }
+
+    #[test]
+    fn long_names_are_cut_with_an_ellipsis_and_ids_are_printed_whole() {
+        assert_eq!(ellipsize("Short", 10), "Short");
+        assert_eq!(ellipsize("Exactly ten", 11), "Exactly ten");
+        assert_eq!(
+            ellipsize("A very long listing name", 10),
+            "A very lo\u{2026}"
+        );
+        // Counted in characters, and a trailing space is not kept before the ellipsis.
+        assert_eq!(ellipsize("Séjour à l'été", 8), "Séjour\u{2026}");
+        assert_eq!(ellipsize("Séjour à l'été", 9), "Séjour à\u{2026}");
+        assert_eq!(ellipsize("abc", 0), "\u{2026}");
+    }
+
+    #[test]
+    fn occupancy_reports_long_closures_and_the_open_season_rate() {
+        // 10 open nights, a 60-night closure, then 20 nights: 5 booked, 15 open.
+        let mut days = days_from("2027-01-01", 10, true, None);
+        days.extend(days_from("2027-01-11", 60, false, None));
+        days.extend(days_from("2027-03-12", 5, false, None));
+        days.extend(days_from("2027-03-17", 15, true, None));
+        // The 5 booked nights follow the closure directly: one run of 65.
+        let est = compute_occupancy_estimate("42", &make_price_calendar("42", days));
+        assert_eq!(est.total_days, 90);
+        assert_eq!(est.occupied_days, 65);
+        assert_eq!(
+            est.closed_periods,
+            [ClosedPeriod {
+                start: "2027-01-11".into(),
+                end: "2027-03-16".into(),
+                nights: 65,
+            }]
+        );
+        // Outside the closure: 25 nights, none unavailable.
+        assert_eq!(est.open_season_rate, Some(0.0));
+        assert!((est.occupancy_rate - 65.0 / 90.0 * 100.0).abs() < 1e-9);
+        let text = est.to_string();
+        assert!(
+            text.contains(
+                "Open-season occupancy: 0.0% of 25 nights, leaving out 65 nights in 1 closed period(s)"
+            ),
+            "{text}"
+        );
+        assert!(
+            text.contains("  Closed: 2027-01-11 to 2027-03-16 (65 nights)"),
+            "{text}"
+        );
+    }
+
+    #[test]
+    fn occupancy_keeps_ordinary_bookings_out_of_the_closures() {
+        // A 44-night run is one night short of a closure; an open night
+        // between two runs splits them.
+        let mut days = days_from("2027-01-01", 44, false, None);
+        days.extend(days_from("2027-02-14", 1, true, None));
+        days.extend(days_from("2027-02-15", 44, false, None));
+        let est = compute_occupancy_estimate("42", &make_price_calendar("42", days));
+        assert_eq!(est.closed_periods, Vec::<ClosedPeriod>::new());
+        assert_eq!(est.open_season_rate, None);
+        assert!(!est.to_string().contains("Open-season"), "{est}");
+
+        // 45 nights is a closure, and a date missing from the calendar ends a run.
+        let mut gapped = days_from("2027-01-01", 45, false, None);
+        gapped.extend(days_from("2027-03-01", 30, false, None));
+        gapped.extend(days_from("2027-03-31", 10, true, None));
+        let est = compute_occupancy_estimate("42", &make_price_calendar("42", gapped));
+        assert_eq!(est.closed_periods.len(), 1);
+        assert_eq!(est.closed_periods[0].nights, 45);
+        // Outside the closure: 30 unavailable of 40 nights.
+        assert!((est.open_season_rate.unwrap() - 75.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn occupancy_of_a_fully_closed_calendar_has_no_open_season_rate() {
+        let days = days_from("2027-01-01", 90, false, None);
+        let est = compute_occupancy_estimate("42", &make_price_calendar("42", days));
+        assert_eq!(est.closed_periods.len(), 1);
+        assert_eq!(est.open_season_rate, None);
+        assert!(
+            est.to_string().contains(
+                "Open-season occupancy: unknown (all 90 nights considered are in closed periods)"
+            ),
+            "{est}"
+        );
+        // Old JSON without the new fields still deserializes.
+        let mut json = serde_json::to_value(&est).unwrap();
+        let fields = json.as_object_mut().unwrap();
+        fields.remove("closed_periods");
+        fields.remove("open_season_rate");
+        let old: OccupancyEstimate = serde_json::from_value(json).unwrap();
+        assert_eq!(old.closed_periods, Vec::<ClosedPeriod>::new());
     }
 
     #[test]

@@ -1,0 +1,583 @@
+{
+ "data": {
+  "node": {
+   "__typename": "DemandStayListing",
+   "propertyType": "HOTEL",
+   "spaceType": "PRIVATE_ROOM",
+   "personCapacity": 2,
+   "description": {
+    "name": {
+     "__typename": "UGCText",
+     "localizedString": "Sample hotel, classic room"
+    }
+   },
+   "listingRatingStats": {
+    "overallRatingStats": {
+     "ratingAverage": 4.42,
+     "ratingCount": "289"
+    }
+   },
+   "location": {
+    "coordinate": {
+     "latitude": 45.716,
+     "longitude": 4.8792
+    }
+   },
+   "pdpPresentation": {
+    "__typename": "DemandStayListingPdpPresentationContainer",
+    "pdpType": "HOTEL",
+    "title": {
+     "content": {
+      "__typename": "UGCText",
+      "localizedString": "Sample hotel, classic room"
+     }
+    },
+    "descriptions": {
+     "longDescriptionHtml": null,
+     "shortDescriptionHtml": {
+      "content": {
+       "__typename": "UGCText",
+       "localizedString": "Sample description, first line.<br />Second line with <b>markup</b>."
+      }
+     }
+    },
+    "amenities": {
+     "previewAmenitiesGroups": [
+      {
+       "title": null,
+       "amenities": [
+        {
+         "available": true,
+         "title": "Breakfast for purchase"
+        },
+        {
+         "available": true,
+         "title": "Paid parking on premises"
+        },
+        {
+         "available": true,
+         "title": "Air conditioning"
+        },
+        {
+         "available": true,
+         "title": "Wifi"
+        },
+        {
+         "available": true,
+         "title": "Elevator"
+        },
+        {
+         "available": true,
+         "title": "Dedicated workspace"
+        },
+        {
+         "available": true,
+         "title": "Bar"
+        },
+        {
+         "available": true,
+         "title": "TV"
+        },
+        {
+         "available": true,
+         "title": "Luggage dropoff allowed"
+        },
+        {
+         "available": true,
+         "title": "Toiletries"
+        }
+       ]
+      }
+     ],
+     "seeAllAmenitiesGroups": [
+      {
+       "title": "Food and drink",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Breakfast for purchase"
+        },
+        {
+         "available": true,
+         "title": "Bar"
+        }
+       ]
+      },
+      {
+       "title": "Parking and transportation",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Paid parking on premises"
+        }
+       ]
+      },
+      {
+       "title": "Guest services",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Luggage dropoff allowed"
+        }
+       ]
+      },
+      {
+       "title": "Accessibility",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Elevator"
+        }
+       ]
+      },
+      {
+       "title": "Internet and office",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Wifi"
+        },
+        {
+         "available": true,
+         "title": "Dedicated workspace"
+        }
+       ]
+      },
+      {
+       "title": "Room amenities",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Air conditioning"
+        },
+        {
+         "available": true,
+         "title": "TV"
+        },
+        {
+         "available": true,
+         "title": "Toiletries"
+        }
+       ]
+      }
+     ]
+    },
+    "location": {
+     "subtitle": null,
+     "locationName": null,
+     "latitude": 45.7160361,
+     "longitude": 4.879247299999999
+    },
+    "localizedLocation": "Lyon",
+    "hostInfo": {
+     "passportData": {
+      "name": "Business Host B",
+      "userId": "RGVtYW5kVXNlcjoxMDAwMDAy",
+      "isSuperhost": false,
+      "isVerified": true,
+      "profilePictureUrl": "https://example.com/fixture-image/host.jpg",
+      "ratingCount": 464,
+      "ratingAverage": 4.44,
+      "timeAsHost": {
+       "years": 2,
+       "months": 1
+      }
+     },
+     "highlights": [
+      {
+       "text": {
+        "content": {
+         "__typename": "UGCText",
+         "localizedString": ""
+        }
+       }
+      }
+     ],
+     "responseRateText": null,
+     "responseTimeText": null,
+     "about": null,
+     "overview": {
+      "title": {
+       "text": "Hosted by Business Host B"
+      }
+     }
+    },
+    "quality": {
+     "listingRatingStats": {
+      "overallRatingStats": {
+       "ratingAverage": 4.44,
+       "ratingCount": "464"
+      }
+     },
+     "isGuestFavorite": false,
+     "categoryRatings": [
+      {
+       "categoryType": "CLEANLINESS",
+       "localizedRating": "4.5",
+       "label": "Cleanliness"
+      },
+      {
+       "categoryType": "ACCURACY",
+       "localizedRating": "4.5",
+       "label": "Accuracy"
+      },
+      {
+       "categoryType": "CHECKIN",
+       "localizedRating": "4.6",
+       "label": "Check-in"
+      },
+      {
+       "categoryType": "COMMUNICATION",
+       "localizedRating": "4.5",
+       "label": "Communication"
+      },
+      {
+       "categoryType": "LOCATION",
+       "localizedRating": "4.4",
+       "label": "Location"
+      },
+      {
+       "categoryType": "VALUE",
+       "localizedRating": "4.4",
+       "label": "Value"
+      }
+     ],
+     "reviewTags": [
+      {
+       "name": "CLEANLINESS",
+       "count": 97,
+       "localizedName": "Cleanliness"
+      },
+      {
+       "name": "VALUE",
+       "count": 52,
+       "localizedName": "Value"
+      },
+      {
+       "name": "INDOOR_SPACES",
+       "count": 53,
+       "localizedName": "Indoor spaces"
+      },
+      {
+       "name": "HOSPITALITY",
+       "count": 115,
+       "localizedName": "Hospitality"
+      },
+      {
+       "name": "PARKING",
+       "count": 34,
+       "localizedName": "Parking"
+      },
+      {
+       "name": "ACCURACY",
+       "count": 31,
+       "localizedName": "Accuracy"
+      },
+      {
+       "name": "LOCATION",
+       "count": 50,
+       "localizedName": "Location"
+      },
+      {
+       "name": "BREAKFAST",
+       "count": 25,
+       "localizedName": "Breakfast"
+      },
+      {
+       "name": "COMFORT",
+       "count": 24,
+       "localizedName": "Comfort"
+      },
+      {
+       "name": "GETTING_AROUND",
+       "count": 33,
+       "localizedName": "Getting around"
+      }
+     ]
+    },
+    "overview": {
+     "title": "Hotel in V\u00e9nissieux, France",
+     "items": []
+    },
+    "rules": {
+     "groupItems": [
+      {
+       "type": "HOUSE_RULES_STRUCTURED_RULES",
+       "title": "Standard hotel rules",
+       "items": [
+        {
+         "type": "HOUSE_RULES_PETS",
+         "title": "No pets",
+         "description": null
+        }
+       ]
+      },
+      {
+       "type": "HOUSE_RULES_HOST_REQUESTS",
+       "title": "Additional rules",
+       "items": [
+        {
+         "type": "HOUSE_RULES_ADDITIONAL_RULES",
+         "title": "During the stay",
+         "description": {
+          "__typename": "PdpUGCText",
+          "content": {
+           "__typename": "UGCText",
+           "localizedString": "Host rule text redacted."
+          }
+         }
+        }
+       ]
+      }
+     ]
+    },
+    "heroMedia": {
+     "edges": [
+      {
+       "node": {
+        "image": {
+         "uri": "https://example.com/fixture-image/1.jpg"
+        }
+       }
+      },
+      {
+       "node": {
+        "image": {
+         "uri": "https://example.com/fixture-image/2.jpg"
+        }
+       }
+      },
+      {
+       "node": {
+        "image": {
+         "uri": "https://example.com/fixture-image/3.jpg"
+        }
+       }
+      }
+     ]
+    },
+    "mediaTour": {
+     "stops": [
+      {
+       "name": "Overview",
+       "items": [
+        {
+         "image": {
+          "uri": "https://example.com/fixture-image/4.jpg"
+         }
+        },
+        {
+         "image": {
+          "uri": "https://example.com/fixture-image/5.jpg"
+         }
+        }
+       ]
+      },
+      {
+       "name": "Eklo Classic XL",
+       "items": [
+        {
+         "image": {
+          "uri": "https://example.com/fixture-image/6.jpg"
+         }
+        },
+        {
+         "image": {
+          "uri": "https://example.com/fixture-image/7.jpg"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    "highlights": [
+     {
+      "headline": {
+       "localizedContent": "Sample highlight 1"
+      },
+      "body": {
+       "localizedContent": "Sample highlight 1 body"
+      }
+     },
+     {
+      "headline": {
+       "localizedContent": "Sample highlight 2"
+      },
+      "body": {
+       "localizedContent": "Sample highlight 2 body"
+      }
+     },
+     {
+      "headline": {
+       "localizedContent": "Sample highlight 3"
+      },
+      "body": {
+       "localizedContent": "Sample highlight 3 body"
+      }
+     }
+    ],
+    "sharingConfig": {
+     "propertyType": "Room in hotel"
+    },
+    "personCapacity": 2
+   }
+  },
+  "presentation": {
+   "stayProductDetailPage": {
+    "sections": {
+     "metadata": {
+      "pdpType": "HOTEL",
+      "sharingConfig": {
+       "title": "Sample hotel \u00b7 \u26054.44 \u00b7 Hotel in Lyon",
+       "propertyType": "Room in hotel",
+       "personCapacity": 2,
+       "reviewCount": 289,
+       "starRating": 4.42
+      },
+      "loggingContext": {
+       "eventDataLogging": {
+        "listingId": "1257736932578886647",
+        "listingLat": 45.716,
+        "listingLng": 4.8792,
+        "roomType": "Private room",
+        "personCapacity": 2
+       }
+      }
+     },
+     "sections": [
+      {
+       "sectionComponentType": "PDP_DESCRIPTION_MODAL",
+       "section": {
+        "__typename": "GeneralListContentSection"
+       }
+      },
+      {
+       "sectionComponentType": "BOOK_IT_FLOATING_FOOTER",
+       "section": {
+        "__typename": "BookItSection"
+       }
+      },
+      {
+       "sectionComponentType": "PHOTO_TOUR_SCROLLABLE",
+       "section": {
+        "__typename": "PhotoTourModalSection",
+        "mediaItems": [
+         {
+          "baseUrl": "https://example.com/fixture-image/8.jpg"
+         },
+         {
+          "baseUrl": "https://example.com/fixture-image/9.jpg"
+         }
+        ]
+       }
+      },
+      {
+       "sectionComponentType": "AVAILABILITY_CALENDAR_DEFAULT",
+       "section": {
+        "__typename": "AvailabilityCalendarSection"
+       }
+      },
+      {
+       "sectionComponentType": "BOOK_IT_CALENDAR_SHEET",
+       "section": {
+        "__typename": "BookItSection"
+       }
+      },
+      {
+       "sectionComponentType": "NAV_DEFAULT",
+       "section": {
+        "__typename": "NavSection"
+       }
+      },
+      {
+       "sectionComponentType": "BOOK_IT_NAV",
+       "section": {
+        "__typename": "BookItSection"
+       }
+      },
+      {
+       "sectionComponentType": "HIGHLIGHTS_DEFAULT",
+       "section": {
+        "__typename": "PdpHighlightsSection"
+       }
+      },
+      {
+       "sectionComponentType": "UGC_TRANSLATION",
+       "section": {
+        "__typename": "UgcTranslationSection"
+       }
+      },
+      {
+       "sectionComponentType": "DESCRIPTION_DEFAULT",
+       "section": {
+        "__typename": "PdpDescriptionSection"
+       }
+      },
+      {
+       "sectionComponentType": "AMENITIES_DEFAULT",
+       "section": {
+        "__typename": "AmenitiesSection"
+       }
+      },
+      {
+       "sectionComponentType": "BOOK_IT_SIDEBAR",
+       "section": {
+        "__typename": "BookItSection",
+        "maxGuestCapacity": null,
+        "structuredDisplayPrice": null
+       }
+      },
+      {
+       "sectionComponentType": "REPORT_TO_AIRBNB",
+       "section": {
+        "__typename": "ReportToAirbnbSection"
+       }
+      },
+      {
+       "sectionComponentType": "TITLE_DEFAULT",
+       "section": {
+        "__typename": "PdpTitleSection"
+       }
+      },
+      {
+       "sectionComponentType": "HERO_DEFAULT",
+       "section": {
+        "__typename": "PdpHeroSection"
+       }
+      },
+      {
+       "sectionComponentType": "LOCATION_PDP",
+       "section": {
+        "__typename": "LocationSection"
+       }
+      },
+      {
+       "sectionComponentType": "REVIEWS_DEFAULT",
+       "section": {
+        "__typename": "StayPdpReviewsSection"
+       }
+      },
+      {
+       "sectionComponentType": "POLICIES_DEFAULT",
+       "section": {
+        "__typename": "PoliciesSection"
+       }
+      },
+      {
+       "sectionComponentType": "SEO_LINKS_DEFAULT",
+       "section": {
+        "__typename": "SeoLinksSection"
+       }
+      },
+      {
+       "sectionComponentType": "NAV_MOBILE",
+       "section": {
+        "__typename": "NavMobileSection"
+       }
+      }
+     ]
+    }
+   }
+  }
+ }
+}

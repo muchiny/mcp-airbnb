@@ -106,13 +106,14 @@ pub fn json_requested<S: AsRef<std::ffi::OsStr>>(args: &[S]) -> bool {
             continue;
         }
         if let Some(cluster) = arg.strip_prefix('-').filter(|c| !c.starts_with('-')) {
-            for (i, flag) in cluster.char_indices() {
+            let mut flags = cluster.chars();
+            while let Some(flag) = flags.next() {
                 match flag {
                     'j' => return true,
                     'v' | 'h' | 'V' => {}
                     // `-c` takes a value: the rest of the cluster, or the next argument.
                     'c' => {
-                        if i + 1 == cluster.len() {
+                        if flags.as_str().is_empty() {
                             rest.next();
                         }
                         break;
@@ -343,6 +344,7 @@ pub async fn dispatch(cli: Cli, client: Arc<dyn AirbnbClient>) -> Result<String>
                 args.id.as_deref(),
                 args.location,
                 args.months,
+                &handlers::stay_args_to_filter(args.stay),
             )
             .await?;
             output::render(&result, json)
@@ -352,6 +354,7 @@ pub async fn dispatch(cli: Cli, client: Arc<dyn AirbnbClient>) -> Result<String>
                 Arc::clone(&client),
                 &args.id,
                 args.location,
+                &handlers::stay_args_to_filter(args.stay),
             )
             .await?;
             output::render(&result, json)
@@ -369,6 +372,7 @@ pub async fn dispatch(cli: Cli, client: Arc<dyn AirbnbClient>) -> Result<String>
                 Arc::clone(&client),
                 &args.id,
                 args.location,
+                &handlers::stay_args_to_filter(args.stay),
             )
             .await?;
             output::render(&result, json)
@@ -379,12 +383,61 @@ pub async fn dispatch(cli: Cli, client: Arc<dyn AirbnbClient>) -> Result<String>
                 &args.id,
                 args.location,
                 args.months,
+                &handlers::stay_args_to_filter(args.stay),
+            )
+            .await?;
+            output::render(&result, json)
+        }
+        Commands::Rank(args) => {
+            let mut stay = handlers::stay_args_to_filter(args.stay);
+            stay.children = args.children;
+            stay.filters.amenities = args.amenities;
+            let request = crate::application::analytical_handlers::RankRequest {
+                listing_id: args.id,
+                location: args.location,
+                stay,
+                max_pages: args.max_pages,
+            };
+            let result = crate::application::analytical_handlers::run_listing_rank(
+                Arc::clone(&client),
+                &request,
+            )
+            .await?;
+            output::render(&result, json)
+        }
+
+        // ---- Dated price and diagnostics ----
+        Commands::Quote(args) => {
+            let request = crate::domain::quote::QuoteRequest {
+                listing_id: args.id,
+                checkin: args.checkin,
+                checkout: args.checkout,
+                adults: args.adults,
+            };
+            let result = crate::application::analytical_handlers::run_price_quote(
+                Arc::clone(&client),
+                &request,
+                args.weeks,
+            )
+            .await?;
+            output::render(&result, json)
+        }
+        Commands::Status(args) => {
+            let result = crate::application::analytical_handlers::run_status(
+                Arc::clone(&client),
+                args.location,
             )
             .await?;
             output::render(&result, json)
         }
     };
-    Ok(out)
+    // In text mode, say when the HTML fallback served part of the answer.
+    // JSON output stays the bare document; `airbnb status --json` reports it.
+    let note = crate::domain::status::fallback_note(&client.degradations())
+        .filter(|_| !json)
+        .map(|note| format!("\n{note}\n"))
+        .unwrap_or_default();
+    Ok(out + &note)
 }
 
 fn init_tracing(verbosity: u8) {

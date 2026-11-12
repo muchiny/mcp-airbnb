@@ -47,7 +47,7 @@ current fixture doesn't cover, capture a fresh one:
 
    ```bash
    curl -sSL \
-        -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+        -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
         -H "Accept-Language: en-US,en;q=0.9" \
         'https://www.airbnb.com/rooms/<id>' \
         > /var/tmp/rooms_<id>_$(date +%Y%m%d).html

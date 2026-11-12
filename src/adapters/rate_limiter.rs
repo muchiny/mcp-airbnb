@@ -91,7 +91,7 @@ impl RateLimiter {
     /// slot. Used after a 429 so the whole process backs off, not just one
     /// request. A shorter penalty never shortens an existing pause or slot.
     pub fn penalize(&self, delay: Duration) {
-        let until = Instant::now() + delay.min(MAX_INTERVAL);
+        let until = after(Instant::now(), delay.min(MAX_INTERVAL));
         let mut state = self.lock();
         state.paused_until = Some(state.paused_until.map_or(until, |paused| paused.max(until)));
         state.next_slot = Some(state.next_slot.map_or(until, |free_at| free_at.max(until)));
@@ -108,7 +108,7 @@ impl RateLimiter {
         let slot = state
             .next_slot
             .map_or(earliest, |free_at| free_at.max(earliest));
-        state.next_slot = Some(slot + self.min_interval);
+        state.next_slot = Some(after(slot, self.min_interval));
         slot
     }
 
@@ -116,6 +116,16 @@ impl RateLimiter {
         let now = Instant::now();
         self.lock().paused_until.is_some_and(|paused| paused > now)
     }
+}
+
+/// `start + delay`, without the panic of `Instant + Duration`. A deadline the
+/// clock cannot represent is capped at `start + MAX_INTERVAL`; `start` is the
+/// last resort.
+fn after(start: Instant, delay: Duration) -> Instant {
+    start
+        .checked_add(delay)
+        .or_else(|| start.checked_add(MAX_INTERVAL))
+        .unwrap_or(start)
 }
 
 #[cfg(test)]
@@ -211,6 +221,15 @@ mod tests {
             "a caller that reserved its slot before the 429 fired {:?} after start",
             fired - start
         );
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn an_unrepresentable_interval_is_capped_instead_of_panicking() {
+        let limiter = RateLimiter::from_interval(Duration::MAX);
+        let start = Instant::now();
+        limiter.wait().await; // slot `start`; `start + Duration::MAX` does not exist
+        limiter.wait().await;
+        assert!(Instant::now() - start >= MAX_INTERVAL);
     }
 
     #[test]

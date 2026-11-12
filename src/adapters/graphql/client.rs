@@ -14,12 +14,13 @@ use crate::adapters::http::{
 use crate::adapters::price;
 use crate::adapters::rate_limiter::RateLimiter;
 use crate::adapters::request_locale;
-use crate::adapters::shared::ApiKeyManager;
+use crate::adapters::shared::{ApiKeyManager, FetchCounter};
 use crate::config::types::{CacheConfig, GraphQLHashes, ScraperConfig};
 use crate::domain::analytics::{self, HostProfile, NeighborhoodStats, OccupancyEstimate};
 use crate::domain::calendar::PriceCalendar;
 use crate::domain::listing::{ListingDetail, SearchResult};
 use crate::domain::listing_id::validate_listing_id;
+use crate::domain::quote::{PriceQuote, QuoteRequest};
 use crate::domain::review::ReviewsPage;
 use crate::domain::search_params::SearchParams;
 use crate::error::{AirbnbError, Result};
@@ -38,6 +39,8 @@ const PDP_SECTIONS_ROOT: &str = "/data/presentation/stayProductDetailPage/sectio
 const CALENDAR_ROOT: &str = "/data/merlin/pdpAvailabilityCalendar/calendarMonths";
 /// Longest upstream error message copied into an `UpstreamSchema` detail.
 const MAX_UPSTREAM_MESSAGE_CHARS: usize = 200;
+/// Longest upstream error classification copied next to the message.
+const MAX_UPSTREAM_KIND_CHARS: usize = 40;
 
 pub struct AirbnbGraphQLClient {
     http: Client,
@@ -52,6 +55,9 @@ pub struct AirbnbGraphQLClient {
     currency: String,
     /// Locale pinned on every request.
     locale: String,
+    /// Answers fetched over the network, per port method (cache hits are
+    /// not counted).
+    fetches: Arc<FetchCounter>,
 }
 
 impl AirbnbGraphQLClient {
@@ -77,7 +83,13 @@ impl AirbnbGraphQLClient {
             api_key_manager,
             currency: config.currency.clone(),
             locale: config.locale.clone(),
+            fetches: Arc::default(),
         })
+    }
+
+    /// The counter of network answers, to share with the composite client.
+    pub fn fetch_counter(&self) -> Arc<FetchCounter> {
+        Arc::clone(&self.fetches)
     }
 
     /// Execute a GraphQL GET request with persisted query hash.
@@ -106,8 +118,7 @@ impl AirbnbGraphQLClient {
         debug!(url = %url, "GraphQL GET request");
 
         let request = self.with_web_client_headers(self.http.get(url.as_str()));
-        let response = self.execute(operation_name, &request).await?;
-        read_graphql_response(operation_name, response).await
+        self.send_graphql(operation_name, &request).await
     }
 
     /// Execute a GraphQL POST request (used for search which requires a body).
@@ -142,8 +153,40 @@ impl AirbnbGraphQLClient {
         let request = self
             .with_web_client_headers(self.http.post(url.as_str()))
             .json(&body);
-        let response = self.execute(operation_name, &request).await?;
-        read_graphql_response(operation_name, response).await
+        self.send_graphql(operation_name, &request).await
+    }
+
+    /// Send one GraphQL request and classify the answer.
+    ///
+    /// Airbnb retires persisted-query ids gradually: during the roll-out the
+    /// same id answers `deprecated_web_operation` on part of the calls
+    /// (observed 2026-11). Such an answer is retried once; a second one is
+    /// `UpstreamSchema`, naming the config key to refresh.
+    async fn send_graphql(
+        &self,
+        operation_name: &str,
+        request: &reqwest::RequestBuilder,
+    ) -> Result<serde_json::Value> {
+        let mut retried = false;
+        loop {
+            let response = self.execute(operation_name, request).await?;
+            match read_graphql_response(operation_name, response).await? {
+                Exchange::Data(json) => return Ok(json),
+                Exchange::Retired if !retried => {
+                    warn!(
+                        operation = operation_name,
+                        "Airbnb answered deprecated_web_operation; retrying once"
+                    );
+                    retried = true;
+                }
+                Exchange::Retired => {
+                    return Err(upstream_schema(
+                        operation_name,
+                        "HTTP 400 deprecated_web_operation: Airbnb is retiring this persisted query id",
+                    ));
+                }
+            }
+        }
     }
 
     /// Add the headers the airbnb.com web client sends on every GraphQL call
@@ -163,8 +206,9 @@ impl AirbnbGraphQLClient {
 
     /// Send one GraphQL request built by the caller (without the API-key
     /// header) through the shared limiter and the retry policy, and return the
-    /// final response for `read_graphql_response` to classify (P1a, I2: GraphQL
-    /// `errors` in any status and HTTP 422 become `UpstreamSchema`).
+    /// final response for `read_graphql_response` to classify (P1a, I2: a
+    /// retired id, GraphQL `errors` without a usable document and HTTP 422
+    /// become `UpstreamSchema`).
     ///
     /// A 401/403 means Airbnb rejected the key: it is invalidated and the
     /// request is sent once more with a fresh key. A second 401/403 is handed
@@ -205,11 +249,25 @@ impl AirbnbGraphQLClient {
 
     /// `StaysPdpSections` variables. The detail and the host profile read the
     /// same document, so both send the detail request.
+    ///
+    /// The ten `include*` flags are required by the persisted query captured
+    /// on 2026-11-12 (without them it answers `ValidationError`); their values
+    /// are the ones the airbnb.com listing page sends.
     fn pdp_sections_variables(id: &str) -> serde_json::Value {
         let b64 = base64::engine::general_purpose::STANDARD;
         serde_json::json!({
             "id": b64.encode(format!("StayListing:{id}")),
             "demandStayListingId": b64.encode(format!("DemandStayListing:{id}")),
+            "includeGpBookItFragment": true,
+            "includeGpPropertyAvailableRoomsFragment": false,
+            "includePdpLayoutPipelineInputs": false,
+            "includePdpMigrationBookItCalendarSheetFragment": true,
+            "includePdpMigrationBookItFloatingFooterFragment": true,
+            "includePdpMigrationBookItNavFragment": true,
+            "includePdpMigrationBookItSidebarFragment": true,
+            "includePdpMigrationPropertyAvailableRoomsFragment": true,
+            "includePdpOffers": false,
+            "includeRecentAskPdpQuestions": false,
             "pdpSectionsRequest": {
                 "adults": "1",
                 "bypassTargetings": false,
@@ -239,7 +297,11 @@ impl AirbnbGraphQLClient {
                 &Self::pdp_sections_variables(id),
             )
             .await?;
-        require_root(&json, "StaysPdpSections", PDP_SECTIONS_ROOT)?;
+        // Documents since 2026-11 carry the listing entity; older ones only
+        // the sections. Either is a document the parsers can read.
+        if parsers::pdp_node::presentation(&json).is_none() {
+            require_root(&json, "StaysPdpSections", PDP_SECTIONS_ROOT)?;
+        }
         Ok(json)
     }
 
@@ -277,14 +339,26 @@ impl AirbnbGraphQLClient {
     }
 }
 
-/// Read a `/api/v3/{operation}` response and classify failures:
-/// HTTP 429 becomes `RateLimited`; a non-empty top-level GraphQL `errors`
-/// array (whatever the status) or HTTP 422 becomes `UpstreamSchema` (stale
-/// persisted query or variables); any other non-2xx status becomes `Parse`.
+/// What one GraphQL exchange produced.
+#[derive(Debug)]
+enum Exchange {
+    /// A usable document (it may carry non-fatal field errors).
+    Data(serde_json::Value),
+    /// HTTP 400 `deprecated_web_operation`: Airbnb is retiring this
+    /// persisted-query id.
+    Retired,
+}
+
+/// `error_type` of the REST-style body Airbnb sends for a retired persisted query.
+const DEPRECATED_OPERATION: &str = "deprecated_web_operation";
+
+/// Read a `/api/v3/{operation}` response and classify it with
+/// [`classify_graphql_body`]. HTTP 429 becomes `RateLimited` before the body
+/// is read.
 async fn read_graphql_response(
     operation_name: &str,
     response: reqwest::Response,
-) -> Result<serde_json::Value> {
+) -> Result<Exchange> {
     let status = response.status();
     if status == StatusCode::TOO_MANY_REQUESTS {
         return Err(AirbnbError::RateLimited);
@@ -302,15 +376,38 @@ async fn read_graphql_response(
         body = %body,
         "GraphQL raw response"
     );
+    classify_graphql_body(operation_name, status, &body)
+}
 
-    let parsed = serde_json::from_str::<serde_json::Value>(&body);
-    if let Ok(json) = &parsed
-        && let Some(errors) = graphql_errors_detail(json)
-    {
-        return Err(upstream_schema(
-            operation_name,
-            &format!("HTTP {status}, GraphQL errors: {errors}"),
-        ));
+/// Classify the body of a GraphQL answer:
+/// - `error_type: deprecated_web_operation` is [`Exchange::Retired`];
+/// - a top-level GraphQL `errors` array that leaves no usable document
+///   (see [`errors_are_partial`]), or HTTP 422, is `UpstreamSchema` (stale
+///   persisted query or variables);
+/// - any other non-2xx status is `UpstreamStatus`;
+/// - a document with only non-fatal field errors is returned as data: the
+///   root checks and parsers then decide whether the part they need is there.
+fn classify_graphql_body(operation_name: &str, status: StatusCode, body: &str) -> Result<Exchange> {
+    let parsed = serde_json::from_str::<serde_json::Value>(body);
+    if let Ok(json) = &parsed {
+        if json.get("error_type").and_then(serde_json::Value::as_str) == Some(DEPRECATED_OPERATION)
+        {
+            return Ok(Exchange::Retired);
+        }
+        if let Some(errors) = graphql_errors_detail(json) {
+            if status.is_success() && errors_are_partial(json) {
+                debug!(
+                    operation = operation_name,
+                    errors = %errors.escape_debug(),
+                    "GraphQL response carries non-fatal field errors"
+                );
+            } else {
+                return Err(upstream_schema(
+                    operation_name,
+                    &format!("HTTP {status}, GraphQL errors: {errors}"),
+                ));
+            }
+        }
     }
     if status == StatusCode::UNPROCESSABLE_ENTITY {
         return Err(upstream_schema(
@@ -324,9 +421,34 @@ async fn read_graphql_response(
             context: format!("GraphQL {operation_name}"),
         });
     }
-    parsed.map_err(|e| AirbnbError::Parse {
+    parsed.map(Exchange::Data).map_err(|e| AirbnbError::Parse {
         reason: format!("GraphQL {operation_name} JSON parse error: {e}"),
     })
+}
+
+/// Whether the `errors` of a response are field errors of a partial result
+/// (GraphQL spec, "Errors"): `data` is present, every entry names the `path`
+/// of the field it nulled, and none is flagged `extensions.fatal: true`.
+/// Airbnb's search answers this way when an optional map field cannot be
+/// resolved (`fatal: false`, observed 2026-11). A request-level error
+/// (`ValidationError`, unknown persisted query) has `data: null` and no path.
+fn errors_are_partial(json: &serde_json::Value) -> bool {
+    let has_data = json.get("data").is_some_and(|data| !data.is_null());
+    let Some(errors) = json.get("errors").and_then(serde_json::Value::as_array) else {
+        return false;
+    };
+    has_data
+        && errors.iter().all(|error| {
+            let has_path = error
+                .get("path")
+                .and_then(serde_json::Value::as_array)
+                .is_some_and(|path| !path.is_empty());
+            let fatal = error
+                .pointer("/extensions/fatal")
+                .and_then(serde_json::Value::as_bool)
+                .unwrap_or(false);
+            has_path && !fatal
+        })
 }
 
 /// Summarise a non-empty top-level GraphQL `errors` array as
@@ -347,10 +469,19 @@ fn graphql_errors_detail(json: &serde_json::Value) -> Option<String> {
                 .chars()
                 .take(MAX_UPSTREAM_MESSAGE_CHARS)
                 .collect();
-            let kind = error
+            // A classification is an identifier: anything else is dropped,
+            // and it is capped like the message.
+            let kind: Option<String> = error
                 .pointer("/extensions/classification")
                 .or_else(|| error.pointer("/extensions/code"))
-                .and_then(serde_json::Value::as_str);
+                .and_then(serde_json::Value::as_str)
+                .map(|kind| {
+                    kind.chars()
+                        .filter(|c| c.is_ascii_alphanumeric() || *c == '_')
+                        .take(MAX_UPSTREAM_KIND_CHARS)
+                        .collect::<String>()
+                })
+                .filter(|kind| !kind.is_empty());
             if let Some(kind) = kind {
                 format!("{message} [{kind}]")
             } else {
@@ -379,6 +510,7 @@ fn hash_config_key(operation_name: &str) -> &'static str {
         "StaysPdpSections" => "stays_pdp_sections",
         "StaysPdpReviewsQuery" => "stays_pdp_reviews",
         "PdpAvailabilityCalendar" => "pdp_availability_calendar",
+        "StaysPdpBookItQuery" => "stays_pdp_book_it",
         _ => "<operation>",
     }
 }
@@ -454,6 +586,7 @@ impl AirbnbClient for AirbnbGraphQLClient {
             );
         }
 
+        self.fetches.record("search_listings");
         Ok(result)
     }
 
@@ -473,6 +606,7 @@ impl AirbnbClient for AirbnbGraphQLClient {
         if let Err(e) = self.cache_host_from(&json, id) {
             debug!(id, error = %e, "PDP document carries no host profile");
         }
+        self.fetches.record("get_listing_detail");
         Ok(detail)
     }
 
@@ -505,6 +639,7 @@ impl AirbnbClient for AirbnbGraphQLClient {
             );
         }
 
+        self.fetches.record("get_reviews");
         Ok(page)
     }
 
@@ -553,7 +688,54 @@ impl AirbnbClient for AirbnbGraphQLClient {
             );
         }
 
+        self.fetches.record("get_price_calendar");
         Ok(calendar)
+    }
+
+    async fn get_price_quote(&self, request: &QuoteRequest) -> Result<PriceQuote> {
+        let nights = request.validate()?;
+        let cache_key = format!(
+            "gql:quote:{}:{}:{}:a={}",
+            request.listing_id, request.checkin, request.checkout, request.adults
+        );
+        if let Some(cached) = self.cache.get(&cache_key)
+            && let Ok(quote) = serde_json::from_str::<PriceQuote>(&cached)
+        {
+            debug!(id = %request.listing_id, "Cache hit for GraphQL price quote");
+            return Ok(quote);
+        }
+
+        let variables = parsers::quote::build_quote_variables(request);
+        let json = self
+            .graphql_get(
+                parsers::quote::BOOK_IT_OPERATION,
+                &self.hashes.stays_pdp_book_it,
+                &variables,
+            )
+            .await?;
+        let quote = parsers::quote::parse_quote_response(
+            &json,
+            request,
+            nights,
+            &price::currency_symbol(&self.currency),
+        )
+        .map_err(|e| match e {
+            AirbnbError::UpstreamSchema { operation, detail } => {
+                upstream_schema(&operation, &detail)
+            }
+            other => other,
+        })?;
+
+        // A quote moves with the calendar: it lives as long as a calendar.
+        if let Ok(serialized) = serde_json::to_string(&quote) {
+            self.cache.set(
+                &cache_key,
+                &serialized,
+                Duration::from_secs(self.cache_config.calendar_ttl_secs),
+            );
+        }
+        self.fetches.record("get_price_quote");
+        Ok(quote)
     }
 
     async fn get_host_profile(&self, listing_id: &str) -> Result<HostProfile> {
@@ -569,11 +751,17 @@ impl AirbnbClient for AirbnbGraphQLClient {
         if let Err(e) = self.cache_detail_from(&json, listing_id) {
             debug!(listing_id, error = %e, "PDP document carries no parsable detail");
         }
-        self.cache_host_from(&json, listing_id)
+        let profile = self.cache_host_from(&json, listing_id)?;
+        self.fetches.record("get_host_profile");
+        Ok(profile)
     }
 
     async fn get_neighborhood_stats(&self, params: &SearchParams) -> Result<NeighborhoodStats> {
+        let fetched = self.fetches.count("search_listings");
         let result = self.search_listings(params).await?;
+        if self.fetches.count("search_listings") > fetched {
+            self.fetches.record("get_neighborhood_stats");
+        }
         Ok(analytics::compute_neighborhood_stats(
             &params.location,
             &result.listings,
@@ -581,8 +769,16 @@ impl AirbnbClient for AirbnbGraphQLClient {
     }
 
     async fn get_occupancy_estimate(&self, id: &str, months: u32) -> Result<OccupancyEstimate> {
+        let fetched = self.fetches.count("get_price_calendar");
         let calendar = self.get_price_calendar(id, months).await?;
+        if self.fetches.count("get_price_calendar") > fetched {
+            self.fetches.record("get_occupancy_estimate");
+        }
         Ok(analytics::compute_occupancy_estimate(id, &calendar))
+    }
+
+    fn clear_cache(&self) {
+        self.cache.clear();
     }
 }
 
@@ -746,10 +942,208 @@ mod tests {
     }
 
     #[test]
+    fn graphql_errors_detail_keeps_an_identifier_sized_classification_only() {
+        let json = serde_json::json!({"errors": [
+            {"message": "boom", "extensions": {"classification": format!("Bad]\n<<<{}", "x".repeat(5000))}},
+            {"message": "plain", "extensions": {"code": "\u{1b}[31m"}},
+        ]});
+        let detail = graphql_errors_detail(&json).unwrap();
+        let expected_kind = format!("Bad{}", "x".repeat(MAX_UPSTREAM_KIND_CHARS - 3));
+        assert_eq!(detail, format!("boom [{expected_kind}]; plain [31m]"));
+    }
+
+    #[test]
     fn graphql_errors_detail_ignores_successful_captures() {
         let json = crate::test_helpers::fixture_json("graphql/StaysPdpReviewsQuery.response.json");
         assert!(graphql_errors_detail(&json).is_none());
         assert!(graphql_errors_detail(&serde_json::json!({"errors": [], "data": {}})).is_none());
+    }
+
+    /// The non-fatal field error the 2026-11 `StaysSearch` id returns next to
+    /// a complete result list.
+    fn non_fatal_search_error() -> serde_json::Value {
+        serde_json::json!({
+            "message": "Not found",
+            "path": ["presentation", "staysSearch", "mapResults", "mapMetadata", "queriedPoi", "placePageType"],
+            "extensions": {"errorType": "NOT_FOUND", "fatal": false}
+        })
+    }
+
+    fn classify(status: u16, body: &serde_json::Value) -> Result<Exchange> {
+        classify_graphql_body(
+            "StaysSearch",
+            StatusCode::from_u16(status).unwrap(),
+            &body.to_string(),
+        )
+    }
+
+    #[test]
+    fn non_fatal_field_errors_keep_the_document() {
+        let body = serde_json::json!({
+            "data": {"presentation": {"staysSearch": {"results": {"searchResults": []}}}},
+            "errors": [non_fatal_search_error()]
+        });
+        let Exchange::Data(json) = classify(200, &body).unwrap() else {
+            panic!("expected data");
+        };
+        assert!(
+            json.pointer("/data/presentation/staysSearch/results")
+                .is_some()
+        );
+    }
+
+    #[test]
+    fn request_level_and_fatal_errors_stay_upstream_schema() {
+        let validation =
+            crate::test_helpers::fixture_json("graphql/StaysSearch.validation_error.json");
+        let mut fatal = non_fatal_search_error();
+        fatal["extensions"]["fatal"] = serde_json::json!(true);
+        let mut no_path = non_fatal_search_error();
+        no_path.as_object_mut().unwrap().remove("path");
+        let cases = [
+            validation,
+            serde_json::json!({"data": {"presentation": {}}, "errors": [fatal]}),
+            serde_json::json!({"data": {"presentation": {}}, "errors": [no_path]}),
+            serde_json::json!({"data": null, "errors": [non_fatal_search_error()]}),
+            serde_json::json!({"errors": [non_fatal_search_error()]}),
+        ];
+        for body in cases {
+            let err = classify(200, &body).unwrap_err();
+            assert!(
+                matches!(err, AirbnbError::UpstreamSchema { .. }),
+                "{body}: {err:?}"
+            );
+            assert!(
+                err.to_string()
+                    .contains("scraper.graphql_hashes.stays_search"),
+                "{err}"
+            );
+        }
+        // Field errors do not excuse an error status.
+        let body = serde_json::json!({"data": {"x": 1}, "errors": [non_fatal_search_error()]});
+        assert!(matches!(
+            classify(500, &body),
+            Err(AirbnbError::UpstreamSchema { .. })
+        ));
+    }
+
+    #[test]
+    fn deprecated_web_operation_is_a_retired_query_whatever_the_status() {
+        let body = serde_json::json!({
+            "error_code": 400,
+            "error_type": "deprecated_web_operation",
+            "error_message": "This operation is deprecated."
+        });
+        assert!(matches!(classify(400, &body), Ok(Exchange::Retired)));
+        // Another HTTP 400 is still an upstream status.
+        let other = serde_json::json!({"error_code": 400, "error_type": "invalid_request"});
+        assert!(matches!(
+            classify(400, &other),
+            Err(AirbnbError::UpstreamStatus { status: 400, .. })
+        ));
+    }
+
+    #[test]
+    fn classify_keeps_422_status_and_parse_errors() {
+        let empty = serde_json::json!({});
+        assert!(matches!(
+            classify(422, &empty),
+            Err(AirbnbError::UpstreamSchema { .. })
+        ));
+        assert!(matches!(
+            classify(503, &empty),
+            Err(AirbnbError::UpstreamStatus { status: 503, .. })
+        ));
+        assert!(matches!(
+            classify_graphql_body("StaysSearch", StatusCode::OK, "<html>"),
+            Err(AirbnbError::Parse { .. })
+        ));
+    }
+
+    #[test]
+    fn pdp_sections_variables_carry_the_2026_11_include_flags() {
+        let variables = AirbnbGraphQLClient::pdp_sections_variables("45490342");
+        assert_eq!(variables["id"], "U3RheUxpc3Rpbmc6NDU0OTAzNDI=");
+        assert_eq!(
+            variables["demandStayListingId"],
+            "RGVtYW5kU3RheUxpc3Rpbmc6NDU0OTAzNDI="
+        );
+        let flags: Vec<(&str, bool)> = variables
+            .as_object()
+            .unwrap()
+            .iter()
+            .filter(|(key, _)| key.starts_with("include"))
+            .map(|(key, value)| (key.as_str(), value.as_bool().unwrap()))
+            .collect();
+        assert_eq!(
+            flags,
+            [
+                ("includeGpBookItFragment", true),
+                ("includeGpPropertyAvailableRoomsFragment", false),
+                ("includePdpLayoutPipelineInputs", false),
+                ("includePdpMigrationBookItCalendarSheetFragment", true),
+                ("includePdpMigrationBookItFloatingFooterFragment", true),
+                ("includePdpMigrationBookItNavFragment", true),
+                ("includePdpMigrationBookItSidebarFragment", true),
+                ("includePdpMigrationPropertyAvailableRoomsFragment", true),
+                ("includePdpOffers", false),
+                ("includeRecentAskPdpQuestions", false),
+            ]
+        );
+        assert_eq!(variables["pdpSectionsRequest"]["layouts"][0], "SIDEBAR");
+    }
+
+    #[tokio::test]
+    async fn retired_query_is_retried_once_then_reported_with_the_config_key() {
+        let server = wiremock::MockServer::start().await;
+        mount_api_key(&server).await;
+        let retired = wiremock::ResponseTemplate::new(400).set_body_json(serde_json::json!({
+            "error_code": 400, "error_type": "deprecated_web_operation"
+        }));
+        // First listing: retired once, then the document.
+        wiremock::Mock::given(wiremock::matchers::path_regex(
+            "^/api/v3/StaysPdpSections/.*",
+        ))
+        .respond_with(retired.clone())
+        .up_to_n_times(1)
+        .with_priority(1)
+        .mount(&server)
+        .await;
+        wiremock::Mock::given(wiremock::matchers::path_regex(
+            "^/api/v3/StaysPdpSections/.*",
+        ))
+        .respond_with(
+            wiremock::ResponseTemplate::new(200)
+                .set_body_json(crate::test_helpers::fixture_json("p1b/pdp_apartment.json")),
+        )
+        .with_priority(2)
+        .mount(&server)
+        .await;
+        // Calendar: always retired.
+        wiremock::Mock::given(wiremock::matchers::path_regex(
+            "^/api/v3/PdpAvailabilityCalendar/.*",
+        ))
+        .respond_with(retired)
+        .expect(2)
+        .mount(&server)
+        .await;
+
+        let client = client_for(&server, "USD", "en");
+        assert_eq!(
+            client.get_listing_detail("38817969").await.unwrap().name,
+            "Charming apartment - Lyon center"
+        );
+        let err = client.get_price_calendar("38817969", 2).await.unwrap_err();
+        assert!(
+            matches!(err, AirbnbError::UpstreamSchema { .. }),
+            "got {err:?}"
+        );
+        let text = err.to_string();
+        assert!(text.contains("deprecated_web_operation"), "{text}");
+        assert!(
+            text.contains("scraper.graphql_hashes.pdp_availability_calendar"),
+            "{text}"
+        );
     }
 
     #[test]

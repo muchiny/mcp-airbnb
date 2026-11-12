@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::domain::listing::ReviewTag;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Review {
     pub author: String,
@@ -33,6 +35,20 @@ pub struct ReviewsPage {
     pub summary: Option<ReviewsSummary>,
     pub reviews: Vec<Review>,
     pub next_cursor: Option<String>,
+    /// Number of reviews of the listing, when the page states it.
+    #[serde(default)]
+    pub total_reviews: Option<u32>,
+    /// Topics guests mention, with the number of reviews mentioning each.
+    #[serde(default)]
+    pub review_tags: Vec<ReviewTag>,
+}
+
+/// `2026-09-12T14:23:48Z` → `2026-09-12`; any other date text is kept.
+fn date_only(date: &str) -> &str {
+    match date.split_once('T') {
+        Some((day, _)) if day.len() == 10 => day,
+        _ => date,
+    }
 }
 
 impl std::fmt::Display for Review {
@@ -41,9 +57,14 @@ impl std::fmt::Display for Review {
         if let Some(ref loc) = self.reviewer_location {
             write!(f, " from {loc}")?;
         }
-        write!(f, " ({})", self.date)?;
+        write!(f, " ({})", date_only(&self.date))?;
         if let Some(rating) = self.rating {
             write!(f, " - {rating:.1}*")?;
+        }
+        if self.is_translated == Some(true)
+            && let Some(ref language) = self.language
+        {
+            write!(f, " [translated from {language}]")?;
         }
         writeln!(f)?;
         writeln!(f, "{}", self.comment)?;
@@ -81,6 +102,23 @@ impl std::fmt::Display for ReviewsPage {
                 write!(f, "Value: {v:.1}")?;
             }
             writeln!(f)?;
+        }
+        let total = self
+            .total_reviews
+            .or_else(|| self.summary.as_ref().map(|s| s.total_reviews))
+            .filter(|&total| total > 0);
+        if let Some(total) = total {
+            writeln!(f, "Showing {} of {total} reviews", self.reviews.len())?;
+        }
+        if !self.review_tags.is_empty() {
+            let parts: Vec<String> = self
+                .review_tags
+                .iter()
+                .map(|tag| format!("{} ({})", tag.name, tag.count))
+                .collect();
+            writeln!(f, "Guests mention: {}", parts.join(", "))?;
+        }
+        if self.summary.is_some() || total.is_some() || !self.review_tags.is_empty() {
             writeln!(f, "---")?;
         }
         for review in &self.reviews {
@@ -108,6 +146,8 @@ mod tests {
             summary: None,
             reviews: vec![],
             next_cursor: Some("48".into()),
+            total_reviews: None,
+            review_tags: vec![],
         };
         let s = page.to_string();
         assert!(s.contains("Next page cursor: 48"), "{s}");
@@ -121,6 +161,8 @@ mod tests {
             summary: None,
             reviews: vec![],
             next_cursor: None,
+            total_reviews: None,
+            review_tags: vec![],
         };
         assert!(!page.to_string().contains("Next page cursor"));
     }
@@ -203,6 +245,8 @@ mod tests {
                 is_translated: None,
             }],
             next_cursor: None,
+            total_reviews: None,
+            review_tags: vec![],
         };
         let s = page.to_string();
         assert!(s.contains("Overall: 4.70 (100 reviews)"));
@@ -230,6 +274,8 @@ mod tests {
                 is_translated: None,
             }],
             next_cursor: Some("next_page_token".into()),
+            total_reviews: None,
+            review_tags: vec![],
         };
         let s = page.to_string();
         assert!(s.contains("More reviews available"));
@@ -294,6 +340,8 @@ mod tests {
             summary: None,
             reviews,
             next_cursor: None,
+            total_reviews: None,
+            review_tags: vec![],
         };
         let s = page.to_string();
 

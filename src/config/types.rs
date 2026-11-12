@@ -218,6 +218,8 @@ pub struct GraphQLHashes {
     pub stays_pdp_reviews: String,
     #[serde(default = "default_pdp_availability_calendar_hash")]
     pub pdp_availability_calendar: String,
+    #[serde(default = "default_stays_pdp_book_it_hash")]
+    pub stays_pdp_book_it: String,
     /// Removed: no operation used it. Still accepted, and ignored with a warning.
     #[doc(hidden)]
     #[serde(default, rename = "get_user_profile", skip_serializing)]
@@ -320,17 +322,21 @@ fn default_graphql_hashes() -> GraphQLHashes {
         stays_pdp_sections: default_stays_pdp_sections_hash(),
         stays_pdp_reviews: default_stays_pdp_reviews_hash(),
         pdp_availability_calendar: default_pdp_availability_calendar_hash(),
+        stays_pdp_book_it: default_stays_pdp_book_it_hash(),
         removed_get_user_profile: None,
     }
 }
 
 fn default_stays_search_hash() -> String {
-    // airbnb.com web client, captured 2026-09-28
-    "0afc7d440ee66286e44038530dc8d2af77d795e434e5cc5c8a8034c93cb377cf".into()
+    // airbnb.com web client, captured 2026-11-12 (the 2026-09 id answers
+    // `deprecated_web_operation` on part of the calls)
+    "58d7ae3d927963c14176145186ec1f28814c942d7203b5bd179a77b161566263".into()
 }
 
 fn default_stays_pdp_sections_hash() -> String {
-    "80c7889b4b0027d99ffea830f6c0d4911a6e863a957cbe1044823f0fc746bf1f".into()
+    // airbnb.com web client, captured 2026-11-12; this id requires the
+    // `include*` variables of `pdp_sections_variables`
+    "1e38cb0e7e395439a08a7d936f5453c34ed3940939a06eebbfcf57d380dac6e2".into()
 }
 
 fn default_stays_pdp_reviews_hash() -> String {
@@ -341,6 +347,11 @@ fn default_stays_pdp_reviews_hash() -> String {
 fn default_pdp_availability_calendar_hash() -> String {
     // airbnb.com web client, captured 2026-09-28
     "be60714ead0a30db42ce6471ddad6a8f3855df0ed400b79282dd0bb8cecdf201".into()
+}
+
+fn default_stays_pdp_book_it_hash() -> String {
+    // airbnb.com web client, captured 2026-11-12
+    "b4e68e2374e453d598e4cdf9dad60447bd1b64372e8d6deb80df3cd11d3e84db".into()
 }
 
 fn default_max_entries() -> usize {
@@ -446,6 +457,7 @@ mod tests {
                 "pdp_availability_calendar",
                 &hashes.pdp_availability_calendar,
             ),
+            ("stays_pdp_book_it", &hashes.stays_pdp_book_it),
         ] {
             assert!(
                 yaml.contains(&format!("{key}: \"{value}\"")),
@@ -455,10 +467,14 @@ mod tests {
     }
 
     #[test]
-    fn default_search_hash_is_the_2026_09_web_client_hash() {
+    fn default_search_and_pdp_hashes_are_the_2026_11_web_client_hashes() {
         assert_eq!(
             GraphQLHashes::default().stays_search,
-            "0afc7d440ee66286e44038530dc8d2af77d795e434e5cc5c8a8034c93cb377cf"
+            "58d7ae3d927963c14176145186ec1f28814c942d7203b5bd179a77b161566263"
+        );
+        assert_eq!(
+            GraphQLHashes::default().stays_pdp_sections,
+            "1e38cb0e7e395439a08a7d936f5453c34ed3940939a06eebbfcf57d380dac6e2"
         );
     }
 

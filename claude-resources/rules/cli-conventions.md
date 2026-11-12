@@ -1,3 +1,11 @@
+---
+paths:
+  - "src/cli/**/*.rs"
+  - "src/bin/cli.rs"
+  - "tests/cli_test.rs"
+  - "tests/parity_test.rs"
+---
+
 # CLI Conventions (`airbnb` binary)
 
 Rules specific to the `airbnb` CLI binary and the `src/cli/` module.
@@ -23,6 +31,9 @@ duplicate code between the two `main` functions.
    - ID + months → `CalendarArgs`
    - ID + optional location → `IdLocationArgs`
    - ID + optional location + months → `IdMonthsLocationArgs`
+   - A stay and comparable filters (`--checkin`, `--checkout`, `--adults`,
+     `--property-type`, `--min-bedrooms`) → flatten `StayArgs` and convert it
+     with `handlers::stay_args_to_filter`
    - Custom shape: add a new `#[derive(Debug, clap::Args)]` struct
 
 2. **Add a variant** to the `Commands` enum in `src/cli/args.rs`, then

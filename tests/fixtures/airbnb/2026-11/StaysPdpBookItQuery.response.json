@@ -1,0 +1,115 @@
+{
+  "data": {
+    "node": {
+      "__typename": "DemandStayListing",
+      "pdpPresentation": {
+        "__typename": "DemandStayListingPdpPresentationContainer",
+        "bookIt": {
+          "__typename": "StandardBookIt",
+          "structuredDisplayPrice": {
+            "__typename": "StructuredDisplayPrice",
+            "primaryLine": {
+              "__typename": "QualifiedDisplayPriceLine",
+              "accessibilityLabel": "$1,400 total",
+              "price": "$1,400",
+              "qualifier": "total",
+              "concatQualifierLeft": false,
+              "trailing": null
+            },
+            "secondaryLine": null,
+            "explanationData": {
+              "__typename": "DisplayPriceExplanationData",
+              "title": "Price details",
+              "subtitle": null,
+              "priceDetails": [
+                {
+                  "__typename": "DisplayPriceExplanationLineGroup",
+                  "items": [
+                    {
+                      "__typename": "DefaultExplanationLineItem",
+                      "description": "7 nights x $200.00",
+                      "priceString": "$1,400.00",
+                      "explanationData": null
+                    }
+                  ],
+                  "renderBorderTop": false,
+                  "collapsable": null
+                },
+                {
+                  "__typename": "DisplayPriceExplanationDisclaimer",
+                  "content": "Pay $0 today with no extra fees."
+                }
+              ]
+            },
+            "explanationDataDisplayPosition": "PRIMARY_LINE",
+            "displayPriceStyle": "REGULATED_TOTAL"
+          },
+          "availability": {
+            "__typename": "BookItAvailability",
+            "isAvailable": true,
+            "canInstantBook": true,
+            "unavailabilityMessage": null,
+            "eligibility": null,
+            "unavailabilityReason": null
+          },
+          "productItemDetail": {
+            "__typename": "BasicPriceDetail",
+            "explanationData": {
+              "__typename": "DisplayPriceExplanationData",
+              "title": "Price details",
+              "priceDetails": [
+                {
+                  "__typename": "DisplayPriceExplanationLineGroup",
+                  "items": [
+                    {
+                      "__typename": "DefaultExplanationLineItem",
+                      "description": "7 nights x $200.00",
+                      "priceString": "$1,400.00",
+                      "explanationData": null
+                    }
+                  ],
+                  "renderBorderTop": false,
+                  "collapsable": false
+                },
+                {
+                  "__typename": "DisplayPriceExplanationLineGroup",
+                  "items": [
+                    {
+                      "__typename": "HighlightExplanationLineItem",
+                      "description": "Total",
+                      "priceString": "$1,400.00",
+                      "explanationData": null,
+                      "originalPriceString": null,
+                      "accessibilityLabel": null
+                    }
+                  ],
+                  "renderBorderTop": false,
+                  "collapsable": null
+                }
+              ]
+            }
+          },
+          "selectedDates": "Jun 12 – 19",
+          "integratedTip": {
+            "__typename": "SimpleMerchandisingTip",
+            "title": "$0 today · Free cancellation before <b>May 13</b>",
+            "type": "PAY_ZERO_UPFRONT",
+            "messageType": "LISTING_PAY_LESS_UPFRONT_EDUCATION"
+          },
+          "announcement": {
+            "__typename": "SimpleMerchandisingTip",
+            "title": "Rare find! This place is usually booked",
+            "type": "RARE_FIND",
+            "messageType": "LISTING_OCCUPANCY_RATE"
+          },
+          "priceDetailTips": null,
+          "priceMerchandisingMessage": null
+        },
+        "priceHeatmap": null
+      }
+    }
+  },
+  "extensions": {
+    "traceId": "fixture"
+  }
+}

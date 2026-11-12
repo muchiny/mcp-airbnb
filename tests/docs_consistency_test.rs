@@ -90,7 +90,7 @@ async fn live_surface() -> LiveSurface {
         .await
         .expect("resources/templates/list should complete")
         .into_iter()
-        .map(|template| template.raw.uri_template)
+        .map(|template| template.uri_template)
         .collect();
     conn.shutdown().await;
     LiveSurface { tools, templates }

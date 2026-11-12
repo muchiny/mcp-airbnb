@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use super::num::amount_text;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Listing {
     pub id: String,
@@ -81,6 +83,36 @@ pub struct ListingDetail {
     pub service_fee: Option<f64>,
     #[serde(default)]
     pub neighborhood: Option<String>,
+    /// Airbnb's "Guest favorite" badge, when the listing page states it.
+    #[serde(default)]
+    pub is_guest_favorite: Option<bool>,
+    /// Highlights Airbnb prints under the title (`"headline: body"`).
+    #[serde(default)]
+    pub highlights: Vec<String>,
+    /// Guest ratings per category (cleanliness, accuracy, ...).
+    #[serde(default)]
+    pub category_ratings: Vec<CategoryRating>,
+    /// Topics guests mention in reviews, with the number of reviews.
+    #[serde(default)]
+    pub review_tags: Vec<ReviewTag>,
+}
+
+/// Average guest rating of one category of a listing.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CategoryRating {
+    /// Category label as Airbnb prints it (`"Cleanliness"`).
+    pub category: String,
+    /// Average rating out of 5.
+    pub rating: f64,
+}
+
+/// A topic guests mention in the reviews of a listing.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ReviewTag {
+    /// Topic label as Airbnb prints it (`"Pool"`).
+    pub name: String,
+    /// Number of reviews that mention the topic.
+    pub count: u32,
 }
 
 /// A price is known only when it is a finite, strictly positive number.
@@ -131,6 +163,23 @@ impl std::fmt::Display for SearchResult {
     }
 }
 
+impl Listing {
+    /// Badges of the search card, in the order Airbnb shows them.
+    pub fn badges(&self) -> Vec<&'static str> {
+        let mut badges = Vec::new();
+        if self.is_guest_favorite == Some(true) {
+            badges.push("Guest Favorite");
+        }
+        if self.is_superhost == Some(true) {
+            badges.push("Superhost");
+        }
+        if self.instant_book == Some(true) {
+            badges.push("Instant Book");
+        }
+        badges
+    }
+}
+
 impl std::fmt::Display for Listing {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // Airbnb only exposes nightly prices on search results and listings
@@ -139,8 +188,12 @@ impl std::fmt::Display for Listing {
         if let Some(price) = self.known_price() {
             write!(
                 f,
-                "[ID {}] {} - {} ({}{price}/night",
-                self.id, self.name, self.location, self.currency
+                "[ID {}] {} - {} ({}{}/night",
+                self.id,
+                self.name,
+                self.location,
+                self.currency,
+                amount_text(price)
             )?;
         } else {
             write!(
@@ -152,7 +205,7 @@ impl std::fmt::Display for Listing {
         if let Some(rating) = self.rating {
             write!(
                 f,
-                ", {rating:.1}* {reviews} reviews",
+                ", {rating:.2}* {reviews} reviews",
                 reviews = self.review_count
             )?;
         }
@@ -161,6 +214,9 @@ impl std::fmt::Display for Listing {
         }
         if self.is_guest_favorite == Some(true) {
             write!(f, " | Guest Favorite")?;
+        }
+        if self.instant_book == Some(true) {
+            write!(f, " | Instant Book")?;
         }
         if let Some(ref hid) = self.host_id {
             write!(f, " | Host ID: {hid}")?;
@@ -172,27 +228,9 @@ impl std::fmt::Display for Listing {
     }
 }
 
-impl std::fmt::Display for ListingDetail {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "# {}", self.name)?;
-        writeln!(f, "Location: {}", self.location)?;
-        // When the public API doesn't surface a nightly price for a direct
-        // detail fetch, `price_per_night` is 0.0 — flag that explicitly
-        // rather than printing a misleading "$0/night".
-        if let Some(price) = self.known_price() {
-            writeln!(f, "Price: {}{price}/night", self.currency)?;
-        } else {
-            writeln!(
-                f,
-                "Price: unavailable — Airbnb shows nightly prices only for dated searches (search with check-in and check-out dates)"
-            )?;
-        }
-        if let Some(rating) = self.rating {
-            writeln!(f, "Rating: {rating:.2} ({} reviews)", self.review_count)?;
-        }
-        if let Some(ref pt) = self.property_type {
-            writeln!(f, "Type: {pt}")?;
-        }
+impl ListingDetail {
+    /// Host line and host facts of the detail view.
+    fn fmt_host(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(ref host) = self.host_name {
             write!(f, "Host: {host}")?;
             if self.host_is_superhost == Some(true) {
@@ -206,7 +244,12 @@ impl std::fmt::Display for ListingDetail {
             }
             writeln!(f)?;
             if let Some(ref joined) = self.host_joined {
-                writeln!(f, "Host since: {joined}")?;
+                // Airbnb publishes either a join date or a tenure ("8 years hosting").
+                if joined.contains("hosting") {
+                    writeln!(f, "Host experience: {joined}")?;
+                } else {
+                    writeln!(f, "Host since: {joined}")?;
+                }
             }
             if let Some(count) = self.host_total_listings {
                 writeln!(f, "Host listings: {count}")?;
@@ -215,6 +258,65 @@ impl std::fmt::Display for ListingDetail {
                 writeln!(f, "Languages: {}", self.host_languages.join(", "))?;
             }
         }
+        Ok(())
+    }
+
+    /// Airbnb's highlights and the topics guests mention in reviews.
+    fn fmt_guest_insights(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if !self.highlights.is_empty() {
+            writeln!(f, "\n## Highlights")?;
+            for highlight in &self.highlights {
+                writeln!(f, "- {highlight}")?;
+            }
+        }
+        if !self.review_tags.is_empty() {
+            let parts: Vec<String> = self
+                .review_tags
+                .iter()
+                .map(|tag| format!("{} ({})", tag.name, tag.count))
+                .collect();
+            writeln!(f, "\n## What guests mention\n{}", parts.join(", "))?;
+        }
+        Ok(())
+    }
+}
+
+impl std::fmt::Display for ListingDetail {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "# {}", self.name)?;
+        if !self.location.is_empty() {
+            writeln!(f, "Location: {}", self.location)?;
+        }
+        // When the public API doesn't surface a nightly price for a direct
+        // detail fetch, `price_per_night` is 0.0 — flag that explicitly
+        // rather than printing a misleading "$0/night".
+        if let Some(price) = self.known_price() {
+            writeln!(f, "Price: {}{}/night", self.currency, amount_text(price))?;
+        } else {
+            writeln!(
+                f,
+                "Price: unavailable — Airbnb shows nightly prices only for dated searches (search with check-in and check-out dates)"
+            )?;
+        }
+        if let Some(rating) = self.rating {
+            write!(f, "Rating: {rating:.2} ({} reviews)", self.review_count)?;
+            if self.is_guest_favorite == Some(true) {
+                write!(f, " | Guest favorite")?;
+            }
+            writeln!(f)?;
+        }
+        if !self.category_ratings.is_empty() {
+            let parts: Vec<String> = self
+                .category_ratings
+                .iter()
+                .map(|entry| format!("{} {:.1}", entry.category, entry.rating))
+                .collect();
+            writeln!(f, "Category ratings: {}", parts.join(" | "))?;
+        }
+        if let Some(ref pt) = self.property_type {
+            writeln!(f, "Type: {pt}")?;
+        }
+        self.fmt_host(f)?;
         if let Some(bedrooms) = self.bedrooms {
             write!(f, "Bedrooms: {bedrooms}")?;
             if let Some(beds) = self.beds {
@@ -244,6 +346,7 @@ impl std::fmt::Display for ListingDetail {
             }
             writeln!(f)?;
         }
+        self.fmt_guest_insights(f)?;
         if !self.description.is_empty() {
             writeln!(f, "\n## Description\n{}", self.description)?;
         }
@@ -251,7 +354,7 @@ impl std::fmt::Display for ListingDetail {
             writeln!(f, "\n## Amenities\n{}", self.amenities.join(", "))?;
         }
         if !self.house_rules.is_empty() {
-            writeln!(f, "\n## House Rules\n{}", self.house_rules.join(", "))?;
+            writeln!(f, "\n## House Rules\n{}", self.house_rules.join("; "))?;
         }
         writeln!(f, "\nURL: {}", self.url)?;
         Ok(())
@@ -384,6 +487,10 @@ mod tests {
             cleaning_fee: None,
             service_fee: None,
             neighborhood: None,
+            is_guest_favorite: None,
+            highlights: vec![],
+            category_ratings: vec![],
+            review_tags: vec![],
         };
         let s = detail.to_string();
         assert!(s.contains("# Villa Rosa"));
@@ -438,6 +545,10 @@ mod tests {
             cleaning_fee: None,
             service_fee: None,
             neighborhood: None,
+            is_guest_favorite: None,
+            highlights: vec![],
+            category_ratings: vec![],
+            review_tags: vec![],
         };
         let s = detail.to_string();
         assert!(s.contains("# Simple Room"));
@@ -486,6 +597,10 @@ mod tests {
             cleaning_fee: None,
             service_fee: None,
             neighborhood: None,
+            is_guest_favorite: None,
+            highlights: vec![],
+            category_ratings: vec![],
+            review_tags: vec![],
         };
         let s = detail.to_string();
         assert!(s.contains("Bedrooms: 2"));
@@ -620,6 +735,10 @@ mod tests {
             cleaning_fee: Some(75.0),
             service_fee: Some(45.0),
             neighborhood: None,
+            is_guest_favorite: None,
+            highlights: vec![],
+            category_ratings: vec![],
+            review_tags: vec![],
         };
         let s = detail.to_string();
         assert!(
@@ -673,6 +792,10 @@ mod tests {
             cleaning_fee: None,
             service_fee: None,
             neighborhood: None,
+            is_guest_favorite: None,
+            highlights: vec![],
+            category_ratings: vec![],
+            review_tags: vec![],
         };
         let s = detail.to_string();
         assert!(
@@ -765,6 +888,10 @@ mod tests {
             cleaning_fee: None,
             service_fee: None,
             neighborhood: None,
+            is_guest_favorite: None,
+            highlights: vec![],
+            category_ratings: vec![],
+            review_tags: vec![],
         }
     }
 

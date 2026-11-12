@@ -6,9 +6,9 @@ Unit tests live next to the code (`#[cfg(test)] mod tests`). Integration tests l
 
 | File | Scope | What it checks |
 |------|-------|----------------|
-| `mcp_server_test.rs` | 📡 MCP protocol | Real rmcp client ↔ server over an in-memory duplex: initialize, `tools/list` (18 tools, annotations, schemas), resources list/read, every stored URI matched against the RFC 6570 templates, error propagation |
-| `mcp_resources_test.rs` | 📦 Resources | Encoded URIs, 18 templates, `text/plain`, tolerant reads, `resources/list_changed` |
-| `functional_verification_test.rs` | 🔄 End to end | All 18 tools called through the MCP protocol against a realistic mock |
+| `mcp_server_test.rs` | 📡 MCP protocol | Real rmcp client ↔ server over an in-memory duplex: initialize, `tools/list` (21 tools, annotations, schemas), resources list/read, every stored URI matched against the RFC 6570 templates, error propagation |
+| `mcp_resources_test.rs` | 📦 Resources | Encoded URIs, 21 templates, `text/plain`, tolerant reads, `resources/list_changed` |
+| `functional_verification_test.rs` | 🔄 End to end | Tools called through the MCP protocol against a realistic mock, including the dated ones (quote, rank, status) |
 | `parity_test.rs` | ⚖️ Parity | The same recording mock through CLI and MCP must make identical upstream calls (ARCH-1) |
 | `cancellation_test.rs` | 🛑 MCP cancellation | A cancelled tool call drops its in-flight upstream work (MCP-8) |
 | `analytical_tools_test.rs` | 🧠 Analytics | The 11 analytical tools with mock data |

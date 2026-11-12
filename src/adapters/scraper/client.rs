@@ -22,6 +22,7 @@ use crate::domain::analytics::{self, HostProfile, NeighborhoodStats, OccupancyEs
 use crate::domain::calendar::PriceCalendar;
 use crate::domain::listing::{ListingDetail, SearchResult};
 use crate::domain::listing_id::validate_listing_id;
+use crate::domain::quote::{PriceQuote, QuoteRequest};
 use crate::domain::review::ReviewsPage;
 use crate::domain::search_params::SearchParams;
 use crate::error::{AirbnbError, Result};
@@ -264,6 +265,20 @@ impl AirbnbClient for AirbnbScraper {
         let calendar = self.get_price_calendar(id, months).await?;
         Ok(analytics::compute_occupancy_estimate(id, &calendar))
     }
+
+    fn clear_cache(&self) {
+        self.cache.clear();
+    }
+
+    /// The listing page carries no dated price: only the booking panel's
+    /// GraphQL query quotes a stay, so the HTML source cannot answer.
+    async fn get_price_quote(&self, request: &QuoteRequest) -> Result<PriceQuote> {
+        request.validate()?;
+        Err(AirbnbError::UpstreamSchema {
+            operation: "StaysPdpBookItQuery".into(),
+            detail: "the HTML listing page publishes no dated price; price quotes need the GraphQL source (scraper.graphql_enabled: true)".into(),
+        })
+    }
 }
 
 /// Build the HTML search URL. The free-text location is pushed as ONE
@@ -308,6 +323,7 @@ mod tests {
             max_price: None,
             property_type: None,
             cursor: None,
+            ..SearchParams::default()
         };
         let url = build_search_url("https://www.airbnb.com", &params).expect("valid base url");
         assert_eq!(url, "https://www.airbnb.com/s/Paris-France/homes");
@@ -327,6 +343,7 @@ mod tests {
             max_price: None,
             property_type: None,
             cursor: None,
+            ..SearchParams::default()
         };
         let url = build_search_url("https://www.airbnb.com", &params).expect("valid base url");
         assert!(url.contains("checkin=2025-07-01"));
@@ -347,6 +364,7 @@ mod tests {
             max_price: None,
             property_type: None,
             cursor: None,
+            ..SearchParams::default()
         }
     }
 

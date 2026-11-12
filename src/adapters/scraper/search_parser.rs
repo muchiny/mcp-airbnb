@@ -108,9 +108,8 @@ fn navigate_json<'a>(data: &'a serde_json::Value, path: &[&str]) -> Option<&'a s
 }
 
 fn deep_find_listings(data: &serde_json::Value, max_depth: u32) -> Option<Vec<&serde_json::Value>> {
-    if max_depth == 0 {
-        return None;
-    }
+    // Depth budget of the levels below; `None` once it is used up.
+    let deeper = max_depth.checked_sub(1)?;
     // Recursively search for arrays containing objects with listing IDs
     match data {
         serde_json::Value::Array(arr) => {
@@ -124,7 +123,7 @@ fn deep_find_listings(data: &serde_json::Value, max_depth: u32) -> Option<Vec<&s
             }
             // Search deeper
             for item in arr {
-                if let Some(result) = deep_find_listings(item, max_depth - 1) {
+                if let Some(result) = deep_find_listings(item, deeper) {
                     return Some(result);
                 }
             }
@@ -132,7 +131,7 @@ fn deep_find_listings(data: &serde_json::Value, max_depth: u32) -> Option<Vec<&s
         }
         serde_json::Value::Object(map) => {
             for value in map.values() {
-                if let Some(result) = deep_find_listings(value, max_depth - 1) {
+                if let Some(result) = deep_find_listings(value, deeper) {
                     return Some(result);
                 }
             }
@@ -405,17 +404,14 @@ fn parse_search_css(document: &Html, base_url: &str) -> Result<SearchResult> {
 fn extract_id_from_url(url: &str) -> Option<String> {
     // Extract listing ID from URLs like "/rooms/12345?..."
     let parts: Vec<&str> = url.split('/').collect();
-    for (i, part) in parts.iter().enumerate() {
-        if *part == "rooms"
-            && let Some(id_part) = parts.get(i + 1)
-        {
-            let id = id_part.split('?').next().unwrap_or(id_part);
-            if !id.is_empty() {
-                return Some(id.to_string());
-            }
-        }
-    }
-    None
+    parts.windows(2).find_map(|pair| match pair {
+        ["rooms", id_part] => id_part
+            .split('?')
+            .next()
+            .filter(|id| !id.is_empty())
+            .map(str::to_string),
+        _ => None,
+    })
 }
 
 #[cfg(test)]

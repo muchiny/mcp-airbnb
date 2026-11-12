@@ -8,7 +8,7 @@ The **MCP layer** exposes domain capabilities as [Model Context Protocol](https:
 
 The main server struct, defined in `server.rs`. It uses rmcp macros:
 
-- **`#[tool_router]`** on the `impl` block — registers all 18 tool methods
+- **`#[tool_router]`** on the `impl` block — registers all 21 tool methods
 - **`#[tool(...)]`** on each method — defines tool name, description, and annotations
 - **`#[tool_handler]`** on the `ServerHandler` impl — provides server info and capabilities
 
@@ -21,7 +21,7 @@ flowchart TD
     Server --> Router["🔧 ToolRouter&lt;Self&gt;"]
     Server --> Resources["📦 ResourceStore"]
 
-    subgraph Data["📡 Data Tools (7)"]
+    subgraph Data["📡 Data Tools (9)"]
         S["🔍 airbnb_search"]
         D["📋 airbnb_listing_details"]
         R["⭐ airbnb_reviews"]
@@ -29,9 +29,11 @@ flowchart TD
         H["👤 airbnb_host_profile"]
         N["📊 airbnb_neighborhood_stats"]
         O["📈 airbnb_occupancy_estimate"]
+        Q["💶 airbnb_price_quote"]
+        ST["🩺 airbnb_status"]
     end
 
-    subgraph Analytical["🧠 Analytical Tools (11)"]
+    subgraph Analytical["🧠 Analytical Tools (12)"]
         CMP["🔄 airbnb_compare_listings"]
         PT["📉 airbnb_price_trends"]
         GF["🕳️ airbnb_gap_finder"]
@@ -43,6 +45,7 @@ flowchart TD
         RS["💬 airbnb_review_sentiment"]
         CP["🎯 airbnb_competitive_positioning"]
         OP["💲 airbnb_optimal_pricing"]
+        SR["🥇 airbnb_search_rank"]
     end
 
     Router --> Data
@@ -65,6 +68,8 @@ Every failure is a tool result with `isError: true`, and nothing is stored for i
 
 Every successful result, and the resource stored with it, wraps the scraped text between `<<<BEGIN UNTRUSTED AIRBNB DATA>>>` and `<<<END UNTRUSTED AIRBNB DATA>>>` (`finish` → `fence_untrusted`). Listing names, descriptions, reviews and host bios are written by third parties; the instructions tell the model to read them as data, never as instructions.
 
+While the GraphQL source is failing and the HTML fallback answers instead, `finish` appends a `PARTIAL DATA WARNING` after the end marker (`domain::status::fallback_note`). It is written by the server and names operations only (`listing details`, `reviews`, …), never upstream text; the upstream error itself is shown by `airbnb_status`, inside the fence.
+
 ### 🔧 Tools
 
 | Tool | Kind | Purpose |
@@ -76,6 +81,8 @@ Every successful result, and the resource stored with it, wraps the scraped text
 | 👤 `airbnb_host_profile` | data | Host profile |
 | 📊 `airbnb_neighborhood_stats` | data | Area prices, ratings, property types |
 | 📈 `airbnb_occupancy_estimate` | data | Occupancy from availability (past dates excluded) |
+| 💶 `airbnb_price_quote` | data | Real price of a stay from the booking panel; `weeks` gives the seasonal curve |
+| 🩺 `airbnb_status` | data | Health of every upstream operation, fallbacks in use |
 | 🔄 `airbnb_compare_listings` | analytical | Side-by-side comparison with percentiles |
 | 📉 `airbnb_price_trends` | analytical | Seasonal pricing |
 | 🕳️ `airbnb_gap_finder` | analytical | Orphan nights and gaps |
@@ -87,6 +94,7 @@ Every successful result, and the resource stored with it, wraps the scraped text
 | 💬 `airbnb_review_sentiment` | analytical | Keyword sentiment and themes |
 | 🎯 `airbnb_competitive_positioning` | analytical | Percentile ranks vs comparable listings (price, rating, amenities, reviews) |
 | 💲 `airbnb_optimal_pricing` | analytical | Price recommendation with reasoning |
+| 🥇 `airbnb_search_rank` | analytical | Position of a listing in a search, price vs the scanned results |
 
 ## 🔧 Tool Parameter Types
 
@@ -94,13 +102,15 @@ Every successful result, and the resource stored with it, wraps the scraped text
 
 | Struct | Tool | Key Fields |
 |--------|------|------------|
-| `SearchToolParams` | 🔍 `airbnb_search` | `location`, `checkin`, `checkout`, `adults`, `children`, `infants`, `pets`, `min_price`, `max_price`, `property_type`, `cursor` |
+| `SearchToolParams` | 🔍 `airbnb_search` | `location`, `checkin`, `checkout`, `adults`, `children`, `infants`, `pets`, `min_price`, `max_price`, `property_type`, `min_bedrooms`, `min_beds`, `min_bathrooms`, `amenities`, `guest_favorite`, `instant_book`, `cursor` |
 | `DetailToolParams` | 📋 `airbnb_listing_details` | `id` |
 | `ReviewsToolParams` | ⭐ `airbnb_reviews` | `id`, `cursor` |
 | `CalendarToolParams` | 📅 `airbnb_price_calendar` | `id`, `months` |
 | `HostProfileToolParams` | 👤 `airbnb_host_profile` | `id` |
 | `NeighborhoodStatsToolParams` | 📊 `airbnb_neighborhood_stats` | `location`, `checkin`, `checkout`, `property_type` |
 | `OccupancyEstimateToolParams` | 📈 `airbnb_occupancy_estimate` | `id`, `months` |
+| `PriceQuoteToolParams` | 💶 `airbnb_price_quote` | `id`, `checkin`, `checkout`, `adults`, `weeks` |
+| `StatusToolParams` | 🩺 `airbnb_status` | `location` |
 
 ### 🧠 Analytical Tools
 
@@ -109,14 +119,15 @@ Every successful result, and the resource stored with it, wraps the scraped text
 | `CompareListingsToolParams` | 🔄 `airbnb_compare_listings` | `ids`, `location`, `max_listings`, `checkin`, `checkout`, `property_type` |
 | `PriceTrendsToolParams` | 📉 `airbnb_price_trends` | `id`, `months` |
 | `GapFinderToolParams` | 🕳️ `airbnb_gap_finder` | `id`, `months` |
-| `RevenueEstimateToolParams` | 💵 `airbnb_revenue_estimate` | `id`, `location`, `months` |
+| `RevenueEstimateToolParams` | 💵 `airbnb_revenue_estimate` | `id`, `location`, `months`, `checkin`, `checkout`, `adults`, `property_type`, `min_bedrooms` |
 | `ListingScoreToolParams` | 🏆 `airbnb_listing_score` | `id` |
-| `AmenityAnalysisToolParams` | 🧩 `airbnb_amenity_analysis` | `id`, `location` |
+| `AmenityAnalysisToolParams` | 🧩 `airbnb_amenity_analysis` | `id`, `location`, `checkin`, `checkout`, `adults`, `property_type`, `min_bedrooms` |
 | `MarketComparisonToolParams` | 🗺️ `airbnb_market_comparison` | `locations`, `checkin`, `checkout`, `property_type` |
 | `HostPortfolioToolParams` | 📂 `airbnb_host_portfolio` | `id` |
 | `ReviewSentimentToolParams` | 💬 `airbnb_review_sentiment` | `id`, `max_pages` |
-| `CompetitivePositioningToolParams` | 🎯 `airbnb_competitive_positioning` | `id`, `location` |
-| `OptimalPricingToolParams` | 💲 `airbnb_optimal_pricing` | `id`, `location`, `months` |
+| `CompetitivePositioningToolParams` | 🎯 `airbnb_competitive_positioning` | `id`, `location`, `checkin`, `checkout`, `adults`, `property_type`, `min_bedrooms` |
+| `OptimalPricingToolParams` | 💲 `airbnb_optimal_pricing` | `id`, `location`, `months`, `checkin`, `checkout`, `adults`, `property_type`, `min_bedrooms` |
+| `SearchRankToolParams` | 🥇 `airbnb_search_rank` | `id`, `location`, `checkin`, `checkout`, `adults`, `children`, `property_type`, `min_bedrooms`, `amenities`, `max_pages` |
 
 All parameter types derive `Debug`, `Deserialize`, and `JsonSchema` (for MCP schema generation via `schemars`) and carry `#[serde(deny_unknown_fields)]`, so a misspelled argument is refused. Ranges, lengths and the listing-id pattern are declared with `#[schemars(range(..))]` / `#[schemars(length(..))]` / `#[schemars(pattern(..))]` from the constants in `src/domain/limits.rs`. The `///` doc comments on each field become JSON Schema descriptions that AI assistants see.
 
@@ -133,7 +144,9 @@ The store is bounded: 256 entries and 8 MiB in total, one hour per entry, least 
 | Reviews | `airbnb://listing/{id}/reviews{?cursor}` | `airbnb_reviews` |
 | Host Profile | `airbnb://listing/{id}/host` | `airbnb_host_profile` |
 | Occupancy Estimate | `airbnb://listing/{id}/occupancy{?months}` | `airbnb_occupancy_estimate` |
-| Search Results | `airbnb://search/{location}{?checkin,checkout,adults,children,infants,pets,min_price,max_price,property_type,cursor}` | `airbnb_search` |
+| Price Quote | `airbnb://listing/{id}/quote{?checkin,checkout,adults,weeks}` | `airbnb_price_quote` |
+| Source Status | `airbnb://status{?location}` | `airbnb_status` |
+| Search Results | `airbnb://search/{location}{?checkin,checkout,adults,children,infants,pets,min_price,max_price,property_type,min_bedrooms,min_beds,min_bathrooms,amenities,guest_favorite,instant_book,cursor}` | `airbnb_search` |
 | Neighborhood Stats | `airbnb://neighborhood/{location}{?checkin,checkout,property_type}` | `airbnb_neighborhood_stats` |
 
 #### 🧠 Analytical Resources
@@ -143,21 +156,22 @@ The store is bounded: 256 entries and 8 MiB in total, one hour per entry, least 
 | Comparison | `airbnb://analysis/compare{?ids,location,max_listings,checkin,checkout,property_type}` | `airbnb_compare_listings` |
 | Price Trends | `airbnb://analysis/price-trends/{id}{?months}` | `airbnb_price_trends` |
 | Booking Gaps | `airbnb://analysis/gaps/{id}{?months}` | `airbnb_gap_finder` |
-| Revenue Estimate | `airbnb://analysis/revenue{?id,location,months}` | `airbnb_revenue_estimate` |
+| Revenue Estimate | `airbnb://analysis/revenue{?id,location,months,checkin,checkout,adults,property_type,min_bedrooms}` | `airbnb_revenue_estimate` |
 | Listing Score | `airbnb://analysis/score/{id}` | `airbnb_listing_score` |
-| Amenity Analysis | `airbnb://analysis/amenities/{id}{?location}` | `airbnb_amenity_analysis` |
+| Amenity Analysis | `airbnb://analysis/amenities/{id}{?location,checkin,checkout,adults,property_type,min_bedrooms}` | `airbnb_amenity_analysis` |
 | Market Comparison | `airbnb://analysis/market/{locations}{?checkin,checkout,property_type}` | `airbnb_market_comparison` |
 | Host Portfolio | `airbnb://analysis/portfolio/{id}` | `airbnb_host_portfolio` |
 | Review Sentiment | `airbnb://analysis/sentiment/{id}{?max_pages}` | `airbnb_review_sentiment` |
-| Competitive Positioning | `airbnb://analysis/positioning/{id}{?location}` | `airbnb_competitive_positioning` |
-| Optimal Pricing | `airbnb://analysis/pricing/{id}{?location,months}` | `airbnb_optimal_pricing` |
+| Competitive Positioning | `airbnb://analysis/positioning/{id}{?location,checkin,checkout,adults,property_type,min_bedrooms}` | `airbnb_competitive_positioning` |
+| Optimal Pricing | `airbnb://analysis/pricing/{id}{?location,months,checkin,checkout,adults,property_type,min_bedrooms}` | `airbnb_optimal_pricing` |
+| Search Rank | `airbnb://analysis/rank/{id}{?location,checkin,checkout,adults,children,property_type,min_bedrooms,amenities,max_pages}` | `airbnb_search_rank` |
 
 ## 🔌 Protocol Details
 
 - 📡 **Transport**: stdio (`stdin`/`stdout`)
 - 🔄 **Protocol**: JSON-RPC (MCP specification)
 - 📝 **Logging**: All tracing output goes to `stderr` — `stdout` is strictly reserved for MCP JSON-RPC messages
-- 🔧 **Capabilities**: Tools (18) + Resources (18 templates, listChanged)
+- 🔧 **Capabilities**: Tools (21) + Resources (21 templates, listChanged)
 - 🏷️ **Version**: `ProtocolVersion::LATEST`
 - 🔒 **Annotations**: All tools marked `read_only_hint = true, open_world_hint = true`
 

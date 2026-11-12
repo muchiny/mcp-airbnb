@@ -1,0 +1,948 @@
+{
+ "data": {
+  "node": {
+   "__typename": "DemandStayListing",
+   "propertyType": "VILLA",
+   "spaceType": "ENTIRE_HOME",
+   "personCapacity": 6,
+   "description": {
+    "name": {
+     "__typename": "UGCText",
+     "localizedString": "Sample villa - 3 bedrooms"
+    }
+   },
+   "listingRatingStats": {
+    "overallRatingStats": {
+     "ratingAverage": 4.94,
+     "ratingCount": "54"
+    }
+   },
+   "location": {
+    "coordinate": {
+     "latitude": 41.5622,
+     "longitude": 9.2739
+    }
+   },
+   "pdpPresentation": {
+    "__typename": "DemandStayListingPdpPresentationContainer",
+    "pdpType": "MARKETPLACE",
+    "title": {
+     "content": {
+      "__typename": "UGCText",
+      "localizedString": "Sample villa - 3 bedrooms"
+     }
+    },
+    "descriptions": {
+     "longDescriptionHtml": {
+      "__typename": "UGCText",
+      "localizedString": "Sample description, first line.<br />Second line with <b>markup</b>."
+     },
+     "shortDescriptionHtml": {
+      "content": {
+       "__typename": "UGCText",
+       "localizedString": "Sample description, first line.<br />Second line with <b>markup</b>."
+      }
+     }
+    },
+    "amenities": {
+     "previewAmenitiesGroups": [
+      {
+       "title": null,
+       "amenities": [
+        {
+         "available": true,
+         "title": "Garden view"
+        },
+        {
+         "available": true,
+         "title": "Beach access \u2013 Beachfront"
+        },
+        {
+         "available": true,
+         "title": "Kitchen"
+        },
+        {
+         "available": true,
+         "title": "Wifi"
+        },
+        {
+         "available": true,
+         "title": "Dedicated workspace"
+        },
+        {
+         "available": true,
+         "title": "Free carport on premises \u2013 8 spaces"
+        },
+        {
+         "available": true,
+         "title": "Shared indoor pool - available seasonally, open specific hours, heated"
+        },
+        {
+         "available": true,
+         "title": "55 inch HDTV with premium cable"
+        },
+        {
+         "available": true,
+         "title": "EV charger"
+        },
+        {
+         "available": true,
+         "title": "Free washer \u2013 In unit"
+        }
+       ]
+      }
+     ],
+     "seeAllAmenitiesGroups": [
+      {
+       "title": "Scenic views",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Garden view"
+        }
+       ]
+      },
+      {
+       "title": "Bathroom",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Hair dryer"
+        },
+        {
+         "available": true,
+         "title": "Cleaning products"
+        },
+        {
+         "available": true,
+         "title": "Hot water"
+        },
+        {
+         "available": true,
+         "title": "Shower gel"
+        }
+       ]
+      },
+      {
+       "title": "Bedroom and laundry",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Free washer \u2013 In unit"
+        },
+        {
+         "available": true,
+         "title": "Essentials"
+        },
+        {
+         "available": true,
+         "title": "Hangers"
+        },
+        {
+         "available": true,
+         "title": "Bed linens"
+        },
+        {
+         "available": true,
+         "title": "Extra pillows and blankets"
+        },
+        {
+         "available": true,
+         "title": "Room-darkening shades"
+        },
+        {
+         "available": true,
+         "title": "Iron"
+        },
+        {
+         "available": true,
+         "title": "Drying rack for clothing"
+        },
+        {
+         "available": true,
+         "title": "Clothing storage"
+        }
+       ]
+      },
+      {
+       "title": "Entertainment",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Ethernet connection"
+        },
+        {
+         "available": true,
+         "title": "55 inch HDTV with premium cable"
+        },
+        {
+         "available": true,
+         "title": "Books and reading material"
+        }
+       ]
+      },
+      {
+       "title": "Family",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Crib"
+        },
+        {
+         "available": true,
+         "title": "Pack \u2019n play/Travel crib - available upon request"
+        },
+        {
+         "available": true,
+         "title": "Children\u2019s books and toys"
+        },
+        {
+         "available": true,
+         "title": "Clamp on table seat high chair - available upon request"
+        },
+        {
+         "available": true,
+         "title": "Baby bath - available upon request"
+        },
+        {
+         "available": true,
+         "title": "Children\u2019s dinnerware"
+        },
+        {
+         "available": true,
+         "title": "Changing table"
+        },
+        {
+         "available": true,
+         "title": "Board games"
+        }
+       ]
+      },
+      {
+       "title": "Heating and cooling",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Central air conditioning"
+        },
+        {
+         "available": true,
+         "title": "Heating - split type ductless system"
+        }
+       ]
+      },
+      {
+       "title": "Home safety",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Smoke alarm"
+        },
+        {
+         "available": true,
+         "title": "Carbon monoxide alarm"
+        },
+        {
+         "available": true,
+         "title": "Fire extinguisher"
+        },
+        {
+         "available": true,
+         "title": "First aid kit"
+        }
+       ]
+      },
+      {
+       "title": "Internet and office",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Wifi"
+        },
+        {
+         "available": true,
+         "title": "Dedicated workspace"
+        }
+       ]
+      },
+      {
+       "title": "Kitchen and dining",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Kitchen"
+        },
+        {
+         "available": true,
+         "title": "Refrigerator"
+        },
+        {
+         "available": true,
+         "title": "Microwave"
+        },
+        {
+         "available": true,
+         "title": "Cooking basics"
+        },
+        {
+         "available": true,
+         "title": "Dishes and silverware"
+        },
+        {
+         "available": true,
+         "title": "Freezer"
+        },
+        {
+         "available": true,
+         "title": "Dishwasher"
+        },
+        {
+         "available": true,
+         "title": "Samsung induction stove"
+        },
+        {
+         "available": true,
+         "title": "Stainless steel oven"
+        },
+        {
+         "available": true,
+         "title": "Hot water kettle"
+        },
+        {
+         "available": true,
+         "title": "Coffee maker: Nespresso"
+        },
+        {
+         "available": true,
+         "title": "Wine glasses"
+        },
+        {
+         "available": true,
+         "title": "Toaster"
+        },
+        {
+         "available": true,
+         "title": "Baking sheet"
+        },
+        {
+         "available": true,
+         "title": "Blender"
+        },
+        {
+         "available": true,
+         "title": "Barbecue utensils"
+        },
+        {
+         "available": true,
+         "title": "Dining table"
+        },
+        {
+         "available": true,
+         "title": "Coffee"
+        },
+        {
+         "available": true,
+         "title": "Bread maker"
+        }
+       ]
+      },
+      {
+       "title": "Location features",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Beach access \u2013 Beachfront"
+        },
+        {
+         "available": true,
+         "title": "Private entrance"
+        }
+       ]
+      },
+      {
+       "title": "Outdoor",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Private patio or balcony"
+        },
+        {
+         "available": true,
+         "title": "Private backyard \u2013 Fully fenced"
+        },
+        {
+         "available": true,
+         "title": "Outdoor furniture"
+        },
+        {
+         "available": true,
+         "title": "Outdoor dining area"
+        },
+        {
+         "available": true,
+         "title": "BBQ grill"
+        },
+        {
+         "available": true,
+         "title": "Beach essentials"
+        },
+        {
+         "available": true,
+         "title": "Sun loungers"
+        }
+       ]
+      },
+      {
+       "title": "Parking and facilities",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Free carport on premises \u2013 8 spaces"
+        },
+        {
+         "available": true,
+         "title": "Free street parking"
+        },
+        {
+         "available": true,
+         "title": "Shared indoor pool - available seasonally, open specific hours, heated"
+        },
+        {
+         "available": true,
+         "title": "EV charger"
+        },
+        {
+         "available": true,
+         "title": "Single level home"
+        }
+       ]
+      },
+      {
+       "title": "Services",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Luggage dropoff allowed"
+        },
+        {
+         "available": true,
+         "title": "Host greets you"
+        }
+       ]
+      },
+      {
+       "title": "Not included",
+       "amenities": [
+        {
+         "available": false,
+         "title": "Exterior security cameras on property"
+        },
+        {
+         "available": false,
+         "title": "Dryer"
+        }
+       ]
+      }
+     ]
+    },
+    "location": {
+     "subtitle": "Porto-Vecchio, Corse, France",
+     "locationName": null,
+     "latitude": 41.5622,
+     "longitude": 9.2739
+    },
+    "localizedLocation": "Porto-Vecchio",
+    "hostInfo": {
+     "passportData": {
+      "name": "Host A",
+      "userId": "RGVtYW5kVXNlcjoxMDAwMDAx",
+      "isSuperhost": true,
+      "isVerified": true,
+      "profilePictureUrl": "https://example.com/fixture-image/host.jpg",
+      "ratingCount": 366,
+      "ratingAverage": 4.95,
+      "timeAsHost": {
+       "years": 8,
+       "months": 1
+      }
+     },
+     "highlights": [
+      {
+       "text": {
+        "content": {
+         "__typename": "UGCText",
+         "localizedString": "Speaks English and French"
+        }
+       }
+      },
+      {
+       "text": {
+        "content": {
+         "__typename": "UGCText",
+         "localizedString": ""
+        }
+       }
+      }
+     ],
+     "responseRateText": "Response rate: 100%",
+     "responseTimeText": "Responds within an hour",
+     "about": null,
+     "overview": {
+      "title": {
+       "text": "Hosted by Host A"
+      }
+     }
+    },
+    "quality": {
+     "listingRatingStats": {
+      "overallRatingStats": {
+       "ratingAverage": 4.94,
+       "ratingCount": "54"
+      }
+     },
+     "isGuestFavorite": true,
+     "categoryRatings": [
+      {
+       "categoryType": "CLEANLINESS",
+       "localizedRating": "5.0",
+       "label": "Cleanliness"
+      },
+      {
+       "categoryType": "ACCURACY",
+       "localizedRating": "5.0",
+       "label": "Accuracy"
+      },
+      {
+       "categoryType": "CHECKIN",
+       "localizedRating": "4.8",
+       "label": "Check-in"
+      },
+      {
+       "categoryType": "COMMUNICATION",
+       "localizedRating": "4.9",
+       "label": "Communication"
+      },
+      {
+       "categoryType": "LOCATION",
+       "localizedRating": "4.8",
+       "label": "Location"
+      },
+      {
+       "categoryType": "VALUE",
+       "localizedRating": "4.8",
+       "label": "Value"
+      }
+     ],
+     "reviewTags": [
+      {
+       "name": "BEACH",
+       "count": 17,
+       "localizedName": "Beach"
+      },
+      {
+       "name": "HOSPITALITY",
+       "count": 50,
+       "localizedName": "Hospitality"
+      },
+      {
+       "name": "POOL",
+       "count": 24,
+       "localizedName": "Pool"
+      },
+      {
+       "name": "CLEANLINESS",
+       "count": 27,
+       "localizedName": "Cleanliness"
+      },
+      {
+       "name": "LOCATION",
+       "count": 26,
+       "localizedName": "Location"
+      },
+      {
+       "name": "AMENITIES",
+       "count": 17,
+       "localizedName": "Amenities"
+      },
+      {
+       "name": "FAMILY",
+       "count": 12,
+       "localizedName": "Family"
+      },
+      {
+       "name": "NEARBY",
+       "count": 11,
+       "localizedName": "Nearby"
+      },
+      {
+       "name": "INDOOR_SPACES",
+       "count": 9,
+       "localizedName": "Indoor spaces"
+      },
+      {
+       "name": "ACCURACY",
+       "count": 10,
+       "localizedName": "Accuracy"
+      }
+     ]
+    },
+    "overview": {
+     "title": "Entire villa in Porto-Vecchio, France",
+     "items": [
+      "6 guests",
+      "3 bedrooms",
+      "4 beds",
+      "2 baths"
+     ]
+    },
+    "rules": {
+     "groupItems": [
+      {
+       "type": "HOUSE_RULES_STRUCTURED_RULES",
+       "title": null,
+       "items": [
+        {
+         "type": "HOUSE_RULES_PERSON_CAPACITY",
+         "title": "Up to 6 overnight guests",
+         "description": null
+        },
+        {
+         "type": "HOUSE_RULES_PETS",
+         "title": "No pets",
+         "description": null
+        },
+        {
+         "type": "HOUSE_RULES_SMOKING_ALLOWED",
+         "title": "No smoking",
+         "description": {
+          "__typename": "LocalizedText",
+          "text": "Including vaping and e-cigarettes"
+         }
+        },
+        {
+         "type": "HOUSE_RULES_QUIET_HOURS",
+         "title": "Quiet hours",
+         "description": {
+          "__typename": "LocalizedText",
+          "text": "11:00\u202fPM - 8:00\u202fAM"
+         }
+        },
+        {
+         "type": "HOUSE_RULES_EVENTS_ALLOWED",
+         "title": "No parties or events",
+         "description": null
+        },
+        {
+         "type": "HOUSE_RULES_COMMERCIAL_PHOTOGRAPHY_ALLOWED",
+         "title": "No commercial photography",
+         "description": {
+          "__typename": "LocalizedText",
+          "text": "Including commercial filming"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    "heroMedia": {
+     "edges": [
+      {
+       "node": {
+        "image": {
+         "uri": "https://example.com/fixture-image/1.jpg"
+        }
+       }
+      },
+      {
+       "node": {
+        "image": {
+         "uri": "https://example.com/fixture-image/2.jpg"
+        }
+       }
+      },
+      {
+       "node": {
+        "image": {
+         "uri": "https://example.com/fixture-image/3.jpg"
+        }
+       }
+      }
+     ]
+    },
+    "mediaTour": {
+     "stops": [
+      {
+       "name": "Living room",
+       "items": [
+        {
+         "image": {
+          "uri": "https://example.com/fixture-image/4.jpg"
+         }
+        },
+        {
+         "image": {
+          "uri": "https://example.com/fixture-image/5.jpg"
+         }
+        }
+       ]
+      },
+      {
+       "name": "Full kitchen",
+       "items": [
+        {
+         "image": {
+          "uri": "https://example.com/fixture-image/6.jpg"
+         }
+        },
+        {
+         "image": {
+          "uri": "https://example.com/fixture-image/7.jpg"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    "highlights": [
+     {
+      "headline": {
+       "localizedContent": "Sample highlight 1"
+      },
+      "body": {
+       "localizedContent": "Sample highlight 1 body"
+      }
+     },
+     {
+      "headline": {
+       "localizedContent": "Sample highlight 2"
+      },
+      "body": {
+       "localizedContent": "Sample highlight 2 body"
+      }
+     },
+     {
+      "headline": {
+       "localizedContent": "Sample highlight 3"
+      },
+      "body": {
+       "localizedContent": "Sample highlight 3 body"
+      }
+     }
+    ],
+    "sharingConfig": {
+     "propertyType": "Entire villa"
+    },
+    "personCapacity": 6
+   }
+  },
+  "presentation": {
+   "stayProductDetailPage": {
+    "sections": {
+     "metadata": {
+      "pdpType": "MARKETPLACE",
+      "sharingConfig": {
+       "title": "Villa in Porto-Vecchio \u00b7 \u26054.94 \u00b7 3 bedrooms \u00b7 4 beds \u00b7 2 baths",
+       "propertyType": "Entire villa",
+       "personCapacity": 6,
+       "reviewCount": 54,
+       "starRating": 4.94
+      },
+      "loggingContext": {
+       "eventDataLogging": {
+        "listingId": "45490342",
+        "listingLat": 41.5622,
+        "listingLng": 9.2739,
+        "roomType": "Entire home/apt",
+        "personCapacity": 6
+       }
+      }
+     },
+     "sections": [
+      {
+       "sectionComponentType": "PDP_DESCRIPTION_MODAL",
+       "section": {
+        "__typename": "GeneralListContentSection"
+       }
+      },
+      {
+       "sectionComponentType": "WHAT_COUNTS_AS_A_PET",
+       "section": {
+        "__typename": "GeneralContentSection"
+       }
+      },
+      {
+       "sectionComponentType": "ACCESSIBILITY_FEATURES_MODAL_V2",
+       "section": {
+        "__typename": "AccessibilityFeaturesSection"
+       }
+      },
+      {
+       "sectionComponentType": "REVIEWS_DEFAULT",
+       "section": {
+        "__typename": "StayPdpReviewsSection"
+       }
+      },
+      {
+       "sectionComponentType": "LOCATION_PDP",
+       "section": {
+        "__typename": "LocationSection"
+       }
+      },
+      {
+       "sectionComponentType": "MEET_YOUR_HOST",
+       "section": {
+        "__typename": "MeetYourHostSection"
+       }
+      },
+      {
+       "sectionComponentType": "POLICIES_DEFAULT",
+       "section": {
+        "__typename": "PoliciesSection"
+       }
+      },
+      {
+       "sectionComponentType": "SEO_LINKS_DEFAULT",
+       "section": {
+        "__typename": "SeoLinksSection"
+       }
+      },
+      {
+       "sectionComponentType": "BOOK_IT_SIDEBAR",
+       "section": {
+        "__typename": "BookItSection",
+        "maxGuestCapacity": 6,
+        "structuredDisplayPrice": null
+       }
+      },
+      {
+       "sectionComponentType": "REPORT_TO_AIRBNB",
+       "section": {
+        "__typename": "ReportToAirbnbSection"
+       }
+      },
+      {
+       "sectionComponentType": "NAV_DEFAULT",
+       "section": {
+        "__typename": "NavSection"
+       }
+      },
+      {
+       "sectionComponentType": "BOOK_IT_NAV",
+       "section": {
+        "__typename": "BookItSection"
+       }
+      },
+      {
+       "sectionComponentType": "MESSAGE_BANNER",
+       "section": null
+      },
+      {
+       "sectionComponentType": "HIGHLIGHTS_DEFAULT",
+       "section": {
+        "__typename": "PdpHighlightsSection"
+       }
+      },
+      {
+       "sectionComponentType": "UGC_TRANSLATION",
+       "section": {
+        "__typename": "UgcTranslationSection"
+       }
+      },
+      {
+       "sectionComponentType": "DESCRIPTION_DEFAULT",
+       "section": {
+        "__typename": "PdpDescriptionSection"
+       }
+      },
+      {
+       "sectionComponentType": "SLEEPING_ARRANGEMENT_IMAGES",
+       "section": {
+        "__typename": "SleepingArrangementSection"
+       }
+      },
+      {
+       "sectionComponentType": "AMENITIES_DEFAULT",
+       "section": {
+        "__typename": "AmenitiesSection"
+       }
+      },
+      {
+       "sectionComponentType": "ACCESSIBILITY_FEATURES_PREVIEW_CAROUSEL",
+       "section": {
+        "__typename": "AccessibilityFeaturesSection"
+       }
+      },
+      {
+       "sectionComponentType": "STAYS_PDP_AVAILABILITY_CALENDAR_INLINE",
+       "section": {
+        "__typename": "AvailabilityCalendarSection"
+       }
+      },
+      {
+       "sectionComponentType": "TITLE_DEFAULT",
+       "section": {
+        "__typename": "PdpTitleSection"
+       }
+      },
+      {
+       "sectionComponentType": "HERO_DEFAULT",
+       "section": {
+        "__typename": "PdpHeroSection"
+       }
+      },
+      {
+       "sectionComponentType": "BOOK_IT_FLOATING_FOOTER",
+       "section": {
+        "__typename": "BookItSection"
+       }
+      },
+      {
+       "sectionComponentType": "NAV_MOBILE",
+       "section": {
+        "__typename": "NavMobileSection"
+       }
+      },
+      {
+       "sectionComponentType": "AVAILABILITY_CALENDAR_DEFAULT",
+       "section": {
+        "__typename": "AvailabilityCalendarSection"
+       }
+      },
+      {
+       "sectionComponentType": "BOOK_IT_CALENDAR_SHEET",
+       "section": {
+        "__typename": "BookItSection"
+       }
+      },
+      {
+       "sectionComponentType": "PDP_DESCRIPTION_MODAL",
+       "section": {
+        "__typename": "GeneralListContentSection"
+       }
+      },
+      {
+       "sectionComponentType": "PHOTO_TOUR_SCROLLABLE",
+       "section": {
+        "__typename": "PhotoTourModalSection",
+        "mediaItems": [
+         {
+          "baseUrl": "https://example.com/fixture-image/8.jpg"
+         },
+         {
+          "baseUrl": "https://example.com/fixture-image/9.jpg"
+         }
+        ]
+       }
+      },
+      {
+       "sectionComponentType": "CANCELLATION_POLICY_PICKER_MODAL",
+       "section": {
+        "__typename": "CancellationPolicyPickerSection"
+       }
+      }
+     ]
+    }
+   }
+  }
+ }
+}

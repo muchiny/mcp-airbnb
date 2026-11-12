@@ -1,5 +1,6 @@
 ---
 name: cli-demo
+disable-model-invocation: true
 description: Run the `airbnb` CLI binary through a short demonstration sequence — help, search, listing details in JSON, and a multi-fetch analytical command — to verify that the CLI wires through to the shared AirbnbClient and renders output correctly. Use after changing anything under src/cli/, src/application/, or the Display impls on domain types.
 ---
 
@@ -21,17 +22,17 @@ commands. It covers:
    cargo build --bin airbnb 2>&1 | tail -5
    ```
 
-2. **Run `--help`** and verify all 18 subcommands are listed:
+2. **Run `--help`** and verify all 21 subcommands are listed:
 
    ```bash
    ./target/debug/airbnb --help
    ```
 
-   Expected commands (count: 18):
+   Expected commands (count: 21):
    `search, listing, reviews, calendar, host, neighborhood, occupancy,
    compare, price-trends, gap-finder, revenue, listing-score, amenities,
    market-comparison, host-portfolio, review-sentiment, competitive,
-   optimal-pricing`.
+   optimal-pricing, rank, quote, status`.
 
 3. **Try a search** (real HTTP, uses the scraper's rate limit of 1 req / 2s —
    this **will** hit Airbnb, so only run it ad-hoc, not in CI):
@@ -43,7 +44,7 @@ commands. It covers:
    Expected: human-readable output starting with `Found N listings` and
    listing at least one property. If it fails with a Cloudflare-style
    error, the scraper or API key cache is stale — see
-   `claude-resources/rules/scraping-conventions.md` § API key rotation.
+   `claude-resources/rules/scraping-conventions.md` § API key.
 
 4. **JSON mode on a listing detail**:
 

@@ -52,9 +52,22 @@ impl ListingCache for MemoryCache {
         Some(entry.value.clone())
     }
 
+    fn clear(&self) {
+        if let Ok(mut cache) = self.inner.write() {
+            cache.clear();
+        } else {
+            tracing::error!("Cache lock poisoned on clear(), entries kept");
+        }
+    }
+
     fn set(&self, key: &str, value: &str, ttl: Duration) {
         let now = Instant::now();
-        let expires_at = now.checked_add(ttl).unwrap_or_else(|| now + MAX_ENTRY_TTL);
+        // An unrepresentable deadline falls back to the cap, then to `now`
+        // (the entry expires at the next clock tick): never a panic.
+        let expires_at = now
+            .checked_add(ttl)
+            .or_else(|| now.checked_add(MAX_ENTRY_TTL))
+            .unwrap_or(now);
         if let Ok(mut cache) = self.inner.write() {
             cache.put(
                 key.to_string(),
@@ -84,6 +97,18 @@ mod tests {
         let cache = MemoryCache::new(10);
         cache.set("key1", "value1", Duration::from_mins(1));
         assert_eq!(cache.get("key1"), Some("value1".to_string()));
+    }
+
+    #[test]
+    fn clear_drops_every_entry() {
+        let cache = MemoryCache::new(10);
+        cache.set("a", "1", Duration::from_mins(1));
+        cache.set("b", "2", Duration::from_mins(1));
+        cache.clear();
+        assert_eq!(cache.get("a"), None);
+        assert_eq!(cache.get("b"), None);
+        cache.set("a", "3", Duration::from_mins(1));
+        assert_eq!(cache.get("a").as_deref(), Some("3"));
     }
 
     #[test]

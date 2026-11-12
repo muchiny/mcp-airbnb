@@ -45,23 +45,23 @@ struct NumberSpan {
 /// Every number of `chars`, with thousands-group spaces folded in.
 fn number_spans(chars: &[char]) -> Vec<NumberSpan> {
     let mut spans = Vec::new();
-    let mut i = 0;
-    while i < chars.len() {
-        if !chars[i].is_ascii_digit() {
-            i += 1;
+    let mut i = 0_usize;
+    while let Some(first) = chars.get(i) {
+        if !first.is_ascii_digit() {
+            i = i.saturating_add(1);
             continue;
         }
         let start = i;
         let mut token = String::new();
-        while i < chars.len() {
-            let c = chars[i];
-            let next_is_digit = chars.get(i + 1).is_some_and(char::is_ascii_digit);
+        while let Some(&c) = chars.get(i) {
+            let next = i.saturating_add(1);
+            let next_is_digit = chars.get(next).is_some_and(char::is_ascii_digit);
             if c.is_ascii_digit() || ((c == ',' || c == '.') && next_is_digit) {
                 token.push(c);
-            } else if !(GROUP_SPACES.contains(&c) && starts_three_digit_group(chars, i + 1)) {
+            } else if !(GROUP_SPACES.contains(&c) && starts_three_digit_group(chars, next)) {
                 break;
             }
-            i += 1;
+            i = next;
         }
         spans.push(NumberSpan {
             start,
@@ -74,10 +74,13 @@ fn number_spans(chars: &[char]) -> Vec<NumberSpan> {
 
 /// `true` when `chars[from..]` starts with exactly three digits.
 fn starts_three_digit_group(chars: &[char], from: usize) -> bool {
-    chars
-        .get(from..from + 3)
-        .is_some_and(|group| group.iter().all(char::is_ascii_digit))
-        && !chars.get(from + 3).is_some_and(char::is_ascii_digit)
+    match chars.get(from..) {
+        Some([a, b, c, rest @ ..]) => {
+            [a, b, c].into_iter().all(char::is_ascii_digit)
+                && !rest.first().is_some_and(char::is_ascii_digit)
+        }
+        _ => false,
+    }
 }
 
 /// Turn a raw token (`"1,234.56"`, `"1.234,56"`, `"45,14"`) into a number.
@@ -96,7 +99,7 @@ fn normalize_number_token(token: &str) -> Option<f64> {
             return None;
         }
         token.replace(group, "").replace(decimal, ".")
-    } else if commas + dots == 0 {
+    } else if commas == 0 && dots == 0 {
         token.to_string()
     } else {
         let separator = if commas > 0 { ',' } else { '.' };
@@ -143,8 +146,8 @@ pub fn detect_currency(s: &str) -> Option<String> {
 
 /// Currency label directly before or after a number.
 fn currency_around(chars: &[char], span: &NumberSpan) -> Option<String> {
-    let before: String = chars[..span.start].iter().collect();
-    let after: String = chars[span.end..].iter().collect();
+    let before: String = chars.get(..span.start)?.iter().collect();
+    let after: String = chars.get(span.end..)?.iter().collect();
     let prefix = before
         .split_whitespace()
         .last()
@@ -287,7 +290,8 @@ pub fn parse_structured_display_price(sdp: &Value, nights_hint: Option<u32>) -> 
     let total = match qualifier {
         Qualifier::Total { .. } => primary_amount,
         _ => secondary_total(sdp).or_else(|| explanation_total(sdp)),
-    };
+    }
+    .filter(|amount| *amount > 0.0);
     let nightly = breakdown.map(|b| b.nightly).or_else(|| match qualifier {
         Qualifier::Unqualified | Qualifier::Night => primary_amount,
         Qualifier::Total { nights } => primary_amount
@@ -295,6 +299,8 @@ pub fn parse_structured_display_price(sdp: &Value, nights_hint: Option<u32>) -> 
             .map(|(stay_total, n)| stay_total / f64::from(n)),
         Qualifier::Other => None,
     });
+    // On the wire 0.0 means "unknown": a zero amount is never a price.
+    let nightly = nightly.filter(|amount| *amount > 0.0);
     DisplayPrice {
         nightly,
         total,
@@ -356,7 +362,7 @@ fn classify_qualifier(qualifier: &str) -> Qualifier {
 
 /// Amount string of a primary line: `discountedPrice`, `price`, the same
 /// keys inside `orderedComponents`, then `originalPrice` as a last resort.
-fn primary_price_str(primary: &Value) -> Option<&str> {
+pub(crate) fn primary_price_str(primary: &Value) -> Option<&str> {
     for key in ["discountedPrice", "price"] {
         if let Some(value) = primary.get(key).and_then(Value::as_str) {
             return Some(value);
@@ -633,6 +639,26 @@ mod tests {
         assert_eq!(p.nightly, Some(90.0));
         assert_eq!(p.total, None);
         assert_eq!(p.currency.as_deref(), Some("$"));
+    }
+
+    #[test]
+    fn zero_amounts_are_unknown_not_prices() {
+        let secondary = json!({
+            "primaryLine": {"price": "$150", "qualifier": "night"},
+            "secondaryLine": {"price": "$0", "qualifier": "total"}
+        });
+        let p = parse_structured_display_price(&secondary, None);
+        assert_eq!((p.nightly, p.total), (Some(150.0), None));
+
+        let breakdown = json!({
+            "primaryLine": {"price": "$0", "qualifier": "total"},
+            "explanationData": {"priceDetails": [{"items": [
+                {"description": "5 nights x $0.00", "priceString": "$0.00"},
+                {"description": "Total", "priceString": "$0.00"}
+            ]}]}
+        });
+        let p = parse_structured_display_price(&breakdown, Some(5));
+        assert_eq!((p.nightly, p.total), (None, None));
     }
 
     #[test]

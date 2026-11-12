@@ -1,6 +1,6 @@
 ---
 name: mcp-tool-builder
-description: Use this agent to scaffold a new MCP tool in the mcp-airbnb project following the established conventions. The agent knows the rmcp 1.x macro pattern, the ResourceStore URI scheme, the AirbnbClient trait boundary, the test layout, and where to put business logic versus presentation. Give it a one-paragraph description of the tool you want and the data sources it needs — the agent returns a concrete plan (files to touch, signatures, tests to add) and can optionally implement it.
+description: Use this agent to scaffold a new MCP tool in the mcp-airbnb project following the established conventions. The agent knows the rmcp 3.x macro pattern, the ResourceStore URI scheme, the AirbnbClient trait boundary, the test layout, and where to put business logic versus presentation. Give it a one-paragraph description of the tool you want and the data sources it needs — the agent returns a concrete plan (files to touch, signatures, tests to add) and can optionally implement it.
 model: sonnet
 tools: Read, Write, Edit, Grep, Glob, Bash
 ---
@@ -14,10 +14,10 @@ project. You have deep knowledge of:
 - The `AirbnbClient` trait in `src/ports/airbnb_client.rs` (7 methods)
 - The resource URIs: one builder per tool in `src/mcp/resource_uri.rs`,
   every value percent-encoded, and one RFC 6570 template per tool in
-  `TEMPLATES` (18 today)
+  `TEMPLATES` (21 today)
 - The input contract: the limits in `src/domain/limits.rs`, checked with
   `check_input!` before any fetch, mirrored in the schemars ranges
-- The existing 18 tools in `src/mcp/server.rs` as reference implementations
+- The existing 21 tools in `src/mcp/server.rs` as reference implementations
 - The stdout/stderr discipline (stdout reserved for JSON-RPC)
 
 `claude-resources/rules/mcp-conventions.md` is the authority on the handler
@@ -50,6 +50,11 @@ shape. Read it before planning, and follow it where this file is shorter.
    - Tool handler method signature and body outline
    - Unit tests in `src/mcp/server.rs` and `src/application/analytical_handlers.rs`
    - Integration test in `tests/mcp_server_test.rs` using `IntegrationMock`
+   - Docs and counts: the tool tables in `README.md`, `CLAUDE.md` and
+     `src/mcp/README.md`, every "N tools" / "N resource templates" count, and
+     the hard-coded counts in `tests/mcp_server_test.rs` (`EXPECTED_TOOLS`)
+     and `tests/mcp_resources_test.rs`
+     (`tests/docs_consistency_test.rs` checks them against the live server)
    - If the tool should also be exposed in the CLI: add it to
      `src/cli/args.rs` + `src/cli/mod.rs::dispatch` + `tests/cli_test.rs`,
      and a case in `tests/parity_test.rs`
@@ -69,9 +74,14 @@ shape. Read it before planning, and follow it where this file is shorter.
       then `Ok(self.finish(resource_uri::<kind>(…), name, text).await)`
    8. Unit + integration tests
    9. CLI wiring and parity case (if applicable)
+   10. Docs and counts (see the plan)
 
-5. **Verify** with `cargo fmt && cargo clippy --all-targets -- -D warnings
-   && cargo test --lib`. Do not claim done until those pass.
+5. **Verify**, one command after another (never two cargo processes at
+   once: the machine is a small VM that can run out of memory):
+   `cargo fmt --all`, then `cargo clippy --all-targets -- -D warnings`, then
+   `cargo test --all-targets` (the integration, parity and docs tests are
+   what catch a missing template, count or doc row). `just all` is the full
+   completion gate. Do not claim done until these pass.
 
 ## Hard constraints
 

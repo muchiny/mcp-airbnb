@@ -1,7 +1,8 @@
 //! Airbnb's public web API key: fetched from the homepage, cached, and shared
 //! by every client.
 
-use std::sync::Arc;
+use std::collections::BTreeMap;
+use std::sync::{Arc, PoisonError};
 use std::time::{Duration, Instant};
 
 use reqwest::Client;
@@ -17,6 +18,36 @@ use crate::error::{AirbnbError, Result};
 pub const KEY_FAILURE_BACKOFF: Duration = Duration::from_secs(120);
 
 const KEY_CONTEXT: &str = "Airbnb homepage (API key)";
+
+/// Counts the answers a source fetched over the network, per port method.
+///
+/// A cache hit is not counted. The composite client compares the count
+/// before and after a call to tell "the primary source answered again" from
+/// "the cache answered", which says nothing about the source.
+#[derive(Debug, Default)]
+pub struct FetchCounter {
+    counts: std::sync::Mutex<BTreeMap<&'static str, u64>>,
+}
+
+impl FetchCounter {
+    /// Record one answer fetched from the source for `method`.
+    pub fn record(&self, method: &'static str) {
+        // A panic aborts the process, so poisoning only shows up in tests.
+        let mut counts = self.counts.lock().unwrap_or_else(PoisonError::into_inner);
+        let count = counts.entry(method).or_insert(0);
+        *count = count.saturating_add(1);
+    }
+
+    /// Answers fetched from the source for `method` so far.
+    pub fn count(&self, method: &str) -> u64 {
+        self.counts
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .get(method)
+            .copied()
+            .unwrap_or(0)
+    }
+}
 
 /// Shared API key manager for Airbnb's internal API.
 ///
@@ -153,11 +184,8 @@ impl ApiKeyManager {
 /// Extract the Airbnb API key from the homepage HTML.
 /// The key is embedded in `"api_config":{"key":"<KEY>"`.
 pub fn extract_api_key(html: &str) -> Option<String> {
-    let marker = "\"api_config\":{\"key\":\"";
-    let start = html.find(marker)? + marker.len();
-    let rest = &html[start..];
-    let end = rest.find('"')?;
-    let key = &rest[..end];
+    let (_, rest) = html.split_once("\"api_config\":{\"key\":\"")?;
+    let (key, _) = rest.split_once('"')?;
     if key.is_empty() {
         return None;
     }
@@ -173,6 +201,18 @@ mod tests {
 
     const KEY_HTML: &str =
         r#"<script>window.__config = {"api_config":{"key":"testkey123"}}</script>"#;
+
+    #[test]
+    fn the_fetch_counter_counts_per_method() {
+        let fetches = FetchCounter::default();
+        assert_eq!(fetches.count("get_reviews"), 0);
+        fetches.record("get_reviews");
+        fetches.record("get_reviews");
+        fetches.record("search_listings");
+        assert_eq!(fetches.count("get_reviews"), 2);
+        assert_eq!(fetches.count("search_listings"), 1);
+        assert_eq!(fetches.count("get_price_quote"), 0);
+    }
 
     fn fast_limiter() -> Arc<RateLimiter> {
         Arc::new(RateLimiter::from_interval(Duration::from_millis(1)))

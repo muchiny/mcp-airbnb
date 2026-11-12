@@ -9,13 +9,14 @@ use mcp_airbnb::domain::analytics::{
 };
 use mcp_airbnb::domain::calendar::{CalendarDay, PriceCalendar};
 use mcp_airbnb::domain::listing::{Listing, ListingDetail, SearchResult};
+use mcp_airbnb::domain::quote::{PriceQuote, QuoteRequest};
 use mcp_airbnb::domain::review::{Review, ReviewsPage, ReviewsSummary};
 use mcp_airbnb::domain::search_params::SearchParams;
 use mcp_airbnb::error::Result;
 use mcp_airbnb::mcp::server::AirbnbMcpServer;
 use mcp_airbnb::ports::airbnb_client::AirbnbClient;
 
-use rmcp::model::{CallToolRequestParams, CallToolResult, ClientInfo, ReadResourceRequestParams};
+use rmcp::model::{CallToolRequestParams, CallToolResult, ClientConfig, ReadResourceRequestParams};
 use rmcp::{ClientHandler, ServiceExt};
 
 // ---------------------------------------------------------------------------
@@ -176,6 +177,10 @@ impl AirbnbClient for AnalyticalMock {
                 cleaning_fee: Some(35.0),
                 service_fee: Some(15.0),
                 neighborhood: Some("Le Marais".into()),
+                is_guest_favorite: None,
+                highlights: vec![],
+                category_ratings: vec![],
+                review_tags: vec![],
             }),
             "2" => Ok(ListingDetail {
                 id: "2".into(),
@@ -225,6 +230,10 @@ impl AirbnbClient for AnalyticalMock {
                 cleaning_fee: Some(50.0),
                 service_fee: Some(25.0),
                 neighborhood: Some("7th arrondissement".into()),
+                is_guest_favorite: None,
+                highlights: vec![],
+                category_ratings: vec![],
+                review_tags: vec![],
             }),
             "3" => Ok(ListingDetail {
                 id: "3".into(),
@@ -261,6 +270,10 @@ impl AirbnbClient for AnalyticalMock {
                 cleaning_fee: None,
                 service_fee: None,
                 neighborhood: Some("Montmartre".into()),
+                is_guest_favorite: None,
+                highlights: vec![],
+                category_ratings: vec![],
+                review_tags: vec![],
             }),
             _ => Ok(ListingDetail {
                 id: id.into(),
@@ -322,6 +335,10 @@ impl AirbnbClient for AnalyticalMock {
                 cleaning_fee: Some(80.0),
                 service_fee: Some(45.0),
                 neighborhood: Some("Saint-Germain-des-Pres".into()),
+                is_guest_favorite: None,
+                highlights: vec![],
+                category_ratings: vec![],
+                review_tags: vec![],
             }),
         }
     }
@@ -392,6 +409,8 @@ impl AirbnbClient for AnalyticalMock {
                 },
             ],
             next_cursor: None,
+            total_reviews: None,
+            review_tags: vec![],
         })
     }
 
@@ -717,6 +736,8 @@ impl AirbnbClient for AnalyticalMock {
             description: Some("Passionate Parisian host.".into()),
             profile_picture_url: Some("https://example.com/marie.jpg".into()),
             identity_verified: Some(true),
+            rating: None,
+            review_count: None,
         })
     }
 
@@ -772,6 +793,8 @@ impl AirbnbClient for AnalyticalMock {
             occupancy_rate: 73.9,
             past_days_excluded: 0,
             blocked_days_excluded: 0,
+            closed_periods: vec![],
+            open_season_rate: None,
             currency: "$".into(),
             average_available_price: Some(112.0),
             weekend_avg_price: Some(138.0),
@@ -804,6 +827,26 @@ impl AirbnbClient for AnalyticalMock {
             ],
         })
     }
+
+    async fn get_price_quote(&self, request: &QuoteRequest) -> Result<PriceQuote> {
+        Ok(PriceQuote {
+            listing_id: request.listing_id.clone(),
+            checkin: request.checkin.clone(),
+            checkout: request.checkout.clone(),
+            nights: 7,
+            adults: request.adults,
+            available: true,
+            unavailability_message: None,
+            instant_book: Some(true),
+            total_display: Some("$700".into()),
+            total: Some(700.0),
+            nightly: Some(100.0),
+            listed_nightly: None,
+            currency: "$".into(),
+            breakdown: vec![],
+            notes: vec![],
+        })
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -815,8 +858,8 @@ impl AirbnbClient for AnalyticalMock {
 struct DummyClientHandler;
 
 impl ClientHandler for DummyClientHandler {
-    fn get_info(&self) -> ClientInfo {
-        ClientInfo::default()
+    fn get_info(&self) -> ClientConfig {
+        ClientConfig::default()
     }
 }
 
@@ -824,7 +867,7 @@ fn extract_text(result: &CallToolResult) -> String {
     result
         .content
         .first()
-        .and_then(|c| c.raw.as_text())
+        .and_then(|c| c.as_text())
         .map(|t| t.text.clone())
         .unwrap_or_default()
 }
@@ -1296,10 +1339,7 @@ async fn list_resource_templates_returns_expected_templates() {
         templates.len()
     );
 
-    let uris: Vec<String> = templates
-        .iter()
-        .map(|t| t.raw.uri_template.clone())
-        .collect();
+    let uris: Vec<String> = templates.iter().map(|t| t.uri_template.clone()).collect();
     assert!(uris.iter().any(|u| u.contains("listing/{id}")));
     assert!(uris.iter().any(|u| u.contains("calendar")));
     assert!(uris.iter().any(|u| u.contains("reviews")));
@@ -1351,7 +1391,7 @@ async fn list_resources_populated_after_tool_call() {
         "Resources should be populated after tool call"
     );
 
-    let uris: Vec<String> = result.resources.iter().map(|r| r.raw.uri.clone()).collect();
+    let uris: Vec<String> = result.resources.iter().map(|r| r.uri.clone()).collect();
     assert!(
         uris.iter().any(|u| u.contains("listing/1")),
         "Should contain listing/1 resource, got: {uris:?}"

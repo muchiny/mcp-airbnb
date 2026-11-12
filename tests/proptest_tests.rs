@@ -108,6 +108,7 @@ proptest! {
             max_price: None,
             property_type: None,
             cursor: None,
+            ..SearchParams::default()
         };
         prop_assert!(params.validate().is_ok());
     }

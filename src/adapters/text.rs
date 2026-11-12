@@ -26,15 +26,14 @@ pub fn html_to_text(html: &str) -> String {
         .collect::<String>()
         .replace('\u{a0}', " ");
     let mut out = String::with_capacity(raw.len());
-    let mut blank_lines = 0;
+    let mut previous_blank = false;
     for line in raw.lines().map(str::trim_end) {
-        if line.trim().is_empty() {
-            blank_lines += 1;
-            if blank_lines > 1 || out.is_empty() {
-                continue;
-            }
-        } else {
-            blank_lines = 0;
+        let blank = line.trim().is_empty();
+        // A blank line is kept only once, and never at the very start.
+        let dropped = blank && (previous_blank || out.is_empty());
+        previous_blank = blank;
+        if dropped {
+            continue;
         }
         if !out.is_empty() {
             out.push('\n');
@@ -58,12 +57,9 @@ pub fn parse_rating_and_count(label: &str) -> (Option<f64>, Option<u32>) {
 pub fn parse_rating_a11y_label(label: &str) -> (Option<f64>, Option<u32>) {
     let words: Vec<&str> = label.split_whitespace().collect();
     let rating = words.first().and_then(|word| parse_rating(word));
-    let count = words.windows(2).find_map(|pair| {
-        pair[1]
-            .to_lowercase()
-            .starts_with("review")
-            .then(|| digits_u32(pair[0]))
-            .flatten()
+    let count = words.windows(2).find_map(|pair| match pair {
+        [number, word] if word.to_lowercase().starts_with("review") => digits_u32(number),
+        _ => None,
     });
     (rating, count)
 }

@@ -163,7 +163,9 @@ pub fn parse_retry_after(headers: &HeaderMap) -> Option<Duration> {
         return Some(Duration::from_secs(seconds));
     }
     let at = chrono::DateTime::parse_from_rfc2822(value).ok()?;
-    let remaining = at.with_timezone(&chrono::Utc) - chrono::Utc::now();
+    let remaining = at
+        .with_timezone(&chrono::Utc)
+        .signed_duration_since(chrono::Utc::now());
     Some(remaining.to_std().unwrap_or(Duration::ZERO))
 }
 
@@ -203,6 +205,7 @@ pub async fn send_with_retries(
             reason: format!("{context}: request could not be built or cannot be replayed"),
         })?;
         let retries_left = attempt < policy.max_retries;
+        let next_attempt = attempt.saturating_add(1);
         limiter.wait().await;
         debug!(context, attempt, "sending request");
         match this_try.send().await {
@@ -233,7 +236,7 @@ pub async fn send_with_retries(
                         "HTTP 429 with Retry-After: pausing all requests, then retrying"
                     );
                 } else if retries_left && is_retryable_status(status) {
-                    let delay = policy.backoff(attempt + 1);
+                    let delay = policy.backoff(next_attempt);
                     warn!(
                         context,
                         status = status.as_u16(),
@@ -249,7 +252,7 @@ pub async fn send_with_retries(
                 let transient = err.is_timeout() || err.is_connect();
                 let mapped = transport_error(err);
                 if retries_left && transient {
-                    let delay = policy.backoff(attempt + 1);
+                    let delay = policy.backoff(next_attempt);
                     warn!(
                         context,
                         error = %mapped,
@@ -262,7 +265,7 @@ pub async fn send_with_retries(
                 }
             }
         }
-        attempt += 1;
+        attempt = next_attempt;
     }
 }
 

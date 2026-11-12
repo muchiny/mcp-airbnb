@@ -2,15 +2,15 @@
 
 Project-specific Claude Code resources (rules, skills, agents) bundled with
 this repository. This folder is **committed to git** — unlike `.claude/`
-which is gitignored — so anyone cloning the repo can install them into their
-own Claude Code setup.
+which is gitignored — so anyone cloning the repo can link or copy them into
+their own Claude Code setup (see Installation).
 
 ## What's in here
 
 ```
 claude-resources/
 ├── rules/
-│   ├── mcp-conventions.md         # How to add/modify an MCP tool (rmcp 1.x macros, ResourceStore, tests)
+│   ├── mcp-conventions.md         # How to add/modify an MCP tool (rmcp 3.x macros, ResourceStore, tests)
 │   ├── scraping-conventions.md    # Rate limiting, fixtures, stdout/stderr, composite client pattern
 │   └── cli-conventions.md         # How to add a new subcommand to the `airbnb` CLI
 ├── skills/
@@ -24,13 +24,37 @@ claude-resources/
 
 ## Installation
 
-Two installation modes — pick the one that fits your workflow. Both work
-simultaneously (user-level + project-level) without conflict.
+Claude Code only loads what sits in `.claude/` (project) or `~/.claude/`
+(user). Nothing reads `claude-resources/` by itself: link or copy it first.
+The two modes can coexist.
 
-### Mode A — User-level (recommended for daily use)
+### Mode A — Project-level, linked (recommended inside this repo)
 
-Copy the resources into your own `~/.claude/` so they're available from any
-working directory, not just when you're inside `mcp-airbnb/`.
+`.claude/` is gitignored here, so the links stay local. Link each
+sub-folder, not `.claude/` itself: Claude Code writes `settings.local.json`
+and its worktrees into `.claude/`, and those must not land in the tracked
+`claude-resources/` folder.
+
+```bash
+# From the repo root
+mkdir -p .claude
+ln -s ../claude-resources/rules  .claude/rules
+ln -s ../claude-resources/skills .claude/skills
+ln -s ../claude-resources/agents .claude/agents
+```
+
+Check that nothing is shadowed first. A project agent or skill with the
+same `name` as a user-level one of `~/.claude/` is resolved by priority
+instead of coexisting (`grep -h '^name:' ~/.claude/agents/*.md`). The names
+used here are `mcp-tool-builder`, `scraper-debugger` (agents) and
+`mcp-smoke`, `cli-demo`, `fixtures` (skills).
+
+Start a new Claude Code session from the repo root. The three rules use
+`paths:` frontmatter, so each one loads only once Claude reads or edits a
+matching file (for example `src/cli/**` for `cli-conventions.md`). Skills
+and agents are available straight away.
+
+### Mode B — User-level copy (available from any directory)
 
 ```bash
 # From the repo root
@@ -39,26 +63,9 @@ cp -r claude-resources/skills/* ~/.claude/skills/
 cp -r claude-resources/agents/* ~/.claude/agents/
 ```
 
-If a file with the same name already exists in `~/.claude/`, it will be
-overwritten — review before copying or rename the project files first.
-
-### Mode B — Project-level (automatic discovery)
-
-Claude Code auto-discovers `.claude/rules/`, `.claude/skills/`, and
-`.claude/agents/` in the current working directory. `.claude/` is gitignored
-in this repo, so you can symlink it to `claude-resources/` locally without
-polluting the git history:
-
-```bash
-# From the repo root
-ln -s claude-resources .claude
-```
-
-This gives the resources to anyone running Claude Code from inside
-`mcp-airbnb/`. Symlinks are fine — Claude Code walks through them.
-
-If you prefer a copy (e.g. you want to tweak files locally without touching
-the committed versions), use `cp -r claude-resources/* .claude/` instead.
+Files with the same name in `~/.claude/` are overwritten: review before
+copying. A copy does not follow later edits of `claude-resources/`, so
+repeat the copy after each update.
 
 ## What requires what
 
@@ -74,14 +81,19 @@ Most resources assume a working Rust toolchain and that you're inside the
 | `agents/mcp-tool-builder` | Read access to `src/mcp/`, `src/ports/`, `src/domain/` |
 | `agents/scraper-debugger` | Read access to `src/adapters/scraper/`, `tests/fixtures/` |
 
-All skills/agents are safe when installed user-level — they'll simply fail
-gracefully (with a "not a mcp-airbnb project" hint) when invoked outside
-this repo.
+`/cli-demo` has `disable-model-invocation: true` because its search step
+hits the real Airbnb site: it only runs when you type it. The other skills
+and the agents stay available to Claude.
+
+When installed user-level, the skills and agents only make sense inside this
+repo (they read `src/` and `tests/` by relative path); `/mcp-smoke` prints
+`not in an mcp-airbnb project` and stops elsewhere.
 
 ## Updating
 
 When the project conventions change, update the files in
-`claude-resources/` and commit them. The workspace-level rules in
-`~/dev/.claude/rules/` (hexagonal architecture, Rust conventions, WSL
-safety) are orthogonal and stay where they are — this folder only ships
-what's **specific to mcp-airbnb**.
+`claude-resources/` and commit them. `tests/docs_consistency_test.rs` also
+reads these files (tool, template and fuzz-target counts, the fixture
+privacy rule), so a stale count here fails the test suite. User-level Rust
+conventions (`~/.claude/rules/`) are orthogonal and stay where they are —
+this folder only ships what's **specific to mcp-airbnb**.

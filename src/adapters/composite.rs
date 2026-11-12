@@ -1,11 +1,18 @@
+use std::collections::BTreeMap;
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+use std::time::{Duration, Instant};
+
 use async_trait::async_trait;
 use tracing::{debug, warn};
 
+use crate::adapters::shared::FetchCounter;
 use crate::domain::analytics::{HostProfile, NeighborhoodStats, OccupancyEstimate};
 use crate::domain::calendar::PriceCalendar;
 use crate::domain::listing::{ListingDetail, SearchResult};
+use crate::domain::quote::{PriceQuote, QuoteRequest};
 use crate::domain::review::ReviewsPage;
 use crate::domain::search_params::SearchParams;
+use crate::domain::status::Degradation;
 use crate::error::{AirbnbError, Result};
 use crate::ports::airbnb_client::AirbnbClient;
 
@@ -13,11 +20,76 @@ use crate::ports::airbnb_client::AirbnbClient;
 pub struct CompositeClient {
     graphql: Box<dyn AirbnbClient>,
     scraper: Box<dyn AirbnbClient>,
+    /// Port methods currently served by the scraper, with the GraphQL error
+    /// and the time of the fallback.
+    degraded: Mutex<BTreeMap<&'static str, (String, Instant)>>,
+    /// Network answers of the GraphQL client, when it reports them. Without
+    /// it every `Ok` counts as an answer of the source.
+    primary_fetches: Option<Arc<FetchCounter>>,
 }
+
+/// How long a fallback stays reported when the operation is not called
+/// again: the search cache lifetime, after which nothing served is stale.
+const DEGRADATION_TTL: Duration = Duration::from_mins(15);
+
+/// Longest GraphQL error kept in a degradation, in characters.
+const DEGRADATION_ERROR_CHARS: usize = 300;
 
 impl CompositeClient {
     pub fn new(graphql: Box<dyn AirbnbClient>, scraper: Box<dyn AirbnbClient>) -> Self {
-        Self { graphql, scraper }
+        Self {
+            graphql,
+            scraper,
+            degraded: Mutex::new(BTreeMap::new()),
+            primary_fetches: None,
+        }
+    }
+
+    /// Tell cache hits from network answers of the primary source: a
+    /// fallback is then forgotten only when GraphQL answered over the
+    /// network, not when its cache did.
+    #[must_use]
+    pub fn with_primary_fetches(mut self, fetches: Arc<FetchCounter>) -> Self {
+        self.primary_fetches = Some(fetches);
+        self
+    }
+
+    /// Network answers of the primary source for `method` so far, when it
+    /// reports them.
+    fn primary_fetched(&self, method: &str) -> Option<u64> {
+        self.primary_fetches
+            .as_ref()
+            .map(|fetches| fetches.count(method))
+    }
+
+    fn degraded(&self) -> MutexGuard<'_, BTreeMap<&'static str, (String, Instant)>> {
+        // A panic aborts the process, so poisoning only shows up in tests.
+        self.degraded.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    /// Record that `method` is served by the scraper because GraphQL failed.
+    fn note_fallback(&self, method: &'static str, err: &AirbnbError) {
+        log_fallback(method, err);
+        let error: String = err
+            .to_string()
+            .chars()
+            .take(DEGRADATION_ERROR_CHARS)
+            .collect();
+        self.degraded().insert(method, (error, Instant::now()));
+    }
+
+    /// Record that GraphQL answered `method` again. `fetched_before` is
+    /// [`Self::primary_fetched`] read before the call: an answer that did
+    /// not raise it came from the cache and says nothing about the source,
+    /// so the fallback stays reported.
+    fn note_primary_ok(&self, method: &'static str, fetched_before: Option<u64>) {
+        let from_source = match (fetched_before, self.primary_fetched(method)) {
+            (Some(before), Some(now)) => now > before,
+            _ => true,
+        };
+        if from_source {
+            self.degraded().remove(method);
+        }
     }
 }
 
@@ -180,10 +252,14 @@ fn empty_first_page(claimed: u32) -> AirbnbError {
 /// Try GraphQL; on a fallback-worthy error try the scraper, keeping both causes.
 macro_rules! with_fallback {
     ($self:expr, $method:ident $(, $arg:expr)*) => {{
+        let fetched_before = $self.primary_fetched(stringify!($method));
         match $self.graphql.$method($($arg),*).await {
-            Ok(result) => Ok(result),
+            Ok(result) => {
+                $self.note_primary_ok(stringify!($method), fetched_before);
+                Ok(result)
+            }
             Err(e) if should_fall_back(&e) => {
-                log_fallback(stringify!($method), &e);
+                $self.note_fallback(stringify!($method), &e);
                 $self
                     .scraper
                     .$method($($arg),*)
@@ -202,6 +278,7 @@ impl AirbnbClient for CompositeClient {
     }
 
     async fn get_listing_detail(&self, id: &str) -> Result<ListingDetail> {
+        let fetched_before = self.primary_fetched("get_listing_detail");
         match self.graphql.get_listing_detail(id).await {
             Ok(mut gql) => {
                 // Only structural gaps justify a second request. The HTML page
@@ -221,10 +298,11 @@ impl AirbnbClient for CompositeClient {
                         ),
                     }
                 }
+                self.note_primary_ok("get_listing_detail", fetched_before);
                 Ok(gql)
             }
             Err(e) if should_fall_back(&e) => {
-                log_fallback("get_listing_detail", &e);
+                self.note_fallback("get_listing_detail", &e);
                 self.scraper
                     .get_listing_detail(id)
                     .await
@@ -234,12 +312,20 @@ impl AirbnbClient for CompositeClient {
         }
     }
 
+    /// Only the GraphQL source quotes a stay (the HTML page has no dated
+    /// price), so there is nothing to fall back to.
+    async fn get_price_quote(&self, request: &QuoteRequest) -> Result<PriceQuote> {
+        self.graphql.get_price_quote(request).await
+    }
+
     async fn get_reviews(&self, id: &str, cursor: Option<&str>) -> Result<ReviewsPage> {
+        let fetched_before = self.primary_fetched("get_reviews");
         match self.graphql.get_reviews(id, cursor).await {
             Ok(gql_page) => {
                 // The HTML scraper only sees the reviews embedded in the listing page
                 // (the first page). It may stand in for an empty *first* GraphQL page,
                 // never for a later page reached through an offset cursor.
+                self.note_primary_ok("get_reviews", fetched_before);
                 if cursor.is_none() && gql_page.reviews.is_empty() {
                     return self.complete_empty_first_reviews_page(id, gql_page).await;
                 }
@@ -247,7 +333,7 @@ impl AirbnbClient for CompositeClient {
             }
             // A GraphQL cursor means nothing to the scraper: later pages never fall back.
             Err(e) if cursor.is_none() && should_fall_back(&e) => {
-                log_fallback("get_reviews", &e);
+                self.note_fallback("get_reviews", &e);
                 match self.scraper.get_reviews(id, None).await {
                     // The listing page's rating summary alone is not a reviews page.
                     Ok(scraped) if claimed_reviews_without_text(&scraped).is_some() => {
@@ -276,6 +362,26 @@ impl AirbnbClient for CompositeClient {
     async fn get_occupancy_estimate(&self, id: &str, months: u32) -> Result<OccupancyEstimate> {
         with_fallback!(self, get_occupancy_estimate, id, months)
     }
+
+    fn clear_cache(&self) {
+        self.graphql.clear_cache();
+        self.scraper.clear_cache();
+    }
+
+    /// The operations the scraper is standing in for. An entry disappears
+    /// when GraphQL answers the operation again over the network (a cache
+    /// hit does not count), or after 15 minutes.
+    fn degradations(&self) -> Vec<Degradation> {
+        let mut degraded = self.degraded();
+        degraded.retain(|_, (_, at)| at.elapsed() < DEGRADATION_TTL);
+        degraded
+            .iter()
+            .map(|(operation, (error, _))| Degradation {
+                operation: (*operation).to_string(),
+                error: error.clone(),
+            })
+            .collect()
+    }
 }
 
 #[cfg(test)]
@@ -288,6 +394,177 @@ mod tests {
 
     fn make_composite(graphql: MockAirbnbClient, scraper: MockAirbnbClient) -> CompositeClient {
         CompositeClient::new(Box::new(graphql), Box::new(scraper))
+    }
+
+    fn drifted() -> AirbnbError {
+        AirbnbError::UpstreamSchema {
+            operation: "StaysPdpSections".into(),
+            detail: "HTTP 400 deprecated_web_operation".into(),
+        }
+    }
+
+    #[tokio::test]
+    async fn a_fallback_is_reported_until_graphql_answers_again() {
+        let failing = Arc::new(std::sync::atomic::AtomicBool::new(true));
+        let flag = Arc::clone(&failing);
+        let graphql = MockAirbnbClient::new().with_detail(move |id| {
+            if flag.load(Ordering::SeqCst) {
+                Err(drifted())
+            } else {
+                Ok(make_listing_detail(id))
+            }
+        });
+        let composite = make_composite(graphql, MockAirbnbClient::new());
+        assert_eq!(composite.degradations(), Vec::<Degradation>::new());
+
+        composite.get_listing_detail("42").await.unwrap();
+        let degraded = composite.degradations();
+        assert_eq!(degraded.len(), 1);
+        assert_eq!(degraded[0].operation, "get_listing_detail");
+        assert_eq!(degraded[0].label(), "listing details");
+        assert!(
+            degraded[0].error.contains("deprecated_web_operation"),
+            "{degraded:?}"
+        );
+
+        failing.store(false, Ordering::SeqCst);
+        composite.get_listing_detail("42").await.unwrap();
+        assert!(
+            composite.degradations().is_empty(),
+            "cleared once GraphQL answers"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_cached_answer_does_not_clear_a_reported_fallback() {
+        let fetches = Arc::new(FetchCounter::default());
+        let failing = Arc::new(std::sync::atomic::AtomicBool::new(true));
+        let from_network = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let graphql = MockAirbnbClient::new()
+            .with_detail({
+                let (failing, from_network, fetches) = (
+                    Arc::clone(&failing),
+                    Arc::clone(&from_network),
+                    Arc::clone(&fetches),
+                );
+                move |id| {
+                    if failing.load(Ordering::SeqCst) {
+                        return Err(drifted());
+                    }
+                    if from_network.load(Ordering::SeqCst) {
+                        fetches.record("get_listing_detail");
+                    }
+                    Ok(make_listing_detail(id))
+                }
+            })
+            .with_calendar({
+                let (failing, from_network, fetches) = (
+                    Arc::clone(&failing),
+                    Arc::clone(&from_network),
+                    Arc::clone(&fetches),
+                );
+                move |id, _| {
+                    if failing.load(Ordering::SeqCst) {
+                        return Err(drifted());
+                    }
+                    if from_network.load(Ordering::SeqCst) {
+                        fetches.record("get_price_calendar");
+                    }
+                    Ok(make_price_calendar(id, vec![]))
+                }
+            });
+        let composite = make_composite(graphql, MockAirbnbClient::new())
+            .with_primary_fetches(Arc::clone(&fetches));
+
+        // Hand-written path (detail) and macro path (calendar).
+        composite.get_listing_detail("42").await.unwrap();
+        composite.get_price_calendar("42", 3).await.unwrap();
+        assert_eq!(composite.degradations().len(), 2);
+
+        // GraphQL says Ok without fetching: its cache answered.
+        failing.store(false, Ordering::SeqCst);
+        composite.get_listing_detail("7").await.unwrap();
+        composite.get_price_calendar("7", 3).await.unwrap();
+        assert_eq!(
+            composite.degradations().len(),
+            2,
+            "a cache hit says nothing about the source"
+        );
+
+        // A network answer of one operation clears that operation only.
+        from_network.store(true, Ordering::SeqCst);
+        composite.get_listing_detail("42").await.unwrap();
+        let left = composite.degradations();
+        assert_eq!(left.len(), 1, "{left:?}");
+        assert_eq!(left[0].operation, "get_price_calendar");
+        composite.get_price_calendar("42", 3).await.unwrap();
+        assert_eq!(composite.degradations(), Vec::<Degradation>::new());
+    }
+
+    #[tokio::test]
+    async fn clearing_the_cache_reaches_both_sources() {
+        let graphql = MockAirbnbClient::new();
+        let scraper = MockAirbnbClient::new();
+        let (primary, fallback) = (graphql.cache_clears(), scraper.cache_clears());
+        make_composite(graphql, scraper).clear_cache();
+        assert_eq!(primary.load(Ordering::SeqCst), 1);
+        assert_eq!(fallback.load(Ordering::SeqCst), 1);
+    }
+
+    #[tokio::test]
+    async fn fallbacks_of_the_macro_methods_are_reported_and_errors_are_capped() {
+        let graphql = MockAirbnbClient::new()
+            .with_calendar(|_, _| {
+                Err(AirbnbError::Parse {
+                    reason: "x".repeat(1000),
+                })
+            })
+            .with_search(|_| Err(AirbnbError::RateLimited));
+        let composite = make_composite(graphql, MockAirbnbClient::new());
+        composite.get_price_calendar("42", 3).await.unwrap();
+        // A 429 is returned as-is: no fallback, so nothing to report.
+        assert!(
+            composite
+                .search_listings(&SearchParams::default())
+                .await
+                .is_err()
+        );
+        let degraded = composite.degradations();
+        assert_eq!(degraded.len(), 1, "{degraded:?}");
+        assert_eq!(degraded[0].operation, "get_price_calendar");
+        assert_eq!(degraded[0].error.chars().count(), 300);
+    }
+
+    #[tokio::test]
+    async fn price_quotes_come_from_graphql_only() {
+        let request = QuoteRequest {
+            listing_id: "42".into(),
+            checkin: "2027-06-12".into(),
+            checkout: "2027-06-19".into(),
+            adults: 2,
+        };
+        let scraper_calls = Arc::new(AtomicUsize::new(0));
+        let calls = Arc::clone(&scraper_calls);
+        let scraper = MockAirbnbClient::new().with_quote(move |request| {
+            calls.fetch_add(1, Ordering::SeqCst);
+            Ok(make_price_quote(request, Some(1.0)))
+        });
+        let ok = make_composite(MockAirbnbClient::new(), scraper);
+        assert_eq!(
+            ok.get_price_quote(&request).await.unwrap().nightly,
+            Some(100.0)
+        );
+
+        let failing = MockAirbnbClient::new().with_quote(|_| Err(drifted()));
+        let broken = make_composite(failing, MockAirbnbClient::new());
+        let err = broken.get_price_quote(&request).await.unwrap_err();
+        assert!(matches!(err, AirbnbError::UpstreamSchema { .. }), "{err}");
+        assert_eq!(
+            scraper_calls.load(Ordering::SeqCst),
+            0,
+            "no HTML fallback for quotes"
+        );
+        assert_eq!(broken.degradations(), Vec::<Degradation>::new());
     }
 
     #[tokio::test]
@@ -318,6 +595,7 @@ mod tests {
             max_price: None,
             property_type: None,
             cursor: None,
+            ..SearchParams::default()
         };
         let result = composite.search_listings(&params).await.unwrap();
         assert_eq!(result.listings[0].name, "GQL Result");
@@ -350,6 +628,7 @@ mod tests {
             max_price: None,
             property_type: None,
             cursor: None,
+            ..SearchParams::default()
         };
         let result = composite.search_listings(&params).await.unwrap();
         assert_eq!(result.listings[0].name, "Scraper Result");
@@ -380,6 +659,7 @@ mod tests {
             max_price: None,
             property_type: None,
             cursor: None,
+            ..SearchParams::default()
         };
         let result = composite.search_listings(&params).await.unwrap();
         assert_eq!(result.listings.len(), 1);
@@ -474,6 +754,7 @@ mod tests {
             max_price: None,
             property_type: None,
             cursor: None,
+            ..SearchParams::default()
         };
         let stats = composite.get_neighborhood_stats(&params).await.unwrap();
         assert_eq!(stats.total_listings, 42);

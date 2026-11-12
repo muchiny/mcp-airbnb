@@ -1,9 +1,18 @@
+---
+paths:
+  - "src/mcp/**/*.rs"
+  - "src/application/analytical_handlers.rs"
+  - "tests/mcp_server_test.rs"
+  - "tests/mcp_resources_test.rs"
+  - "tests/functional_verification_test.rs"
+---
+
 # MCP Server Conventions (`mcp-airbnb`)
 
 Rules specific to the MCP protocol layer in `src/mcp/`. Applies when adding,
 modifying, or debugging MCP tools.
 
-## rmcp 1.x macros
+## rmcp 3.x macros
 
 Tools are declared via three attribute macros from `rmcp`:
 
@@ -14,7 +23,7 @@ Tools are declared via three attribute macros from `rmcp`:
 #[tool_handler]                 // on the `impl ServerHandler for AirbnbMcpServer`
 ```
 
-See `src/mcp/server.rs` for 18 existing examples. Do not roll your own
+See `src/mcp/server.rs` for 21 existing examples. Do not roll your own
 JSON-RPC dispatch — always go through the macros.
 
 ## Tool handler shape
@@ -28,9 +37,10 @@ A tool handler is a **thin wrapper**. It must:
 
 ## Parameter structs
 
-- Live in `src/mcp/server.rs` near the top (or in the handler method if
-  single-use)
+- Live in `src/mcp/server.rs`, above the `impl AirbnbMcpServer` block, one
+  `<Name>ToolParams` struct per tool
 - Must derive `Debug, serde::Deserialize, schemars::JsonSchema`
+  (`rmcp` is built with the `schemars` feature, see `Cargo.toml`)
 - Doc-comments on each field become the JSON schema `description` — write
   them as if the LLM will read them (it will)
 - Optional fields: `Option<T>` with no default
@@ -38,26 +48,32 @@ A tool handler is a **thin wrapper**. It must:
 
 ## Resource storage
 
-Every successful tool result is stored through `finish`. URIs come only from the builders in `src/mcp/resource_uri.rs` (one RFC 6570 template per tool, 18 in total; every value percent-encoded; every result-changing input in the URI). `ResourceStore` is a bounded LRU: 256 entries, 8 MiB, 1 h TTL, URIs ≤ 16 KiB. `resources/list` returns pages of 100. Add a template to `TEMPLATES` whenever you add a tool.
+Every successful tool result is stored through `finish`. URIs come only from the builders in `src/mcp/resource_uri.rs` (one RFC 6570 template per tool, 21 in total; every value percent-encoded; every result-changing input in the URI). `ResourceStore` is a bounded LRU: 256 entries, 8 MiB, 1 h TTL, URIs ≤ 16 KiB. `resources/list` returns pages of 100. Add a template to `TEMPLATES` whenever you add a tool.
 
 ## Error handling
 
-Return an error **inside** `CallToolResult::error(vec![Content::text(...)])`
+Return an error **inside** `CallToolResult::error(vec![ContentBlock::text(...)])`
 rather than bubbling `McpError`. This gives the LLM a readable explanation
 instead of a protocol-level failure.
 
 ```rust
+// Abridged from `airbnb_listing_details` in src/mcp/server.rs
+check_input!(validate_listing_id(&params.id));
 match self.client.get_listing_detail(&params.id).await {
     Ok(detail) => {
+        let text = detail.to_string();
         let name = format!("Listing: {}", detail.name);
-        Ok(self.finish(resource_uri::listing(&params.id), name, detail.to_string()).await)
+        Ok(self.finish(resource_uri::listing(&params.id), name, text).await)
     }
-    Err(e) => Ok(CallToolResult::error(vec![Content::text(format!(
-        "Failed to get listing {}: {e}",
+    Err(e) => Ok(CallToolResult::error(vec![ContentBlock::text(format!(
+        "Failed to get listing details for ID {}: {e}. Verify the listing ID is correct — use airbnb_search to find valid IDs.",
         quote_input(&params.id)
     ))])),
 }
 ```
+
+`quote_input` (`src/error.rs`) escapes and truncates user input before it is
+echoed back, so an id cannot inject text into the message.
 
 ## Stdout discipline
 
@@ -68,6 +84,14 @@ rule breaks the wire protocol silently and is painful to debug.
 
 All logging goes through `tracing::{info,warn,error,debug}!` which is
 configured in `main.rs` to write to `std::io::stderr()`.
+
+## Adding a tool also touches
+
+`resource_uri::TEMPLATES` (and its length), the tool tables and counts in
+`README.md`, `CLAUDE.md` and `src/mcp/README.md`, and the hard-coded counts and
+tool list in `tests/mcp_server_test.rs` (`EXPECTED_TOOLS`) and
+`tests/mcp_resources_test.rs`. `tests/docs_consistency_test.rs` fails when a
+count or a tool/template name in the docs drifts from the live server.
 
 ## Testing tools
 

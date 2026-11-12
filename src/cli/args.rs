@@ -32,7 +32,7 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Commands {
-    // ---- Data tools (7) ----
+    // ---- Data tools ----
     /// Search listings by location
     Search(SearchArgs),
     /// Fetch full details for a listing
@@ -48,7 +48,7 @@ pub enum Commands {
     /// Estimate occupancy for a listing
     Occupancy(CalendarArgs),
 
-    // ---- Analytical tools (11) ----
+    // ---- Analytical tools ----
     /// Compare multiple listings side-by-side
     Compare(CompareArgs),
     /// Analyze seasonal price trends from the calendar
@@ -71,6 +71,15 @@ pub enum Commands {
     Competitive(IdLocationArgs),
     /// Recommend optimal pricing based on market data
     OptimalPricing(IdMonthsLocationArgs),
+    /// Find where a listing ranks in the search results of a location
+    Rank(RankArgs),
+
+    // ---- Dated price and diagnostics ----
+    /// Quote the real price of a stay (total, per night, availability)
+    Quote(QuoteArgs),
+    /// Check every Airbnb source this tool depends on
+    #[command(alias = "doctor")]
+    Status(StatusArgs),
 }
 
 // ---------------- Argument structs ----------------
@@ -117,6 +126,32 @@ pub struct SearchArgs {
     #[arg(long)]
     pub property_type: Option<String>,
 
+    /// Minimum number of bedrooms (1–16)
+    #[arg(long, value_parser = clap::value_parser!(u32).range(1..=16))]
+    pub min_bedrooms: Option<u32>,
+
+    /// Minimum number of beds (1–16)
+    #[arg(long, value_parser = clap::value_parser!(u32).range(1..=16))]
+    pub min_beds: Option<u32>,
+
+    /// Minimum number of bathrooms (1–16)
+    #[arg(long, value_parser = clap::value_parser!(u32).range(1..=16))]
+    pub min_bathrooms: Option<u32>,
+
+    /// Amenity every result must have (repeatable): wifi, air conditioning, pool,
+    /// kitchen, free parking, hot tub, heating, washer, dryer, dedicated workspace,
+    /// self check-in, tv, bbq grill, crib
+    #[arg(long = "amenity", value_name = "NAME")]
+    pub amenities: Vec<String>,
+
+    /// Only Guest Favorite listings
+    #[arg(long)]
+    pub guest_favorite: bool,
+
+    /// Only listings that can be booked instantly
+    #[arg(long)]
+    pub instant_book: bool,
+
     /// Pagination cursor from a previous search result
     #[arg(long)]
     pub cursor: Option<String>,
@@ -162,6 +197,9 @@ pub struct IdLocationArgs {
     /// Optional location override (defaults to the listing's own location)
     #[arg(long)]
     pub location: Option<String>,
+    /// Stay and filters of the comparable search
+    #[command(flatten)]
+    pub stay: StayArgs,
 }
 
 #[derive(Debug, Args)]
@@ -176,6 +214,88 @@ pub struct IdMonthsLocationArgs {
     /// Months of calendar data to use (1–12)
     #[arg(long, default_value_t = 12, value_parser = clap::value_parser!(u32).range(1..=12))]
     pub months: u32,
+    /// Stay and filters of the comparable search
+    #[command(flatten)]
+    pub stay: StayArgs,
+}
+
+/// Stay and comparable filters shared by the comparable-based commands.
+#[derive(Debug, Args, Default)]
+pub struct StayArgs {
+    /// Check-in date (YYYY-MM-DD) of the stay comparables are searched for; needs --checkout
+    #[arg(long)]
+    pub checkin: Option<String>,
+
+    /// Check-out date (YYYY-MM-DD); needs --checkin
+    #[arg(long)]
+    pub checkout: Option<String>,
+
+    /// Number of adults of the stay (1–16)
+    #[arg(long)]
+    pub adults: Option<u32>,
+
+    /// Keep only comparables of this type: "Entire home", "Private room" or "Hotel room"
+    #[arg(long)]
+    pub property_type: Option<String>,
+
+    /// Keep only comparables with at least this many bedrooms (1–16)
+    #[arg(long, value_parser = clap::value_parser!(u32).range(1..=16))]
+    pub min_bedrooms: Option<u32>,
+}
+
+#[derive(Debug, Args)]
+pub struct QuoteArgs {
+    /// Listing ID
+    pub id: String,
+
+    /// Check-in date (YYYY-MM-DD)
+    #[arg(long)]
+    pub checkin: String,
+
+    /// Check-out date (YYYY-MM-DD)
+    #[arg(long)]
+    pub checkout: String,
+
+    /// Number of adults (1–16)
+    #[arg(long, default_value_t = 1, value_parser = clap::value_parser!(u32).range(1..=16))]
+    pub adults: u32,
+
+    /// Weekly stays to quote (1–12): the same stay again, one week later each time
+    #[arg(long, default_value_t = 1, value_parser = clap::value_parser!(u32).range(1..=12))]
+    pub weeks: u32,
+}
+
+#[derive(Debug, Args)]
+pub struct RankArgs {
+    /// Listing ID to locate
+    pub id: String,
+
+    /// Location to search (defaults to the listing's own location)
+    #[arg(long)]
+    pub location: Option<String>,
+
+    /// Stay and filters of the search
+    #[command(flatten)]
+    pub stay: StayArgs,
+
+    /// Number of children
+    #[arg(long)]
+    pub children: Option<u32>,
+
+    /// Amenity every result must have (repeatable; same names as `search --amenity`)
+    #[arg(long = "amenity", value_name = "NAME")]
+    pub amenities: Vec<String>,
+
+    /// Search pages to scan at most (1–15, 18 results each)
+    #[arg(long, default_value_t = 5, value_parser = clap::value_parser!(u32).range(1..=15))]
+    pub max_pages: u32,
+}
+
+#[derive(Debug, Args)]
+pub struct StatusArgs {
+    /// Location the checks search (default: "Paris, France")
+    #[arg(long)]
+    pub location: Option<String>,
 }
 
 #[derive(Debug, Args)]
@@ -228,6 +348,9 @@ pub struct RevenueArgs {
     /// Months of calendar data to use (1–12)
     #[arg(long, default_value_t = 12, value_parser = clap::value_parser!(u32).range(1..=12))]
     pub months: u32,
+    /// Stay and filters of the comparable search
+    #[command(flatten)]
+    pub stay: StayArgs,
 }
 
 #[derive(Debug, Args)]
@@ -277,6 +400,197 @@ mod tests {
 
     fn parse(args: &[&str]) -> Result<Cli, clap::Error> {
         Cli::try_parse_from(args)
+    }
+
+    #[test]
+    fn parse_search_panel_filters() {
+        let cli = parse(&[
+            "airbnb",
+            "search",
+            "Porto-Vecchio",
+            "--min-bedrooms",
+            "2",
+            "--min-beds",
+            "3",
+            "--min-bathrooms",
+            "1",
+            "--amenity",
+            "pool",
+            "--amenity",
+            "air conditioning",
+            "--guest-favorite",
+            "--instant-book",
+        ])
+        .unwrap();
+        let Commands::Search(args) = cli.command else {
+            panic!("expected Search");
+        };
+        assert_eq!(args.min_bedrooms, Some(2));
+        assert_eq!(args.min_beds, Some(3));
+        assert_eq!(args.min_bathrooms, Some(1));
+        assert_eq!(args.amenities, ["pool", "air conditioning"]);
+        assert!(args.guest_favorite && args.instant_book);
+        assert!(parse(&["airbnb", "search", "Paris", "--min-bedrooms", "0"]).is_err());
+        assert!(parse(&["airbnb", "search", "Paris", "--min-beds", "17"]).is_err());
+    }
+
+    #[test]
+    fn parse_quote_with_defaults_and_ranges() {
+        let cli = parse(&[
+            "airbnb",
+            "quote",
+            "42",
+            "--checkin",
+            "2027-07-10",
+            "--checkout",
+            "2027-07-17",
+        ])
+        .unwrap();
+        let Commands::Quote(args) = cli.command else {
+            panic!("expected Quote");
+        };
+        assert_eq!(args.id, "42");
+        assert_eq!((args.adults, args.weeks), (1, 1));
+        assert_eq!(args.checkout, "2027-07-17");
+
+        let base = ["airbnb", "quote", "42", "--checkin", "2027-07-10"];
+        assert!(parse(&base).is_err(), "checkout is required");
+        let dated = [
+            "airbnb",
+            "quote",
+            "42",
+            "--checkin",
+            "2027-07-10",
+            "--checkout",
+            "2027-07-17",
+        ];
+        for extra in [
+            ["--weeks", "0"],
+            ["--weeks", "13"],
+            ["--adults", "0"],
+            ["--adults", "17"],
+        ] {
+            let args: Vec<&str> = dated.iter().chain(extra.iter()).copied().collect();
+            assert!(parse(&args).is_err(), "{extra:?}");
+        }
+        let args: Vec<&str> = dated
+            .iter()
+            .chain(["--weeks", "12"].iter())
+            .copied()
+            .collect();
+        assert!(parse(&args).is_ok());
+    }
+
+    #[test]
+    fn parse_rank_with_stay_and_filters() {
+        let cli = parse(&[
+            "airbnb",
+            "rank",
+            "42",
+            "--location",
+            "Porto-Vecchio",
+            "--checkin",
+            "2027-07-10",
+            "--checkout",
+            "2027-07-17",
+            "--adults",
+            "4",
+            "--children",
+            "1",
+            "--property-type",
+            "Entire home",
+            "--min-bedrooms",
+            "2",
+            "--amenity",
+            "pool",
+            "--max-pages",
+            "15",
+        ])
+        .unwrap();
+        let Commands::Rank(args) = cli.command else {
+            panic!("expected Rank");
+        };
+        assert_eq!(args.id, "42");
+        assert_eq!(args.location.as_deref(), Some("Porto-Vecchio"));
+        assert_eq!(args.stay.adults, Some(4));
+        assert_eq!(args.stay.min_bedrooms, Some(2));
+        assert_eq!(args.children, Some(1));
+        assert_eq!(args.amenities, ["pool"]);
+        assert_eq!(args.max_pages, 15);
+
+        let Commands::Rank(defaults) = parse(&["airbnb", "rank", "42"]).unwrap().command else {
+            panic!("expected Rank");
+        };
+        assert_eq!(defaults.max_pages, 5);
+        assert!(defaults.location.is_none());
+        assert!(parse(&["airbnb", "rank", "42", "--max-pages", "16"]).is_err());
+        assert!(parse(&["airbnb", "rank", "42", "--max-pages", "0"]).is_err());
+    }
+
+    #[test]
+    fn parse_status_and_its_doctor_alias() {
+        for name in ["status", "doctor"] {
+            let Commands::Status(args) = parse(&["airbnb", name]).unwrap().command else {
+                panic!("expected Status for {name}");
+            };
+            assert!(args.location.is_none());
+        }
+        let Commands::Status(args) = parse(&["airbnb", "status", "--location", "Lyon, France"])
+            .unwrap()
+            .command
+        else {
+            panic!("expected Status");
+        };
+        assert_eq!(args.location.as_deref(), Some("Lyon, France"));
+    }
+
+    #[test]
+    fn parse_stay_options_of_the_comparable_based_commands() {
+        let Commands::OptimalPricing(args) = parse(&[
+            "airbnb",
+            "optimal-pricing",
+            "42",
+            "--checkin",
+            "2027-07-10",
+            "--checkout",
+            "2027-07-17",
+            "--adults",
+            "4",
+            "--property-type",
+            "Entire home",
+            "--min-bedrooms",
+            "2",
+        ])
+        .unwrap()
+        .command
+        else {
+            panic!("expected OptimalPricing");
+        };
+        assert_eq!(args.stay.checkin.as_deref(), Some("2027-07-10"));
+        assert_eq!(args.stay.adults, Some(4));
+        assert_eq!(args.stay.property_type.as_deref(), Some("Entire home"));
+        assert_eq!(args.stay.min_bedrooms, Some(2));
+
+        let Commands::Competitive(args) = parse(&["airbnb", "competitive", "42"]).unwrap().command
+        else {
+            panic!("expected Competitive");
+        };
+        assert!(args.stay.checkin.is_none() && args.stay.min_bedrooms.is_none());
+        let Commands::Revenue(args) = parse(&[
+            "airbnb",
+            "revenue",
+            "--location",
+            "Rome",
+            "--min-bedrooms",
+            "3",
+        ])
+        .unwrap()
+        .command
+        else {
+            panic!("expected Revenue");
+        };
+        assert_eq!(args.stay.min_bedrooms, Some(3));
+        assert!(parse(&["airbnb", "amenities", "42", "--min-bedrooms", "17"]).is_err());
     }
 
     #[test]
