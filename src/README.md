@@ -9,7 +9,7 @@ graph LR
     main["main.rs<br/>🚀 mcp-airbnb binary"] --> application
     main --> mcp
     clibin["bin/cli.rs<br/>🖥️ airbnb binary"] --> cli
-    mcp["mcp/<br/>📡 rmcp · 18 tools · 18 resource templates"] --> application
+    mcp["mcp/<br/>📡 rmcp · 21 tools · 21 resource templates"] --> application
     mcp --> domain
     cli["cli/<br/>🖥️ clap"] --> application
     cli --> domain
@@ -33,7 +33,7 @@ graph LR
 | [`ports/`](ports/) | 🔌 Core | `AirbnbClient` (7 required methods), `ListingCache` | [🔌 Ports](ports/README.md) |
 | [`adapters/`](adapters/) | ⚡ Infrastructure | GraphQL (primary), HTML scraper (fallback), composite client, LRU cache, API key manager, process-wide `RateLimiter`, HTTP retry/redirect policy | [⚡ Adapters](adapters/README.md) |
 | [`application/`](application/) | 🎼 Orchestration | `load_app_config` (config lookup), `build_client` (one shared `RateLimiter`, cache, `ApiKeyManager`), `analytical_handlers` (used by MCP and CLI) | — |
-| [`mcp/`](mcp/) | 📡 Interface | MCP server: 18 tools (7 data + 11 analytical), 18 resource templates (`resource_uri.rs`) | [📡 MCP](mcp/README.md) |
+| [`mcp/`](mcp/) | 📡 Interface | MCP server: 21 tools (9 data + 12 analytical), 21 resource templates (`resource_uri.rs`) | [📡 MCP](mcp/README.md) |
 | [`cli/`](cli/) | 🖥️ Interface | `airbnb` CLI: clap args, `dispatch`, handlers, output | — |
 | [`config/`](config/) | ⚙️ Infrastructure | `config.yaml` types, `load_config`, `Config::validate` | [⚙️ Config](config/README.md) |
 | `fuzz_support.rs` | 🎲 Test support | Hidden fuzz harness shared by `fuzz/` and `tests/fuzz_seed_replay_test.rs` | — |

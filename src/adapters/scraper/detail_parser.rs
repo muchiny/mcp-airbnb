@@ -303,6 +303,10 @@ fn extract_detail_from_json(
         cleaning_fee: None,
         service_fee: None,
         neighborhood: None,
+        is_guest_favorite: None,
+        highlights: vec![],
+        category_ratings: vec![],
+        review_tags: vec![],
     })
 }
 
@@ -333,9 +337,8 @@ fn find_listing_data(data: &serde_json::Value) -> Option<&serde_json::Value> {
 }
 
 fn deep_find_listing(data: &serde_json::Value, max_depth: u32) -> Option<&serde_json::Value> {
-    if max_depth == 0 {
-        return None;
-    }
+    // Depth budget of the levels below; `None` once it is used up.
+    let deeper = max_depth.checked_sub(1)?;
     match data {
         serde_json::Value::Object(map) => {
             if map.contains_key("name")
@@ -344,7 +347,7 @@ fn deep_find_listing(data: &serde_json::Value, max_depth: u32) -> Option<&serde_
                 return Some(data);
             }
             for value in map.values() {
-                if let Some(result) = deep_find_listing(value, max_depth - 1) {
+                if let Some(result) = deep_find_listing(value, deeper) {
                     return Some(result);
                 }
             }
@@ -352,7 +355,7 @@ fn deep_find_listing(data: &serde_json::Value, max_depth: u32) -> Option<&serde_
         }
         serde_json::Value::Array(arr) => {
             for item in arr {
-                if let Some(result) = deep_find_listing(item, max_depth - 1) {
+                if let Some(result) = deep_find_listing(item, deeper) {
                     return Some(result);
                 }
             }
@@ -425,6 +428,10 @@ fn parse_detail_css(
         cleaning_fee: None,
         service_fee: None,
         neighborhood: None,
+        is_guest_favorite: None,
+        highlights: vec![],
+        category_ratings: vec![],
+        review_tags: vec![],
     })
 }
 

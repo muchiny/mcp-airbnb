@@ -9,6 +9,7 @@ use std::sync::Arc;
 use mcp_airbnb::domain::analytics::{HostProfile, NeighborhoodStats, OccupancyEstimate};
 use mcp_airbnb::domain::calendar::{CalendarDay, PriceCalendar};
 use mcp_airbnb::domain::listing::{Listing, ListingDetail, SearchResult};
+use mcp_airbnb::domain::quote::{PriceQuote, QuoteRequest};
 use mcp_airbnb::domain::review::{Review, ReviewsPage};
 use mcp_airbnb::domain::search_params::SearchParams;
 use mcp_airbnb::error::{AirbnbError, Result};
@@ -111,6 +112,10 @@ impl AirbnbClient for IntegrationMock {
             cleaning_fee: None,
             service_fee: None,
             neighborhood: None,
+            is_guest_favorite: None,
+            highlights: vec![],
+            category_ratings: vec![],
+            review_tags: vec![],
         })
     }
 
@@ -129,6 +134,8 @@ impl AirbnbClient for IntegrationMock {
                 is_translated: None,
             }],
             next_cursor: None,
+            total_reviews: None,
+            review_tags: vec![],
         })
     }
 
@@ -166,6 +173,8 @@ impl AirbnbClient for IntegrationMock {
             description: None,
             profile_picture_url: None,
             identity_verified: Some(true),
+            rating: None,
+            review_count: None,
         })
     }
 
@@ -195,11 +204,33 @@ impl AirbnbClient for IntegrationMock {
             occupancy_rate: 65.2,
             past_days_excluded: 0,
             blocked_days_excluded: 0,
+            closed_periods: vec![],
+            open_season_rate: None,
             currency: "$".into(),
             average_available_price: Some(90.0),
             weekend_avg_price: Some(110.0),
             weekday_avg_price: Some(80.0),
             monthly_breakdown: vec![],
+        })
+    }
+
+    async fn get_price_quote(&self, request: &QuoteRequest) -> Result<PriceQuote> {
+        Ok(PriceQuote {
+            listing_id: request.listing_id.clone(),
+            checkin: request.checkin.clone(),
+            checkout: request.checkout.clone(),
+            nights: 7,
+            adults: request.adults,
+            available: true,
+            unavailability_message: None,
+            instant_book: Some(true),
+            total_display: Some("$700".into()),
+            total: Some(700.0),
+            nightly: Some(100.0),
+            listed_nightly: None,
+            currency: "$".into(),
+            breakdown: vec![],
+            notes: vec![],
         })
     }
 }
@@ -243,9 +274,20 @@ impl AirbnbClient for ErrorMock {
             reason: "no occupancy".into(),
         })
     }
+
+    async fn get_price_quote(&self, _request: &QuoteRequest) -> Result<PriceQuote> {
+        Err(AirbnbError::RateLimited)
+    }
 }
 
-const EXPECTED_TOOLS: [&str; 18] = [
+/// A stay 60 days ahead, 7 nights: stay dates must not be in the past.
+fn future_stay() -> (String, String) {
+    let checkin = chrono::Utc::now().date_naive() + chrono::Days::new(60);
+    let checkout = checkin + chrono::Days::new(7);
+    (checkin.to_string(), checkout.to_string())
+}
+
+const EXPECTED_TOOLS: [&str; 21] = [
     "airbnb_search",
     "airbnb_listing_details",
     "airbnb_reviews",
@@ -264,6 +306,9 @@ const EXPECTED_TOOLS: [&str; 18] = [
     "airbnb_review_sentiment",
     "airbnb_competitive_positioning",
     "airbnb_optimal_pricing",
+    "airbnb_price_quote",
+    "airbnb_search_rank",
+    "airbnb_status",
 ];
 
 /// Does `uri` match the RFC 6570 `template`? Covers the two operators the
@@ -323,7 +368,7 @@ fn uri_template_matcher_understands_form_style_queries() {
     ));
     assert!(uri_matches_template(
         "airbnb://analysis/revenue?id=42&months=12",
-        "airbnb://analysis/revenue{?id,location,months}"
+        "airbnb://analysis/revenue{?id,location,months,checkin,checkout,adults,property_type,min_bedrooms}"
     ));
     assert!(!uri_matches_template(
         "airbnb://listing/42/calendar?cursor=1",
@@ -331,7 +376,7 @@ fn uri_template_matcher_understands_form_style_queries() {
     ));
     assert!(!uri_matches_template(
         "airbnb://search/Berlin, Germany/Mitte",
-        "airbnb://search/{location}{?checkin,checkout,adults,children,infants,pets,min_price,max_price,property_type,cursor}"
+        "airbnb://search/{location}{?checkin,checkout,adults,children,infants,pets,min_price,max_price,property_type,min_bedrooms,min_beds,min_bathrooms,amenities,guest_favorite,instant_book,cursor}"
     ));
 }
 
@@ -342,9 +387,19 @@ async fn initialize_reports_server_identity_and_capabilities() {
         .client
         .peer_info()
         .expect("the server's initialize result is recorded");
-    assert_eq!(info.server_info.name, "mcp-airbnb");
-    assert_eq!(info.server_info.version, env!("CARGO_PKG_VERSION"));
-    assert_eq!(info.protocol_version, ProtocolVersion::LATEST);
+    let implementation = info
+        .server_info
+        .as_ref()
+        .expect("the server names its implementation");
+    assert_eq!(implementation.name, "mcp-airbnb");
+    assert_eq!(implementation.version, env!("CARGO_PKG_VERSION"));
+    // The test client opens the session with `initialize`; protocol
+    // revisions after 2025-11-25 have no `initialize`, so that is the newest
+    // version such a session can negotiate.
+    assert_eq!(
+        info.protocol_version,
+        ProtocolVersion::LATEST_WITH_INITIALIZE
+    );
     assert!(
         info.capabilities.tools.is_some(),
         "tools capability missing"
@@ -457,7 +512,7 @@ async fn resources_read_back_what_a_tool_just_returned() {
                 "the resource must hold exactly what the tool returned"
             );
         }
-        other @ ResourceContents::BlobResourceContents { .. } => {
+        other => {
             panic!("expected text contents, got {other:?}")
         }
     }
@@ -480,8 +535,10 @@ async fn reading_an_unknown_resource_is_resource_not_found() {
 }
 
 #[tokio::test]
+#[allow(clippy::too_many_lines)] // one table row per tool call
 async fn every_stored_resource_uri_matches_an_advertised_template() {
     let conn = common::connect(Arc::new(IntegrationMock)).await;
+    let (checkin, checkout) = future_stay();
     let calls = [
         (
             "airbnb_search",
@@ -502,6 +559,45 @@ async fn every_stored_resource_uri_matches_an_advertised_template() {
         (
             "airbnb_market_comparison",
             json!({ "locations": ["Berlin, Germany", "Munich / Bavaria"] }),
+        ),
+        (
+            "airbnb_search",
+            json!({
+                "location": "Berlin, Germany",
+                "min_bedrooms": 2,
+                "amenities": ["pool", "wifi"],
+                "guest_favorite": true,
+                "instant_book": true
+            }),
+        ),
+        (
+            "airbnb_price_quote",
+            json!({ "id": "101", "checkin": checkin, "checkout": checkout, "adults": 2, "weeks": 2 }),
+        ),
+        (
+            "airbnb_search_rank",
+            json!({
+                "id": "101",
+                "location": "Berlin, Germany / Mitte",
+                "checkin": checkin,
+                "checkout": checkout,
+                "adults": 2,
+                "amenities": ["pool"],
+                "max_pages": 2
+            }),
+        ),
+        ("airbnb_status", json!({})),
+        ("airbnb_status", json!({ "location": "Lyon, France" })),
+        (
+            "airbnb_optimal_pricing",
+            json!({
+                "id": "101",
+                "checkin": checkin,
+                "checkout": checkout,
+                "adults": 2,
+                "property_type": "Entire home",
+                "min_bedrooms": 1
+            }),
         ),
     ];
     let call_count = calls.len();
@@ -524,7 +620,7 @@ async fn every_stored_resource_uri_matches_an_advertised_template() {
         .await
         .expect("resources/templates/list should complete")
         .into_iter()
-        .map(|template| template.raw.uri_template)
+        .map(|template| template.uri_template)
         .collect();
     let resources = conn
         .client
@@ -536,7 +632,7 @@ async fn every_stored_resource_uri_matches_an_advertised_template() {
         "each successful call stores a resource, got {}",
         resources.len()
     );
-    assert_eq!(templates.len(), 18, "P4 advertises one template per tool");
+    assert_eq!(templates.len(), 21, "one template per tool");
     for resource in &resources {
         let uri = resource.uri.as_str();
         assert!(

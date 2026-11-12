@@ -6,7 +6,7 @@ The **ports layer** defines trait boundaries between the domain core and the out
 
 ### `AirbnbClient` (`airbnb_client.rs`)
 
-The primary outbound port for fetching Airbnb data. All **7 methods are required**: there are no default implementations, so every adapter and every test mock implements each one.
+The primary outbound port for fetching Airbnb data. The **8 async methods are required**, so every adapter and every test mock implements each one. Two methods have a default. `degradations()` (none): `CompositeClient` overrides it to report the operations whose GraphQL source failed and that the HTML fallback is serving; an operation leaves the list when GraphQL answers it again over the network (a cache hit does not count) or after 15 minutes. `clear_cache()` (no-op): the adapters drop their cached answers, so the status check probes Airbnb itself and never reports a cached answer as a healthy source.
 
 ```rust
 #[async_trait]
@@ -18,6 +18,8 @@ pub trait AirbnbClient: Send + Sync {
     async fn get_host_profile(&self, listing_id: &str) -> Result<HostProfile>;
     async fn get_neighborhood_stats(&self, params: &SearchParams) -> Result<NeighborhoodStats>;
     async fn get_occupancy_estimate(&self, id: &str, months: u32) -> Result<OccupancyEstimate>;
+    async fn get_price_quote(&self, request: &QuoteRequest) -> Result<PriceQuote>;
+    fn degradations(&self) -> Vec<Degradation> { Vec::new() }
 }
 ```
 
@@ -32,6 +34,9 @@ classDiagram
         +get_host_profile(listing_id) HostProfile
         +get_neighborhood_stats(params) NeighborhoodStats
         +get_occupancy_estimate(id, months) OccupancyEstimate
+        +get_price_quote(request) PriceQuote
+        +degradations() Vec~Degradation~
+        +clear_cache()
     }
 ```
 
@@ -43,6 +48,7 @@ Outbound port for caching serialized data with TTL.
 pub trait ListingCache: Send + Sync {
     fn get(&self, key: &str) -> Option<String>;
     fn set(&self, key: &str, value: &str, ttl: Duration);
+    fn clear(&self);
 }
 ```
 

@@ -5,7 +5,8 @@ use crate::adapters::stay_search::listing_from_stay_search_result;
 use crate::adapters::text;
 use crate::domain::listing::{Listing, SearchResult};
 use crate::domain::search_params::{
-    SEARCH_PAGE_SIZE, SUPPORTED_PROPERTY_TYPES, SearchParams, canonical_property_type,
+    SEARCH_PAGE_SIZE, SUPPORTED_PROPERTY_TYPES, SearchFilters, SearchParams,
+    canonical_property_type,
 };
 use crate::error::{AirbnbError, Result};
 
@@ -44,6 +45,36 @@ fn property_type_raw_param(property_type: &str) -> Option<(&'static str, &'stati
 /// airbnb.com web client (2026-09): the location travels as the `query` raw
 /// param (no Google `placeId`), filters as sorted `rawParams`, and the page
 /// cursor as `cursor` on both the list and the map request.
+/// Raw params of the panel filters. Their names are the camelCase form of
+/// the URL params (`min_bedrooms` → `minBedrooms`), checked live 2026-11;
+/// the amenities are one multi-valued param.
+fn panel_filter_params(filters: &SearchFilters) -> Vec<(&'static str, Vec<String>)> {
+    let mut raw: Vec<(&'static str, Vec<String>)> = Vec::new();
+    for (name, value) in [
+        ("minBedrooms", filters.min_bedrooms),
+        ("minBeds", filters.min_beds),
+        ("minBathrooms", filters.min_bathrooms),
+    ] {
+        if let Some(value) = value {
+            raw.push((name, vec![value.to_string()]));
+        }
+    }
+    if filters.guest_favorite {
+        raw.push(("guestFavorite", vec!["true".to_string()]));
+    }
+    if filters.instant_book {
+        raw.push(("ib", vec!["true".to_string()]));
+    }
+    let amenity_ids = filters.amenity_ids();
+    if !amenity_ids.is_empty() {
+        raw.push((
+            "amenities",
+            amenity_ids.iter().map(u32::to_string).collect(),
+        ));
+    }
+    raw
+}
+
 pub fn build_search_variables(params: &SearchParams) -> Result<Value> {
     let mut filters: Vec<(&'static str, String)> = vec![
         ("cdnCacheSafe", "false".to_string()),
@@ -89,6 +120,11 @@ pub fn build_search_variables(params: &SearchParams) -> Result<Value> {
             })?;
         filters.push((name, value.to_string()));
     }
+    let mut filters: Vec<(&'static str, Vec<String>)> = filters
+        .into_iter()
+        .map(|(name, value)| (name, vec![value]))
+        .collect();
+    filters.extend(panel_filter_params(&params.filters));
     filters.sort_by_key(|(name, _)| *name);
 
     // The map request carries the same filters minus the grid size (as captured).
@@ -96,27 +132,31 @@ pub fn build_search_variables(params: &SearchParams) -> Result<Value> {
         filters
             .iter()
             .filter(|(name, _)| include_grid || *name != "itemsPerGrid")
-            .map(|(name, value)| serde_json::json!({"filterName": name, "filterValues": [value]}))
+            .map(|(name, values)| serde_json::json!({"filterName": name, "filterValues": values}))
             .collect()
     };
 
-    let mut list_request = serde_json::json!({
+    // The cursor is sent only when there is one: `"cursor": null` is not the
+    // same request.
+    let with_cursor = |mut request: Value| -> Value {
+        if let (Some(cursor), Some(fields)) = (&params.cursor, request.as_object_mut()) {
+            fields.insert("cursor".to_owned(), Value::String(cursor.clone()));
+        }
+        request
+    };
+    let list_request = with_cursor(serde_json::json!({
         "metadataOnly": false,
         "requestedPageType": "STAYS_SEARCH",
         "treatmentFlags": SEARCH_TREATMENT_FLAGS,
         "maxMapItems": 9999,
         "rawParams": raw_params(true),
-    });
-    let mut map_request = serde_json::json!({
+    }));
+    let map_request = with_cursor(serde_json::json!({
         "metadataOnly": false,
         "requestedPageType": "STAYS_SEARCH",
         "treatmentFlags": SEARCH_TREATMENT_FLAGS,
         "rawParams": raw_params(false),
-    });
-    if let Some(ref cursor) = params.cursor {
-        list_request["cursor"] = Value::String(cursor.clone());
-        map_request["cursor"] = Value::String(cursor.clone());
-    }
+    }));
 
     Ok(serde_json::json!({
         "staysSearchRequest": list_request,
@@ -302,7 +342,8 @@ fn next_page_cursor(pagination: Option<&Value>, request_cursor: Option<&str>) ->
         None => 0,
         Some(requested) => cursors.iter().position(|c| *c == requested)?,
     };
-    cursors.get(current + 1).copied().map(String::from)
+    let next = current.checked_add(1)?;
+    cursors.get(next).copied().map(String::from)
 }
 
 #[cfg(test)]
@@ -534,6 +575,7 @@ mod tests {
             max_price: Some(200),
             property_type: Some("Entire home".into()),
             cursor: Some("CURSOR_2".into()),
+            ..SearchParams::default()
         };
         let vars = build_search_variables(&params).unwrap();
         for request in ["staysSearchRequest", "staysMapSearchRequestV2"] {
@@ -554,6 +596,56 @@ mod tests {
                 !raw.contains_key("placeId"),
                 "{request} must not send placeId"
             );
+        }
+    }
+
+    #[test]
+    fn panel_filters_are_sent_as_raw_params_of_both_requests() {
+        let params = SearchParams {
+            location: "Paris".into(),
+            filters: crate::domain::search_params::SearchFilters {
+                min_bedrooms: Some(2),
+                min_beds: Some(3),
+                min_bathrooms: Some(1),
+                amenities: vec!["pool".into(), "wifi".into()],
+                guest_favorite: true,
+                instant_book: true,
+            },
+            ..SearchParams::default()
+        };
+        let vars = build_search_variables(&params).unwrap();
+        for request in ["staysSearchRequest", "staysMapSearchRequestV2"] {
+            let raw: HashMap<String, Vec<String>> =
+                raw_params(&vars[request]).into_iter().collect();
+            assert_eq!(raw["minBedrooms"], ["2"], "{request}");
+            assert_eq!(raw["minBeds"], ["3"], "{request}");
+            assert_eq!(raw["minBathrooms"], ["1"], "{request}");
+            assert_eq!(
+                raw["amenities"],
+                ["4", "7"],
+                "{request}: one multi-valued param"
+            );
+            assert_eq!(raw["guestFavorite"], ["true"], "{request}");
+            assert_eq!(raw["ib"], ["true"], "{request}");
+        }
+
+        let plain = build_search_variables(&SearchParams {
+            location: "Paris".into(),
+            ..SearchParams::default()
+        })
+        .unwrap();
+        let raw: HashMap<String, Vec<String>> = raw_params(&plain["staysSearchRequest"])
+            .into_iter()
+            .collect();
+        for name in [
+            "minBedrooms",
+            "minBeds",
+            "minBathrooms",
+            "amenities",
+            "guestFavorite",
+            "ib",
+        ] {
+            assert!(!raw.contains_key(name), "{name} is sent only when asked");
         }
     }
 

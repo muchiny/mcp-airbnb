@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use mcp_airbnb::mcp::server::AirbnbMcpServer;
 use mcp_airbnb::ports::airbnb_client::AirbnbClient;
-use rmcp::model::{CallToolRequestParams, CallToolResult, ClientInfo};
+use rmcp::model::{CallToolRequestParams, CallToolResult, ClientConfig};
 use rmcp::service::RunningService;
 use rmcp::{ClientHandler, RoleClient, ServiceExt};
 
@@ -16,8 +16,8 @@ use rmcp::{ClientHandler, RoleClient, ServiceExt};
 pub struct DummyClient;
 
 impl ClientHandler for DummyClient {
-    fn get_info(&self) -> ClientInfo {
-        ClientInfo::default()
+    fn get_info(&self) -> ClientConfig {
+        ClientConfig::default()
     }
 }
 
@@ -65,7 +65,7 @@ pub fn text_of(result: &CallToolResult) -> String {
     result
         .content
         .iter()
-        .filter_map(|content| content.raw.as_text())
+        .filter_map(|content| content.as_text())
         .map(|text| text.text.as_str())
         .collect::<Vec<_>>()
         .join("\n")

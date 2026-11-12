@@ -32,10 +32,14 @@ pub(crate) fn is_listing_page(document: &Html, html: &str, listing_id: &str) -> 
 /// that `/rooms/1234` does not match listing `123`.
 fn points_to_listing(url: &str, needle: &str) -> bool {
     url.match_indices(needle).any(|(start, matched)| {
-        let rest = url.get(start + matched.len()..).unwrap_or_default();
-        rest.chars()
-            .next()
-            .is_none_or(|c| matches!(c, '?' | '/' | '#'))
+        start
+            .checked_add(matched.len())
+            .and_then(|end| url.get(end..))
+            .is_some_and(|rest| {
+                rest.chars()
+                    .next()
+                    .is_none_or(|c| matches!(c, '?' | '/' | '#'))
+            })
     })
 }
 

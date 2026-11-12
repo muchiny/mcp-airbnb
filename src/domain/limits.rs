@@ -46,6 +46,22 @@ pub const MAX_GUESTS: u32 = 16;
 pub const MAX_INFANTS: u32 = 5;
 /// Most pets per search.
 pub const MAX_PETS: u32 = 5;
+/// Smallest `min_bedrooms` / `min_beds` / `min_bathrooms` search filter.
+pub const ROOMS_FILTER_MIN: u32 = 1;
+/// Largest `min_bedrooms` / `min_beds` / `min_bathrooms` search filter.
+pub const ROOMS_FILTER_MAX: u32 = 16;
+/// Most amenity filters per search.
+pub const AMENITY_FILTERS_MAX: usize = 10;
+/// Fewest search pages a rank measure scans.
+pub const RANK_PAGES_MIN: u32 = 1;
+/// Most search pages a rank measure scans (Airbnb serves 15 pages per search).
+pub const RANK_PAGES_MAX: u32 = 15;
+/// Search pages a rank measure scans when `max_pages` is omitted.
+pub const RANK_PAGES_DEFAULT: u32 = 5;
+/// Fewest weekly stays a price quote covers.
+pub const QUOTE_WEEKS_MIN: u32 = 1;
+/// Most weekly stays a price quote covers.
+pub const QUOTE_WEEKS_MAX: u32 = 12;
 
 fn invalid(reason: String) -> AirbnbError {
     AirbnbError::InvalidParams { reason }

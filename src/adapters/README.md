@@ -13,7 +13,9 @@ adapters/
 │       ├── detail.rs    #    📋 StaysPdpSections → ListingDetail
 │       ├── review.rs    #    ⭐ StaysPdpReviewsQuery → ReviewsPage
 │       ├── host.rs      #    👤 StaysPdpSections → HostProfile
-│       └── pdp.rs       #    🧩 Shared StaysPdpSections helpers (SBUI blocks, metadata)
+│       ├── pdp.rs       #    🧩 Shared StaysPdpSections helpers (SBUI blocks, metadata)
+│       ├── pdp_node.rs  #    🧬 Listing entity `data.node.pdpPresentation` (2026-11 documents)
+│       └── quote.rs     #    💶 StaysPdpBookItQuery → PriceQuote (dated price of one stay)
 ├── scraper/             # 🕷️ HTML scraper — fallback data source
 │   ├── client.rs        #    AirbnbScraper — HTTP client, retry, cache-aside
 │   ├── page_markers.rs  #    🔖 Genuine listing page vs bot challenge / consent wall / error page

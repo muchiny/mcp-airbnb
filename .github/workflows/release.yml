@@ -24,7 +24,7 @@ jobs:
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
         with:
-          toolchain: "1.93"
+          toolchain: "1.99"
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - run: cargo fmt --all -- --check
@@ -63,10 +63,10 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master
         with:
-          toolchain: "1.93"
+          toolchain: "1.99"
           targets: ${{ matrix.target }}
 
-      # rust-toolchain.toml selects 1.93; make sure the target is installed
+      # rust-toolchain.toml selects 1.99; make sure the target is installed
       # for that exact toolchain.
       - name: Add compilation target
         run: rustup target add ${{ matrix.target }}

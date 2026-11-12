@@ -1,6 +1,6 @@
 # 🏠 mcp-airbnb
 
-[![Rust](https://img.shields.io/badge/Rust-1.93%2B-orange?logo=rust)](https://www.rust-lang.org/)
+[![Rust](https://img.shields.io/badge/Rust-1.99%2B-orange?logo=rust)](https://www.rust-lang.org/)
 [![MCP](https://img.shields.io/badge/MCP-rmcp%201.4-blue)](https://modelcontextprotocol.io/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
@@ -11,7 +11,7 @@
 [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) is an open standard that lets AI assistants call external tools. This crate ships **two entry points** over one backend (GraphQL API first, HTML scraping fallback), no API key required:
 
 - 📡 `mcp-airbnb` — MCP server over stdio for any MCP-compatible AI (Claude, etc.)
-- 🖥️ `airbnb` — standalone CLI binary exposing the same 18 tools as shell subcommands (`airbnb search …`, `airbnb --json listing …`, pipeable into `jq`)
+- 🖥️ `airbnb` — standalone CLI binary exposing the same 21 tools as shell subcommands (`airbnb search …`, `airbnb --json listing …`, pipeable into `jq`)
 
 **Who is it for?**
 
@@ -23,13 +23,15 @@
 ## ✨ Features
 
 ### 📡 Data Tools
-- 🔍 **Search listings** by location, dates, guests, price range, and property type
+- 🔍 **Search listings** by location, dates, guests, price range and property type, plus Airbnb's panel filters (minimum bedrooms / beds / bathrooms, 14 amenities, Guest Favorite, Instant Book); results show their badges and the stay total
 - 📋 **Listing details** with description, amenities, house rules, photos, and host info
-- ⭐ **Reviews** with aggregate ratings and individual comments, paginated
+- ⭐ **Reviews** with aggregate ratings, the total count, the topics guests mention and individual comments (Airbnb's translation when there is one), paginated
 - 📅 **Availability calendar** with daily availability and minimum nights (nightly prices only when Airbnb publishes them; currently it does not)
 - 👤 **Host profiles** with superhost status, response rate, languages, and bio
 - 📊 **Neighborhood stats** with average/median prices, ratings, and property type distribution
 - 📈 **Occupancy estimates** over future nights (past days excluded; an upper bound, since bookings and host blocks look alike) with a monthly breakdown
+- 💶 **Price quote** — the real price of a stay from the booking panel (total, average per night, breakdown, why a stay cannot be booked); `weeks` quotes consecutive weeks for the seasonal curve
+- 🩺 **Source status** — every Airbnb source checked in one call (OK / DEGRADED / FAILED), fallbacks in use and the config key to update
 
 ### 🧠 Analytical Tools
 - 🔄 **Compare listings** side-by-side (2-100) with tie-aware percentile ranks (unknown prices excluded)
@@ -37,19 +39,21 @@
 - 🕳️ **Gap finder** — 1-3 night gaps between unavailable nights, minimum-stay advice
 - 💵 **Revenue estimate** — ADR, occupancy and revenue projections, each input labelled measured or assumed
 - 🏆 **Listing score** — quality audit (0-100) across 6 categories with improvement tips
-- 🧩 **Amenity analysis** — missing popular amenities vs neighborhood competition
+- 🧩 **Amenity analysis** — missing popular amenities vs comparable listings, on normalized labels (a "Private outdoor pool" is a pool)
 - 🗺️ **Market comparison** — compare 2-5 neighborhoods side-by-side
 - 📂 **Host portfolio** — the host's listings visible in a search of the listing's city
 - 💬 **Review sentiment** — English keyword heuristic with negation: breakdown, themes, keywords
 - 🎯 **Competitive positioning** — percentile ranks vs comparable listings (price, rating, amenities, reviews)
 - 💲 **Optimal pricing** — data-driven pricing recommendation with reasoning
+- 🥇 **Search rank** — where a listing sits in the results of a search (location, stay, filters), its price against the scanned results and its neighbours
+- 📆 **Dated, like-for-like analyses** — optimal pricing, competitive positioning, revenue and amenity analysis accept a stay (`checkin`, `checkout`, `adults`) and comparable filters (`property_type`, `min_bedrooms`)
 
 ### 🔧 Infrastructure
 - 🖥️ **Dual entry point** — MCP server (`mcp-airbnb`) + standalone `airbnb` CLI, same backend
-- 🔗 **Dual data source** — GraphQL API (fast, structured) + HTML scraper (fallback)
+- 🔗 **Dual data source** — GraphQL API (fast, structured) + HTML scraper (fallback); a result served by the fallback says so (`PARTIAL DATA WARNING`)
 - 💾 **In-memory LRU cache** with configurable TTLs per tool
 - ⏱️ **Rate limiting** to respect Airbnb: one limiter shared by every outbound request (API-key fetch, GraphQL, HTML fallback), default 1 request per 2 seconds; a 429 pauses all requests
-- 📦 **MCP Resources** — every tool result cached as a resource (18 resource templates in RFC 6570 form; bounded: 256 entries / 8 MiB / 1 h; `listChanged` notifications)
+- 📦 **MCP Resources** — every tool result cached as a resource (21 resource templates in RFC 6570 form; bounded: 256 entries / 8 MiB / 1 h; `listChanged` notifications)
 - 🏗️ **Hexagonal architecture** — clean separation of domain, ports, adapters, and application layer
 
 ## 🏗️ Architecture
@@ -62,7 +66,7 @@ graph TB
     end
 
     subgraph MCP["📡 MCP Protocol Layer"]
-        Server["AirbnbMcpServer<br/>rmcp 1.4 · stdio · 18 tools"]
+        Server["AirbnbMcpServer<br/>rmcp 3.9 · stdio · 21 tools"]
     end
 
     subgraph Core["💎 Domain & Ports"]
@@ -93,19 +97,21 @@ graph TB
 
 ## 🔧 MCP Tools
 
-### 📡 Data Tools (7)
+### 📡 Data Tools (9)
 
 | Tool | Description | Key Parameters |
 |------|-------------|----------------|
-| 🔍 `airbnb_search` | Search listings by location, dates, and guests | `location` (required), `checkin`, `checkout`, `adults`, `min_price`, `max_price`, `property_type`, `cursor` |
+| 🔍 `airbnb_search` | Search listings by location, dates, and guests, with Airbnb's panel filters; results carry their badges (Guest Favorite, Superhost, Instant Book) and the stay total | `location` (required), `checkin`, `checkout`, `adults`, `min_price`, `max_price`, `property_type`, `min_bedrooms`, `min_beds`, `min_bathrooms`, `amenities`, `guest_favorite`, `instant_book`, `cursor` |
 | 📋 `airbnb_listing_details` | Full details for a specific listing | `id` |
-| ⭐ `airbnb_reviews` | Paginated reviews with ratings summary | `id`, `cursor` |
-| 📅 `airbnb_price_calendar` | Availability calendar (prices only when Airbnb publishes them) | `id`, `months` (1-12, default: 3) |
+| ⭐ `airbnb_reviews` | Paginated reviews (Airbnb's translation when there is one), total count and the topics guests mention | `id`, `cursor` |
+| 📅 `airbnb_price_calendar` | Availability calendar as date ranges: consecutive days with the same status are one row (prices only when Airbnb publishes them) | `id`, `months` (1-12, default: 3) |
 | 👤 `airbnb_host_profile` | Host profile with superhost status and bio | `id` |
 | 📊 `airbnb_neighborhood_stats` | Aggregated area statistics | `location`, `checkin`, `checkout`, `property_type` |
-| 📈 `airbnb_occupancy_estimate` | Occupancy of future nights (upper bound) and monthly breakdown | `id`, `months` (1-12, default: 3) |
+| 📈 `airbnb_occupancy_estimate` | Occupancy of future nights (upper bound), open-season rate outside long closures, monthly breakdown | `id`, `months` (1-12, default: 3) |
+| 💶 `airbnb_price_quote` | Real price of a stay from the booking panel: total, per night, breakdown, availability and why not; `weeks` rebuilds the seasonal curve | `id`, `checkin`, `checkout` (required), `adults` (default: 1), `weeks` (1-12, default: 1) |
+| 🩺 `airbnb_status` | Health of every Airbnb source (OK / DEGRADED / FAILED), fallbacks in use and the config key to update | `location` (default: Paris, France) |
 
-### 🧠 Analytical Tools (11)
+### 🧠 Analytical Tools (12)
 
 These tools compose data from the tools above — no additional scraping required.
 
@@ -114,14 +120,15 @@ These tools compose data from the tools above — no additional scraping require
 | 🔄 `airbnb_compare_listings` | Compare 2-100 listings side-by-side with percentile rankings | `ids` (2-10) or `location`, `max_listings` (2-100, default 20), `checkin`, `checkout`, `property_type` |
 | 📉 `airbnb_price_trends` | Seasonal pricing (needs published nightly prices): monthly averages, weekend premium, volatility | `id`, `months` (1-12, default: 12) |
 | 🕳️ `airbnb_gap_finder` | 1-3 night gaps between unavailable nights, minimum-stay advice | `id`, `months` (1-12, default: 3) |
-| 💵 `airbnb_revenue_estimate` | ADR, occupancy and revenue projections, each input labelled measured or assumed | `id` or `location`, `months` (1-12, default: 12) |
+| 💵 `airbnb_revenue_estimate` | ADR, occupancy and revenue projections, each input labelled measured or assumed | `id` or `location`, `months` (1-12, default: 12), `checkin`, `checkout`, `adults`, `property_type`, `min_bedrooms` |
 | 🏆 `airbnb_listing_score` | Quality audit (0-100) across 6 categories with improvement suggestions | `id` |
-| 🧩 `airbnb_amenity_analysis` | Missing popular amenities vs neighborhood competition | `id`, `location` |
+| 🧩 `airbnb_amenity_analysis` | Missing popular amenities vs comparable listings (labels normalized: every kind of pool is a pool) | `id`, `location`, `checkin`, `checkout`, `adults`, `property_type`, `min_bedrooms` |
 | 🗺️ `airbnb_market_comparison` | Compare 2-5 neighborhoods side-by-side | `locations` (2-5, required), `checkin`, `checkout`, `property_type` |
 | 📂 `airbnb_host_portfolio` | The host's listings visible in a search of the listing's city | `id` |
 | 💬 `airbnb_review_sentiment` | English keyword sentiment with negation: breakdown, themes, keywords | `id`, `max_pages` (1-20, default: 5) |
-| 🎯 `airbnb_competitive_positioning` | Percentile ranks vs comparable listings, strengths/weaknesses | `id`, `location` |
-| 💲 `airbnb_optimal_pricing` | Pricing recommendation with reasoning (neighborhood median or known price as baseline) | `id`, `location`, `months` (1-12, default: 12) |
+| 🎯 `airbnb_competitive_positioning` | Percentile ranks vs comparable listings, strengths/weaknesses; with dates, the listing's own price is its quote for the stay | `id`, `location`, `checkin`, `checkout`, `adults`, `property_type`, `min_bedrooms` |
+| 💲 `airbnb_optimal_pricing` | Pricing recommendation with reasoning (neighborhood median or known price as baseline) | `id`, `location`, `months` (1-12, default: 12), `checkin`, `checkout`, `adults`, `property_type`, `min_bedrooms` |
+| 🥇 `airbnb_search_rank` | Position of a listing in the search results of a location for a stay and filters, its price against the scanned results and its neighbours | `id`, `location`, `checkin`, `checkout`, `adults`, `children`, `property_type`, `min_bedrooms`, `amenities`, `max_pages` (1-15, default: 5) |
 
 ### 📏 Input limits
 
@@ -132,17 +139,21 @@ Out-of-range input is rejected with an error (MCP `isError`, CLI exit code 2). I
 | Listing `id` | digits, no leading zero, ≤ 20 digits (`^[1-9][0-9]{0,19}$`) |
 | `months` | 1–12 |
 | `max_pages` (review sentiment) | 1–20, default 5 |
+| `max_pages` (search rank) | 1–15, default 5 (18 results per page) |
+| `weeks` (price quote) | 1–12, default 1 |
+| `min_bedrooms` / `min_beds` / `min_bathrooms` | 1–16 |
+| `amenities` (search, search rank) | at most 10 of: wifi, air conditioning, pool, kitchen, free parking, hot tub, heating, washer, dryer, dedicated workspace, self check-in, tv, bbq grill, crib |
 | `ids` (compare) | 2–10 |
 | `max_listings` (compare) | 2–100, default 20 |
 | `locations` (market comparison) | 2–5 |
 | `location` | 1–200 characters |
 | `cursor` | ≤ 1024 characters |
 | `checkin` / `checkout` | exactly `YYYY-MM-DD`, check-in from yesterday (UTC) to 730 days ahead, 1–365 nights |
-| guests | adults ≤ 16 (≥ 1 with dates), adults + children ≤ 16, infants ≤ 5, pets ≤ 5 |
+| guests | adults ≤ 16 (≥ 1 with dates, 1–16 for a price quote), adults + children ≤ 16, infants ≤ 5, pets ≤ 5 |
 
 ## 📦 MCP Resources
 
-Every successful tool result is kept as an MCP resource, so clients can read it again without re-scraping. `resources/templates/list` advertises one RFC 6570 template per tool (18 in total). Variable parts are percent-encoded (only `A-Z a-z 0-9 - . _ ~` stay literal), so a URI a client expands from a template is byte-for-byte the URI the server stores. For example, `airbnb_search {"location": "Paris, France"}` is stored as `airbnb://search/Paris%2C%20France`. Every input that changes the result is part of the URI (cursor, dates, filters, months, `max_pages`).
+Every successful tool result is kept as an MCP resource, so clients can read it again without re-scraping. `resources/templates/list` advertises one RFC 6570 template per tool (21 in total). Variable parts are percent-encoded (only `A-Z a-z 0-9 - . _ ~` stay literal), so a URI a client expands from a template is byte-for-byte the URI the server stores. For example, `airbnb_search {"location": "Paris, France"}` is stored as `airbnb://search/Paris%2C%20France`. Every input that changes the result is part of the URI (cursor, dates, filters, months, `max_pages`).
 
 The store is bounded: 256 entries and 8 MiB in total, one hour per entry, least recently used out first. `resources/list` returns pages of 100 URIs. The server advertises `listChanged` and sends `notifications/resources/list_changed` when a tool call adds a new URI. Contents are `text/plain`.
 
@@ -155,7 +166,9 @@ The store is bounded: 256 entries and 8 MiB in total, one hour per entry, least 
 | Reviews | `airbnb://listing/{id}/reviews{?cursor}` | `airbnb_reviews` |
 | Host Profile | `airbnb://listing/{id}/host` | `airbnb_host_profile` |
 | Occupancy Estimate | `airbnb://listing/{id}/occupancy{?months}` | `airbnb_occupancy_estimate` |
-| Search Results | `airbnb://search/{location}{?checkin,checkout,adults,children,infants,pets,min_price,max_price,property_type,cursor}` | `airbnb_search` |
+| Price Quote | `airbnb://listing/{id}/quote{?checkin,checkout,adults,weeks}` | `airbnb_price_quote` |
+| Source Status | `airbnb://status{?location}` | `airbnb_status` |
+| Search Results | `airbnb://search/{location}{?checkin,checkout,adults,children,infants,pets,min_price,max_price,property_type,min_bedrooms,min_beds,min_bathrooms,amenities,guest_favorite,instant_book,cursor}` | `airbnb_search` |
 | Neighborhood Stats | `airbnb://neighborhood/{location}{?checkin,checkout,property_type}` | `airbnb_neighborhood_stats` |
 
 #### 🧠 Analytical Resources
@@ -165,34 +178,38 @@ The store is bounded: 256 entries and 8 MiB in total, one hour per entry, least 
 | Comparison | `airbnb://analysis/compare{?ids,location,max_listings,checkin,checkout,property_type}` | `airbnb_compare_listings` |
 | Price Trends | `airbnb://analysis/price-trends/{id}{?months}` | `airbnb_price_trends` |
 | Booking Gaps | `airbnb://analysis/gaps/{id}{?months}` | `airbnb_gap_finder` |
-| Revenue Estimate | `airbnb://analysis/revenue{?id,location,months}` | `airbnb_revenue_estimate` |
+| Revenue Estimate | `airbnb://analysis/revenue{?id,location,months,checkin,checkout,adults,property_type,min_bedrooms}` | `airbnb_revenue_estimate` |
 | Listing Score | `airbnb://analysis/score/{id}` | `airbnb_listing_score` |
-| Amenity Analysis | `airbnb://analysis/amenities/{id}{?location}` | `airbnb_amenity_analysis` |
+| Amenity Analysis | `airbnb://analysis/amenities/{id}{?location,checkin,checkout,adults,property_type,min_bedrooms}` | `airbnb_amenity_analysis` |
 | Market Comparison | `airbnb://analysis/market/{locations}{?checkin,checkout,property_type}` | `airbnb_market_comparison` |
 | Host Portfolio | `airbnb://analysis/portfolio/{id}` | `airbnb_host_portfolio` |
 | Review Sentiment | `airbnb://analysis/sentiment/{id}{?max_pages}` | `airbnb_review_sentiment` |
-| Competitive Positioning | `airbnb://analysis/positioning/{id}{?location}` | `airbnb_competitive_positioning` |
-| Optimal Pricing | `airbnb://analysis/pricing/{id}{?location,months}` | `airbnb_optimal_pricing` |
+| Competitive Positioning | `airbnb://analysis/positioning/{id}{?location,checkin,checkout,adults,property_type,min_bedrooms}` | `airbnb_competitive_positioning` |
+| Optimal Pricing | `airbnb://analysis/pricing/{id}{?location,months,checkin,checkout,adults,property_type,min_bedrooms}` | `airbnb_optimal_pricing` |
+| Search Rank | `airbnb://analysis/rank/{id}{?location,checkin,checkout,adults,children,property_type,min_bedrooms,amenities,max_pages}` | `airbnb_search_rank` |
 
 ## 🖥️ CLI
 
-The `airbnb` binary exposes all 18 tools as shell subcommands. Every analytical subcommand calls the same `application::analytical_handlers` function as the matching MCP tool, with the same defaults and limits; `tests/parity_test.rs` runs one recording mock through both entry points and compares the upstream calls. Each CLI run is a new process, so the in-memory cache and the rate limiter start empty on every invocation.
+The `airbnb` binary exposes all 21 tools as shell subcommands. Every analytical subcommand calls the same `application::analytical_handlers` function as the matching MCP tool, with the same defaults and limits; `tests/parity_test.rs` runs one recording mock through both entry points and compares the upstream calls. Each CLI run is a new process, so the in-memory cache and the rate limiter start empty on every invocation.
 
 > **Per-process limits.** Each `airbnb` invocation is a new process with its own empty cache, its own API-key fetch and its own rate limiter. Pacing and caching do not carry over between invocations, so shell loops must add their own delay (for example `sleep 2` between calls) to stay within Airbnb's limits.
 
-### Data subcommands (7)
+### Data subcommands (9)
 
 ```bash
 airbnb search "Paris, France" --adults 2 --max-price 200
+airbnb search "Porto-Vecchio, Corsica" --min-bedrooms 2 --amenity pool --guest-favorite
 airbnb listing 12345678
 airbnb reviews 12345678 --cursor <next_page_cursor>
 airbnb calendar 12345678 --months 6
 airbnb host 12345678
 airbnb neighborhood "Barcelona, Spain"
 airbnb occupancy 12345678 --months 3
+airbnb quote 12345678 --checkin 2027-07-10 --checkout 2027-07-17 --adults 4 --weeks 8
+airbnb status                                # alias: airbnb doctor
 ```
 
-### Analytical subcommands (11)
+### Analytical subcommands (12)
 
 ```bash
 airbnb compare --location "Lisbon, Portugal" --max-listings 40 --property-type "Entire home"
@@ -208,6 +225,8 @@ airbnb host-portfolio 12345678
 airbnb review-sentiment 12345678 --max-pages 5
 airbnb competitive 12345678
 airbnb optimal-pricing 12345678 --months 12
+airbnb optimal-pricing 12345678 --checkin 2027-07-10 --checkout 2027-07-17 --adults 4 --min-bedrooms 2
+airbnb rank 12345678 --checkin 2027-07-10 --checkout 2027-07-17 --adults 4 --max-pages 10
 ```
 
 ### Global flags
@@ -257,11 +276,11 @@ When you fetch a listing via `airbnb listing <id>` without dates, Airbnb's publi
 
 What the analytics can and cannot measure:
 
-- **Calendar prices are not published.** Airbnb's availability calendar currently returns no nightly price for any day. Price trends, gap revenue and calendar-based ADR therefore report "not published" or "unknown", never `$0`.
-- **Occupancy is an upper bound.** Only future nights count: days before today (the server's local date) are excluded. Airbnb does not distinguish booked nights from nights the host blocked, so every unavailable future night counts as occupied. Days explicitly marked as host-blocked are excluded.
+- **Calendar prices are not published.** Airbnb's availability calendar currently returns no nightly price for any day. Price trends, gap revenue and calendar-based ADR therefore report "not published" or "unknown", never `$0`. The dated price of one listing comes from `airbnb quote` / `airbnb_price_quote`, one stay per request.
+- **Occupancy is an upper bound.** Only future nights count: days before today (the server's local date) are excluded. Airbnb does not distinguish booked nights from nights the host blocked, so every unavailable future night counts as occupied. Days explicitly marked as host-blocked are excluded. A run of 45 or more consecutive unavailable nights is reported as a closed period (a seasonal closure, or dates the host has not opened yet, more likely than one booking), and the estimate adds an open-season occupancy over the nights outside those periods. The headline rate still includes them.
 - **Revenue inputs are labelled.** With a listing ID, occupancy is measured from its calendar. With a location only, occupancy is an explicit 65% assumption. The ADR source is printed (calendar, listing price, or neighborhood average as a proxy). The tool returns an error instead of estimating from no price at all.
 - **Currencies are never mixed or invented.** Every price prints in the currency of its data. Statistics use the most common currency in the sample.
-- **Percentiles are percentile ranks** against the listings actually compared, and ties share a rank. Competitive positioning ranks price, rating, amenities and review volume against a location search. Occupancy is shown but not ranked, because no neighborhood benchmark exists.
+- **Percentiles are percentile ranks** against the listings actually compared, and ties share a rank. Competitive positioning ranks price, rating, amenities and review volume against a location search. With stay dates, the listing's own price is its quote on the basis search results use (the `N nights x price` line, before fees), so it compares like for like with the comparables. Occupancy is shown but not ranked, because no neighborhood benchmark exists.
 - **Host portfolio covers one search page** of the listing's city, and says how the other listings were matched: by host id, or by host display name as a flagged fallback.
 - **Review sentiment is an English keyword heuristic** with simple negation. Non-English reviews are skipped and counted.
 
@@ -274,7 +293,7 @@ What the analytics can and cannot measure:
 
 ### Prerequisites
 
-- **Rust 1.93+** — `rust-toolchain.toml` pins 1.93 and [rustup](https://rustup.rs/) installs it on the first build
+- **Rust 1.99+** — `rust-toolchain.toml` pins 1.99 and [rustup](https://rustup.rs/) installs it on the first build
 - **Fuzzing only** — `rustup toolchain install nightly` and `cargo install cargo-fuzz`
 
 ### Build & Run
@@ -356,6 +375,10 @@ Once connected to an MCP-compatible AI assistant, you can ask natural language q
 > *"Show me the details and reviews for listing 12345678"*
 >
 > *"What's the price calendar for that listing over the next 6 months?"*
+>
+> *"Find villas in Porto-Vecchio with a pool and at least 3 bedrooms, Guest Favorites only"*
+>
+> *"What does listing 12345678 really cost for July 10-17 with 4 adults? And week by week until September?"*
 
 ### 📊 Analyze & Compare
 
@@ -380,6 +403,14 @@ Once connected to an MCP-compatible AI assistant, you can ask natural language q
 > *"Which other listings in the same city belong to the host of listing 12345678?"*
 >
 > *"What share of the next 3 months is already unavailable for listing 12345678?"*
+>
+> *"Where does my listing 12345678 rank in a search of its town for July 10-17, 4 adults, with a pool?"*
+>
+> *"Is my price right for July 10-17 against entire homes with 2+ bedrooms?"*
+
+### 🩺 When results look thin
+
+> *"Check the status of the Airbnb sources"* — `airbnb_status` says which operation fails and which config key to update.
 
 ### 🔄 Typical Workflow
 
@@ -390,6 +421,8 @@ Once connected to an MCP-compatible AI assistant, you can ask natural language q
 4. airbnb_price_calendar → Understand pricing & availability
 5. airbnb_listing_score → Audit quality (0-100)
 6. airbnb_revenue_estimate → Project income potential
+7. airbnb_price_quote  → Real price of a stay (weeks = seasonal curve)
+8. airbnb_search_rank  → Where the listing shows up for that stay
 ```
 
 ## ⚙️ Configuration
@@ -407,7 +440,7 @@ All settings live in an optional `config.yaml`. Lookup order: `airbnb --config <
 | `scraper` | `locale` | `en` | Locale requested on every request (`locale=` and `Accept-Language`) |
 | `scraper` | `graphql_enabled` | `true` | GraphQL API as primary source with HTML fallback; `false` = HTML scraper only |
 | `scraper` | `api_key_cache_secs` | `86400` | API key cache TTL (24 hours) |
-| `scraper` | `graphql_hashes` | *(built-in, refreshed 2026-09)* | Persisted query hashes for GraphQL operations. A rotated hash surfaces as `Airbnb API changed for <operation>` in the logs and the call falls back to HTML scraping — see [GraphQL adapter README](src/adapters/graphql/README.md#-detecting-api-drift) |
+| `scraper` | `graphql_hashes` | *(built-in, refreshed 2026-11)* | Persisted query hashes for GraphQL operations. A rotated hash surfaces as `Airbnb API changed for <operation>` in the logs and the call falls back to HTML scraping — see [GraphQL adapter README](src/adapters/graphql/README.md#-detecting-api-drift) |
 | `cache` | `max_entries` | `500` | LRU cache capacity |
 | `cache` | `search_ttl_secs` | `900` | Search cache TTL (15 min) |
 | `cache` | `detail_ttl_secs` | `3600` | Detail cache TTL (1 hour) |
@@ -421,10 +454,11 @@ All settings live in an optional `config.yaml`. Lookup order: `airbnb --config <
 
 These come from Airbnb, not from this crate. The tools say so instead of inventing numbers.
 
-- 📅 **No per-day calendar prices.** As of September 2026 Airbnb's `PdpAvailabilityCalendar` query returns `price.localPriceFormatted: null` for every day (365 of 365 days in the captured response). Availability and minimum stays are real. Price-based calendar analytics (price trends, lost revenue of gaps, weekday/weekend split) report that price data is unavailable instead of `$0`. Nightly prices come from dated searches (`airbnb_search` with `checkin` and `checkout`).
-- 🏷️ **Listing details fetched without dates carry no price.** Same rule: search with dates to get a nightly price.
-- 🔑 **Persisted-query hashes rotate.** GraphQL calls use Airbnb's persisted-query hashes (`scraper.graphql_hashes`). When Airbnb rotates one, the call reports `Airbnb API changed for <operation>: …` instead of returning empty data. The server logs it and falls back to HTML scraping, and the error reaches the tool result only when the fallback fails too. Copy the current hash from your browser's network panel into `config.yaml`.
+- 📅 **No per-day calendar prices.** As of September 2026 Airbnb's `PdpAvailabilityCalendar` query returns `price.localPriceFormatted: null` for every day (365 of 365 days in the captured response). Availability and minimum stays are real. Price-based calendar analytics (price trends, lost revenue of gaps, weekday/weekend split) report that price data is unavailable instead of `$0`. Nightly prices come from dated searches (`airbnb_search` with `checkin` and `checkout`) and, for one listing, from `airbnb_price_quote`: the booking panel's total for a stay, one stay per request (`weeks` repeats it week after week to rebuild a seasonal curve).
+- 🏷️ **Listing details fetched without dates carry no price.** Same rule: pass `checkin` and `checkout` (and `adults`) to `airbnb_optimal_pricing`, `airbnb_competitive_positioning` and `airbnb_revenue_estimate`; they then price the listing with its quote for that stay and search the comparables for the same stay.
+- 🔑 **Persisted-query hashes rotate.** GraphQL calls use Airbnb's persisted-query hashes (`scraper.graphql_hashes`). When Airbnb rotates one, the call reports `Airbnb API changed for <operation>: …` instead of returning empty data. The server falls back to HTML scraping, which carries fewer fields; while it does, every result ends with a `PARTIAL DATA WARNING` naming the affected operations, and `airbnb_status` (CLI: `airbnb status`) shows each source as OK / DEGRADED / FAILED with the upstream error and the config key to update. `python3 scripts/discover_query_ids.py --listing-id <id>` reads the current ids from Airbnb's web bundles (search, listing sections and price quote; the reviews and calendar ids are loaded later by the site and must be copied from the browser's network panel). A new id can come with new variables or a new response shape, as in November 2026: the id alone is then not enough.
 - 💱 **One currency per request.** Every request pins `scraper.currency` and `scraper.locale`. Results are reported in that currency and never converted.
+- 🥇 **A search rank is one measure.** Airbnb's order depends on the dates, the guest count, the filters, the locale and the session, and Airbnb serves at most 15 pages of 18 results. `airbnb_search_rank` reports what one scan saw; repeat it before comparing two ranks.
 - 📈 **Occupancy is inferred.** The calendar only says that a future night is unavailable, not whether it is booked or blocked by the host. Past dates are excluded.
 - ⏱️ **The rate limit is per process.** The limiter (default 1 request per 2 s) covers every request of one process. Separate `airbnb` CLI invocations do not share it (see the per-process note under 🖥️ CLI).
 - 🧾 **Public pages only.** Anything Airbnb shows only to logged-in users (exact address, guest identities) is out of reach by design.
@@ -449,7 +483,7 @@ mcp-airbnb/
 │   ├── application/         # 🎼 Wiring + use cases shared by both binaries
 │   │   ├── mod.rs           #    build_client(), load_app_config()
 │   │   └── analytical_handlers.rs  # Multi-fetch analytical use cases
-│   ├── mcp/                 # 📡 MCP server (rmcp 1.4, stdio, 18 tools, 18 resource templates)
+│   ├── mcp/                 # 📡 MCP server (rmcp 3.9, stdio, 21 tools, 21 resource templates)
 │   │   ├── server.rs        #    Tool handlers, ResourceStore
 │   │   └── resource_uri.rs  #    RFC 6570 templates + percent-encoded URI builders
 │   ├── cli/                 # 🖥️ CLI (clap derive, dispatcher, output)
@@ -465,9 +499,9 @@ mcp-airbnb/
 │   └── main.rs              # 🚀 `mcp-airbnb` binary entrypoint (default-run)
 ├── tests/                   # 🧪 Integration tests + fixtures/airbnb/2026-09/ (anonymized)
 ├── fuzz/                    # 🎲 cargo-fuzz crate: 13 fuzz targets, seeds/, airbnb.dict, make_seeds.py
-├── scripts/                 # 🔎 live_smoke.py (opt-in, never in CI), check_workflows.py, anonymize_fixtures.py
+├── scripts/                 # 🔎 live_smoke.py (opt-in, never in CI), discover_query_ids.py, check_workflows.py, anonymize_fixtures.py
 ├── claude-resources/        # 📚 Shareable Claude Code rules/skills/agents (committed,
-│   │                        #     copy into ~/.claude/ or symlink as .claude/)
+│   │                        #     link each sub-folder into .claude/, see its README)
 │   ├── rules/               #    mcp-conventions, scraping-conventions, cli-conventions
 │   ├── skills/              #    /mcp-smoke, /cli-demo, /fixtures
 │   └── agents/              #    mcp-tool-builder, scraper-debugger
@@ -477,7 +511,7 @@ mcp-airbnb/
 ├── justfile                 # Recipes: check, lint, test, fuzz, fuzz-seeds, smoke, …
 ├── tarpaulin.toml           # Code coverage configuration
 ├── deny.toml                # cargo-deny: advisories, licenses, bans, sources
-├── rust-toolchain.toml      # Pinned toolchain (1.93)
+├── rust-toolchain.toml      # Pinned toolchain (1.99)
 ├── Cargo.toml               # 2 binaries: mcp-airbnb (default-run) + airbnb
 ├── LICENSE                  # MIT
 └── CLAUDE.md                # Development guide
@@ -526,8 +560,8 @@ sequenceDiagram
 cargo test --all-targets                          # 🧪 everything (unit + integration)
 cargo test --lib                                  # unit tests only
 cargo test --test mcp_server_test                 # 📡 MCP protocol over a duplex transport
-cargo test --test mcp_resources_test              # 📦 resource URIs, 18 templates, list_changed
-cargo test --test functional_verification_test    # 🔄 all 18 tools end to end with a mock
+cargo test --test mcp_resources_test              # 📦 resource URIs, 21 templates, list_changed
+cargo test --test functional_verification_test    # 🔄 the tools end to end with a mock
 cargo test --test parity_test                     # ⚖️ CLI and MCP make the same upstream calls
 cargo test --test cancellation_test               # 🛑 cancelled tool calls stop upstream work
 cargo test --test scraper_test                    # 🕷️ HTML scraper
@@ -538,7 +572,7 @@ cargo test --test cli_test                        # 🖥️ CLI dispatcher and b
 cargo test --test proptest_tests                  # 🎲 property-based tests
 cargo test --test fuzz_seed_replay_test           # 🎲 replays the committed fuzz seeds on stable
 cargo test --test docs_consistency_test           # 📚 docs vs code (counts, commands, config keys)
-cargo clippy --all-targets -- -D warnings         # 🔍 lint (CI gate, MSRV 1.93 toolchain)
+cargo clippy --all-targets -- -D warnings         # 🔍 lint (CI gate, MSRV 1.99 toolchain)
 cargo +stable clippy --all-targets -- -D warnings # 🔭 preview newer lints (advisory)
 RUSTDOCFLAGS="-D warnings" cargo doc --no-deps    # 📚 docs
 cargo fmt --all -- --check                        # ✅ formatting
@@ -562,12 +596,12 @@ The nightly CI job fuzzes every target for 120 s and uploads crash reproducers a
 
 ### 🔎 Live smoke test (opt-in)
 
-Never run in CI. It calls each of the 18 tools once against the real site, which means a few dozen upstream requests spaced by the rate limiter. It flags suspicious output ($0 prices, empty reviews, placeholder locations, occupancy counting past dates, …):
+Never run in CI. It calls each of the 21 tools once against the real site, which means a few dozen upstream requests spaced by the rate limiter. It flags suspicious output ($0 prices, empty reviews, placeholder locations, occupancy counting past dates, a source that `airbnb_status` does not report OK, results served by the HTML fallback, …):
 
 ```bash
 cargo build --release --bin mcp-airbnb
 python3 scripts/live_smoke.py --live --location "Lyon, France"
-python3 -m unittest discover -s scripts -p 'test_live_smoke.py'   # offline self-test
+python3 -m unittest discover -s scripts -p 'test_*.py'            # offline self-tests (just smoke-selftest)
 ```
 
 > See [tests/README.md](tests/README.md) for the test architecture and mock infrastructure.

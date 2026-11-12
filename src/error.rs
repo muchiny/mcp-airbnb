@@ -74,7 +74,7 @@ pub fn quote_input(input: &str) -> String {
     let mut chars = input.chars();
     let head: String = chars.by_ref().take(MAX_ECHOED_INPUT_CHARS).collect();
     let truncated = chars.next().is_some();
-    let mut quoted = String::with_capacity(head.len() + 4);
+    let mut quoted = String::with_capacity(head.len().saturating_add(4));
     quoted.push('"');
     quoted.extend(head.escape_debug());
     quoted.push('"');

@@ -16,6 +16,7 @@ use mcp_airbnb::domain::analytics::{
 };
 use mcp_airbnb::domain::calendar::{CalendarDay, PriceCalendar};
 use mcp_airbnb::domain::listing::{Listing, ListingDetail, SearchResult};
+use mcp_airbnb::domain::quote::{PriceQuote, QuoteRequest};
 use mcp_airbnb::domain::review::{Review, ReviewsPage};
 use mcp_airbnb::domain::search_params::SearchParams;
 use mcp_airbnb::error::Result;
@@ -92,6 +93,10 @@ fn sample_detail(id: &str) -> ListingDetail {
         cleaning_fee: Some(40.0),
         service_fee: Some(20.0),
         neighborhood: Some("Trastevere".into()),
+        is_guest_favorite: None,
+        highlights: vec![],
+        category_ratings: vec![],
+        review_tags: vec![],
     }
 }
 
@@ -151,6 +156,8 @@ fn sample_host_profile() -> HostProfile {
         description: Some("Experienced host".into()),
         profile_picture_url: None,
         identity_verified: Some(true),
+        rating: None,
+        review_count: None,
     }
 }
 
@@ -165,6 +172,8 @@ fn sample_occupancy(id: &str) -> OccupancyEstimate {
         occupancy_rate: 80.0,
         past_days_excluded: 0,
         blocked_days_excluded: 0,
+        closed_periods: vec![],
+        open_season_rate: None,
         currency: "$".into(),
         average_available_price: Some(165.0),
         weekend_avg_price: Some(185.0),
@@ -207,6 +216,8 @@ fn sample_reviews(id: &str) -> ReviewsPage {
             },
         ],
         next_cursor: Some("24".into()),
+        total_reviews: None,
+        review_tags: vec![],
     }
 }
 
@@ -252,6 +263,26 @@ impl AirbnbClient for CliMock {
 
     async fn get_occupancy_estimate(&self, id: &str, _months: u32) -> Result<OccupancyEstimate> {
         Ok(sample_occupancy(id))
+    }
+
+    async fn get_price_quote(&self, request: &QuoteRequest) -> Result<PriceQuote> {
+        Ok(PriceQuote {
+            listing_id: request.listing_id.clone(),
+            checkin: request.checkin.clone(),
+            checkout: request.checkout.clone(),
+            nights: 7,
+            adults: request.adults,
+            available: true,
+            unavailability_message: None,
+            instant_book: Some(true),
+            total_display: Some("$700".into()),
+            total: Some(700.0),
+            nightly: Some(100.0),
+            listed_nightly: None,
+            currency: "$".into(),
+            breakdown: vec![],
+            notes: vec![],
+        })
     }
 }
 
@@ -509,6 +540,215 @@ async fn optimal_pricing_returns_json() {
     let out = dispatch(cli, mock()).await.unwrap();
     let parsed: serde_json::Value = serde_json::from_str(out.trim()).unwrap();
     assert_eq!(parsed["listing_id"], "12345");
+}
+
+/// A stay 60 days ahead, 7 nights: stay dates must not be in the past.
+fn future_stay() -> (String, String) {
+    let checkin = chrono::Utc::now().date_naive() + chrono::Days::new(60);
+    let checkout = checkin + chrono::Days::new(7);
+    (checkin.to_string(), checkout.to_string())
+}
+
+#[tokio::test]
+async fn quote_text_shows_the_total_and_the_average() {
+    let (checkin, checkout) = future_stay();
+    let cli = parse_cli(&[
+        "airbnb",
+        "quote",
+        "12345",
+        "--checkin",
+        &checkin,
+        "--checkout",
+        &checkout,
+        "--adults",
+        "2",
+    ]);
+    let out = dispatch(cli, mock()).await.unwrap();
+    assert!(out.contains("# Price quote: listing 12345"), "{out}");
+    assert!(out.contains("(7 nights, 2 adults)"), "{out}");
+    assert!(
+        out.contains("Total: $700 ($100.00 per night on average, fees and taxes included)"),
+        "{out}"
+    );
+    assert!(out.contains("Available: yes (Instant Book)"), "{out}");
+}
+
+#[tokio::test]
+async fn quote_json_over_weeks_lists_one_quote_per_week() {
+    let (checkin, checkout) = future_stay();
+    let cli = parse_cli(&[
+        "airbnb",
+        "--json",
+        "quote",
+        "12345",
+        "--checkin",
+        &checkin,
+        "--checkout",
+        &checkout,
+        "--weeks",
+        "3",
+    ]);
+    let out = dispatch(cli, mock()).await.unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(out.trim()).unwrap();
+    assert_eq!(parsed["listing_id"], "12345");
+    let quotes = parsed["quotes"].as_array().unwrap();
+    assert_eq!(quotes.len(), 3);
+    assert_eq!(quotes[0]["checkin"], checkin.as_str());
+    assert_eq!(quotes[1]["checkin"], checkout.as_str(), "one week later");
+    assert_eq!(quotes[0]["total"], 700.0);
+}
+
+#[tokio::test]
+async fn quote_rejects_a_past_stay_as_invalid_input() {
+    let cli = parse_cli(&[
+        "airbnb",
+        "quote",
+        "12345",
+        "--checkin",
+        "2020-01-01",
+        "--checkout",
+        "2020-01-08",
+    ]);
+    let err = dispatch(cli, mock()).await.unwrap_err();
+    assert!(err.to_string().contains("checkin"), "{err}");
+}
+
+#[tokio::test]
+async fn rank_text_shows_the_position_and_the_neighbours() {
+    let cli = parse_cli(&["airbnb", "rank", "102", "--location", "Rome, Italy"]);
+    let out = dispatch(cli, mock()).await.unwrap();
+    assert!(out.contains("# Search rank: listing 102"), "{out}");
+    assert!(out.contains("Search: Rome, Italy"), "{out}");
+    assert!(
+        out.contains("Position: 2 of 3 results scanned (page 1)"),
+        "{out}"
+    );
+    assert!(out.contains("> 2. Cozy Studio (ID: 102)"), "{out}");
+    assert!(out.contains("0 of 3 priced results are cheaper"), "{out}");
+}
+
+#[tokio::test]
+async fn rank_json_of_an_absent_listing_uses_its_own_location() {
+    let (checkin, checkout) = future_stay();
+    let cli = parse_cli(&[
+        "airbnb",
+        "--json",
+        "rank",
+        "999",
+        "--checkin",
+        &checkin,
+        "--checkout",
+        &checkout,
+        "--adults",
+        "4",
+        "--min-bedrooms",
+        "2",
+        "--amenity",
+        "pool",
+        "--max-pages",
+        "2",
+    ]);
+    let out = dispatch(cli, mock()).await.unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(out.trim()).unwrap();
+    assert_eq!(parsed["listing_id"], "999");
+    assert!(parsed["position"].is_null());
+    assert_eq!(parsed["scanned"], 3);
+    assert_eq!(parsed["exhausted"], true);
+    let search = parsed["search"].as_str().unwrap();
+    assert!(search.contains("4 adult(s)"), "{search}");
+    assert!(search.contains("2+ bedrooms"), "{search}");
+    assert!(search.ends_with("amenities: pool"), "{search}");
+}
+
+#[tokio::test]
+async fn rank_rejects_an_unknown_amenity() {
+    let cli = parse_cli(&["airbnb", "rank", "102", "--amenity", "sauna"]);
+    let err = dispatch(cli, mock()).await.unwrap_err();
+    assert!(
+        err.to_string().contains("unsupported amenity filter"),
+        "{err}"
+    );
+}
+
+#[tokio::test]
+async fn status_text_lists_every_check() {
+    for name in ["status", "doctor"] {
+        let cli = parse_cli(&["airbnb", name]);
+        let out = dispatch(cli, mock()).await.unwrap();
+        assert!(out.contains("# Airbnb source status"), "{out}");
+        for check in [
+            "| search | OK |",
+            "| listing details | OK |",
+            "| reviews | OK |",
+            "| calendar | OK |",
+            "| host profile | OK |",
+            "| price quote | OK | bookable, total $700 |",
+        ] {
+            assert!(out.contains(check), "{name}: missing {check} in {out}");
+        }
+        assert!(
+            out.contains("Verdict: all sources answer with complete data."),
+            "{out}"
+        );
+        assert!(!out.contains("PARTIAL DATA WARNING"), "{out}");
+    }
+}
+
+#[tokio::test]
+async fn status_json_has_one_probe_per_check() {
+    let cli = parse_cli(&["airbnb", "--json", "status", "--location", "Lyon, France"]);
+    let out = dispatch(cli, mock()).await.unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(out.trim()).unwrap();
+    assert_eq!(parsed["probes"].as_array().unwrap().len(), 6);
+    assert_eq!(parsed["probes"][0]["state"], "ok");
+    assert!(parsed["sample"].as_str().unwrap().contains("Lyon, France"));
+    assert_eq!(parsed["degradations"].as_array().unwrap().len(), 0);
+}
+
+#[tokio::test]
+async fn search_with_panel_filters_and_dated_analyses_run() {
+    let cli = parse_cli(&[
+        "airbnb",
+        "search",
+        "Rome, Italy",
+        "--min-bedrooms",
+        "2",
+        "--amenity",
+        "pool",
+        "--guest-favorite",
+        "--instant-book",
+    ]);
+    let out = dispatch(cli, mock()).await.unwrap();
+    assert!(out.contains("Sunny Loft"), "{out}");
+
+    let bad = parse_cli(&["airbnb", "search", "Rome, Italy", "--amenity", "sauna"]);
+    assert!(dispatch(bad, mock()).await.is_err());
+
+    let (checkin, checkout) = future_stay();
+    for command in ["optimal-pricing", "competitive", "amenities", "revenue"] {
+        let cli = parse_cli(&[
+            "airbnb",
+            "--json",
+            command,
+            "12345",
+            "--checkin",
+            &checkin,
+            "--checkout",
+            &checkout,
+            "--adults",
+            "4",
+            "--property-type",
+            "Entire home",
+            "--min-bedrooms",
+            "2",
+        ]);
+        let out = dispatch(cli, mock()).await.unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(out.trim()).unwrap();
+        assert!(parsed.is_object(), "{command}: {out}");
+    }
+    // Half a stay is rejected.
+    let half = parse_cli(&["airbnb", "competitive", "12345", "--checkin", &checkin]);
+    assert!(dispatch(half, mock()).await.is_err());
 }
 
 #[tokio::test]

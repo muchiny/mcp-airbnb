@@ -2,13 +2,18 @@ use serde_json::Value;
 use tracing::debug;
 
 use super::host;
-use super::pdp::{self, str_field};
+use super::pdp::{self, push_unique, str_field, u32_value};
+use super::pdp_node;
 use crate::adapters::price;
 use crate::adapters::text;
 use crate::domain::listing::ListingDetail;
 use crate::error::{AirbnbError, Result};
 
 /// Parse the GraphQL `StaysPdpSections` response into a `ListingDetail`.
+///
+/// Documents captured since 2026-11 carry the listing in `data.node`
+/// (`pdp_node`); its values win, and the sections and metadata fill what
+/// the entity does not publish. Older documents are read from the sections.
 ///
 /// The listing page embeds the same document (`niobeClientData`), so the HTML
 /// scraper uses this parser too. Values Airbnb does not publish stay
@@ -18,13 +23,18 @@ use crate::error::{AirbnbError, Result};
 /// location is a place name, never a section heading such as "Where you'll be".
 #[allow(clippy::too_many_lines)]
 pub fn parse_detail_response(json: &Value, id: &str, base_url: &str) -> Result<ListingDetail> {
-    let sections = json
-        .pointer(pdp::SECTIONS)
-        .and_then(Value::as_array)
-        .ok_or_else(|| AirbnbError::UpstreamSchema {
-            operation: "StaysPdpSections".into(),
-            detail: "could not find sections array".into(),
-        })?;
+    let node = pdp_node::node_detail(json);
+    let sections: &[Value] = match json.pointer(pdp::SECTIONS).and_then(Value::as_array) {
+        Some(sections) => sections,
+        None if node.is_some() => &[],
+        None => {
+            return Err(AirbnbError::UpstreamSchema {
+                operation: "StaysPdpSections".into(),
+                detail: "could not find sections array".into(),
+            });
+        }
+    };
+    let node = node.unwrap_or_default();
 
     let mut name: Option<String> = None;
     let mut title_subtitle: Option<String> = None;
@@ -201,17 +211,23 @@ pub fn parse_detail_response(json: &Value, id: &str, base_url: &str) -> Result<L
         .and_then(text::split_type_and_place);
 
     // A place name from the most precise source; never a section heading.
-    let location = title_subtitle
+    let location = node
+        .location
+        .or(title_subtitle)
         .or(location_subtitle)
         .or_else(|| overview_line.as_ref().map(|(_, place)| place.clone()))
         .or_else(|| str_field(sharing, "location"))
         .or(calendar_location)
         .unwrap_or_default();
-    let name = name
+    let name = node
+        .name
+        .or(name)
         .or(calendar_title)
         .or_else(|| str_field(sharing, "title"))
         .unwrap_or_default();
-    let property_type = property_type
+    let property_type = node
+        .property_type
+        .or(property_type)
         .or_else(|| str_field(sharing, "propertyType"))
         .or_else(|| overview_line.as_ref().map(|(kind, _)| kind.clone()))
         .or_else(|| str_field(logging, "roomType"));
@@ -225,7 +241,11 @@ pub fn parse_detail_response(json: &Value, id: &str, base_url: &str) -> Result<L
                 .collect()
         })
         .unwrap_or_default();
-    let rooms = text::parse_room_counts(overview_items.iter().map(String::as_str))
+    let rooms = node
+        .rooms
+        .or_fill(text::parse_room_counts(
+            overview_items.iter().map(String::as_str),
+        ))
         .or_fill(text::parse_room_counts(
             legacy_overview_items.iter().map(String::as_str),
         ))
@@ -235,13 +255,17 @@ pub fn parse_detail_response(json: &Value, id: &str, base_url: &str) -> Result<L
         .or_fill(text::parse_room_counts(
             calendar_items.iter().map(String::as_str),
         ));
-    let max_guests = book_it_max_guests
+    let max_guests = node
+        .max_guests
+        .or(book_it_max_guests)
         .or(rooms.guests)
         .or(calendar_max_guests)
         .or_else(|| u32_value(sharing.and_then(|s| s.get("personCapacity"))))
         .or_else(|| u32_value(logging.and_then(|l| l.get("personCapacity"))));
 
-    let rating = rating
+    let rating = node
+        .rating
+        .or(rating)
         .or_else(|| {
             sharing
                 .and_then(|s| s.get("starRating"))
@@ -252,15 +276,17 @@ pub fn parse_detail_response(json: &Value, id: &str, base_url: &str) -> Result<L
                 .and_then(|l| l.get("guestSatisfactionOverall"))
                 .and_then(Value::as_f64)
         });
-    let review_count = review_count
+    let review_count = node
+        .review_count
+        .or(review_count)
         .or_else(|| u32_value(sharing.and_then(|s| s.get("reviewCount"))))
         .unwrap_or(0);
-    let latitude = latitude.or_else(|| {
+    let latitude = node.latitude.or(latitude).or_else(|| {
         logging
             .and_then(|l| l.get("listingLat"))
             .and_then(Value::as_f64)
     });
-    let longitude = longitude.or_else(|| {
+    let longitude = node.longitude.or(longitude).or_else(|| {
         logging
             .and_then(|l| l.get("listingLng"))
             .and_then(Value::as_f64)
@@ -298,8 +324,29 @@ pub fn parse_detail_response(json: &Value, id: &str, base_url: &str) -> Result<L
         .and_then(|l| l.get("instantBook").or_else(|| l.get("isInstantBook")))
         .and_then(Value::as_bool);
 
-    let host = host::find_host_section(sections)
-        .and_then(|section| host::host_profile_from_section(section, host::sbui_host_id(json)));
+    let host = pdp_node::node_host(json).or_else(|| {
+        host::find_host_section(sections)
+            .and_then(|section| host::host_profile_from_section(section, host::sbui_host_id(json)))
+    });
+    // The entity's lists are complete; the section copies only matter for
+    // documents without the entity.
+    let description = node.description.unwrap_or(description);
+    let amenities = if node.amenities.is_empty() {
+        amenities
+    } else {
+        node.amenities
+    };
+    let house_rules = if node.house_rules.is_empty() {
+        house_rules
+    } else {
+        node.house_rules
+    };
+    let mut all_photos = node.photos;
+    for url in &photos {
+        push_unique(&mut all_photos, url);
+    }
+    let photos = all_photos;
+    let neighborhood = node.neighborhood.or(neighborhood);
     let host_ref = host.as_ref();
     let host_id = host_ref
         .and_then(|h| h.host_id.clone())
@@ -345,6 +392,10 @@ pub fn parse_detail_response(json: &Value, id: &str, base_url: &str) -> Result<L
         cleaning_fee,
         service_fee,
         neighborhood,
+        is_guest_favorite: node.is_guest_favorite,
+        highlights: node.highlights,
+        category_ratings: node.category_ratings,
+        review_tags: node.review_tags,
     })
 }
 
@@ -429,15 +480,6 @@ fn fees(booking: Option<&Value>) -> (Option<f64>, Option<f64>) {
     (cleaning, service)
 }
 
-/// A count published as a number or a numeric string.
-fn u32_value(value: Option<&Value>) -> Option<u32> {
-    let value = value?;
-    value
-        .as_u64()
-        .or_else(|| value.as_str().and_then(|s| s.trim().parse().ok()))
-        .and_then(|n| u32::try_from(n).ok())
-}
-
 /// `title` of every item of a list section (`detailItems`, `houseRules`, ...).
 fn item_titles(items: Option<&Value>) -> Vec<String> {
     items
@@ -447,12 +489,6 @@ fn item_titles(items: Option<&Value>) -> Vec<String> {
         .filter_map(|item| item.get("title").and_then(Value::as_str))
         .map(str::to_string)
         .collect()
-}
-
-fn push_unique(list: &mut Vec<String>, value: &str) {
-    if !list.iter().any(|existing| existing == value) {
-        list.push(value.to_string());
-    }
 }
 
 fn house_rule_starting_with(rules: &[String], prefixes: &[&str]) -> Option<String> {
@@ -794,5 +830,68 @@ mod tests {
         ]));
         let detail = parse_detail_response(&json, "1", "https://www.airbnb.com").unwrap();
         assert_eq!(detail.known_price(), None);
+    }
+
+    #[test]
+    fn entity_document_of_2026_11_yields_a_full_detail() {
+        let json = crate::test_helpers::fixture_2026_11("StaysPdpSections.villa.response.json");
+        let detail = parse_detail_response(&json, "45490342", "https://www.airbnb.com").unwrap();
+        assert_eq!(detail.name, "Sample villa - 3 bedrooms");
+        assert_eq!(detail.location, "Porto-Vecchio, Corse, France");
+        assert_eq!(detail.property_type.as_deref(), Some("Entire villa"));
+        assert_eq!(detail.rating, Some(4.94));
+        assert_eq!(detail.review_count, 54);
+        assert_eq!(
+            (
+                detail.bedrooms,
+                detail.beds,
+                detail.bathrooms,
+                detail.max_guests
+            ),
+            (Some(3), Some(4), Some(2.0), Some(6))
+        );
+        assert_eq!(detail.host_name.as_deref(), Some("Host A"));
+        assert_eq!(detail.host_id.as_deref(), Some("1000001"));
+        assert_eq!(detail.host_is_superhost, Some(true));
+        assert_eq!(detail.host_response_rate.as_deref(), Some("100%"));
+        assert_eq!(detail.host_languages, ["English", "French"]);
+        assert_eq!(detail.is_guest_favorite, Some(true));
+        assert_eq!(detail.category_ratings.len(), 6);
+        assert!(detail.amenities.len() > 60, "{}", detail.amenities.len());
+        assert!(detail.description.starts_with("Sample description"));
+        // Entity photos first, then the section photos not already listed.
+        assert_eq!(detail.photos.len(), 9, "{:?}", detail.photos);
+        assert_eq!(detail.known_price(), None);
+        assert_eq!(
+            (detail.latitude, detail.longitude),
+            (Some(41.5622), Some(9.2739))
+        );
+    }
+
+    #[test]
+    fn entity_document_parses_without_the_sections_array() {
+        let mut json =
+            crate::test_helpers::fixture_2026_11("StaysPdpSections.apartment.response.json");
+        json["data"]["presentation"] = serde_json::Value::Null;
+        let detail = parse_detail_response(&json, "38817969", "https://www.airbnb.com").unwrap();
+        assert_eq!(detail.name, "Sample apartment - city center");
+        assert_eq!(
+            detail.neighborhood.as_deref(),
+            Some("1st Arrondissement, Lyon")
+        );
+        assert_eq!(detail.location, "Lyon, Auvergne-Rh\u{f4}ne-Alpes, France");
+        assert_eq!(detail.max_guests, Some(4));
+    }
+
+    #[test]
+    fn hotel_entity_document_names_the_hotel_and_its_place() {
+        let json = crate::test_helpers::fixture_2026_11("StaysPdpSections.hotel.response.json");
+        let detail =
+            parse_detail_response(&json, "1257736932578886647", "https://www.airbnb.com").unwrap();
+        assert_eq!(detail.name, "Sample hotel, classic room");
+        assert_eq!(detail.location, "V\u{e9}nissieux, France");
+        assert_eq!(detail.property_type.as_deref(), Some("Room in hotel"));
+        assert_eq!(detail.host_name.as_deref(), Some("Business Host B"));
+        assert_eq!(detail.bedrooms, None);
     }
 }

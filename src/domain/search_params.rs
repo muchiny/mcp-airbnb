@@ -26,6 +26,123 @@ pub fn canonical_property_type(value: &str) -> Option<&'static str> {
 /// Longest accepted `location`, in characters.
 pub const MAX_LOCATION_CHARS: usize = 200;
 
+/// Amenity filters of Airbnb's search panel that the tools accept, as
+/// `(name, Airbnb amenity id)`. Each id was checked against live results
+/// (2026-11): a search with `amenities[]=<id>` returns listings with it.
+pub const AMENITY_FILTERS: [(&str, u32); 14] = [
+    ("wifi", 4),
+    ("air conditioning", 5),
+    ("pool", 7),
+    ("kitchen", 8),
+    ("free parking", 9),
+    ("hot tub", 25),
+    ("heating", 30),
+    ("washer", 33),
+    ("dryer", 34),
+    ("dedicated workspace", 47),
+    ("self check-in", 51),
+    ("tv", 58),
+    ("bbq grill", 99),
+    ("crib", 286),
+];
+
+/// Airbnb amenity id of a supported amenity filter (case and surrounding
+/// whitespace ignored), or `None` when the tools do not know the amenity.
+pub fn amenity_filter_id(name: &str) -> Option<u32> {
+    let wanted = name.trim().to_ascii_lowercase();
+    AMENITY_FILTERS
+        .iter()
+        .find(|(known, _)| *known == wanted)
+        .map(|(_, id)| *id)
+}
+
+/// Names of the supported amenity filters, for error messages and schemas.
+pub fn amenity_filter_names() -> String {
+    AMENITY_FILTERS
+        .iter()
+        .map(|(name, _)| *name)
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// Filters of Airbnb's search panel beyond dates, guests, price and type of
+/// place. The default applies no filter.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct SearchFilters {
+    /// Fewest bedrooms a result may have.
+    pub min_bedrooms: Option<u32>,
+    /// Fewest beds a result may have.
+    pub min_beds: Option<u32>,
+    /// Fewest bathrooms a result may have.
+    pub min_bathrooms: Option<u32>,
+    /// Amenities every result must have (names of [`AMENITY_FILTERS`]).
+    pub amenities: Vec<String>,
+    /// Keep only Guest Favorite listings.
+    pub guest_favorite: bool,
+    /// Keep only Instant Book listings.
+    pub instant_book: bool,
+}
+
+impl SearchFilters {
+    /// Whether no filter is set.
+    pub fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+
+    /// Check the room counts (1–16), the amenity names and their number.
+    pub fn validate(&self) -> Result<()> {
+        for (field, value) in [
+            ("min_bedrooms", self.min_bedrooms),
+            ("min_beds", self.min_beds),
+            ("min_bathrooms", self.min_bathrooms),
+        ] {
+            if let Some(value) = value {
+                limits::in_range(
+                    field,
+                    value,
+                    limits::ROOMS_FILTER_MIN,
+                    limits::ROOMS_FILTER_MAX,
+                )?;
+            }
+        }
+        if self.amenities.len() > limits::AMENITY_FILTERS_MAX {
+            return Err(invalid(format!(
+                "amenities must contain at most {} entries, got {}",
+                limits::AMENITY_FILTERS_MAX,
+                self.amenities.len()
+            )));
+        }
+        for amenity in &self.amenities {
+            if amenity_filter_id(amenity).is_none() {
+                return Err(invalid(format!(
+                    "unsupported amenity filter {}; expected one of: {}",
+                    quote_input(amenity),
+                    amenity_filter_names()
+                )));
+            }
+        }
+        Ok(())
+    }
+
+    /// Airbnb ids of the amenity filters, sorted and without duplicates.
+    pub fn amenity_ids(&self) -> Vec<u32> {
+        let mut ids: Vec<u32> = self
+            .amenities
+            .iter()
+            .filter_map(|name| amenity_filter_id(name))
+            .collect();
+        ids.sort_unstable();
+        ids.dedup();
+        ids
+    }
+
+    /// The amenity ids as one comma-separated value (`4,7`), or `None`.
+    pub fn amenity_id_list(&self) -> Option<String> {
+        let ids = self.amenity_ids();
+        (!ids.is_empty()).then(|| ids.iter().map(u32::to_string).collect::<Vec<_>>().join(","))
+    }
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct SearchParams {
     pub location: String,
@@ -39,6 +156,8 @@ pub struct SearchParams {
     pub max_price: Option<u32>,
     pub property_type: Option<String>,
     pub cursor: Option<String>,
+    /// Panel filters: rooms, amenities, Guest Favorite, Instant Book.
+    pub filters: SearchFilters,
 }
 
 impl SearchParams {
@@ -59,37 +178,15 @@ impl SearchParams {
     ///   `limits::MAX_BOOKING_HORIZON_DAYS` days ahead;
     /// - the stay lasts 1 to `limits::MAX_STAY_NIGHTS` nights;
     /// - there is at least 1 adult when dates are given, and guest counts are bounded;
-    /// - `min_price <= max_price`, `property_type` is a supported filter, and
-    ///   the cursor length is bounded.
+    /// - `min_price <= max_price`, `property_type` is a supported filter, the
+    ///   panel filters pass [`SearchFilters::validate`], and the cursor length
+    ///   is bounded.
     pub fn validate_at(&self, today: NaiveDate) -> Result<()> {
         limits::check_location(&self.location)?;
 
         match (&self.checkin, &self.checkout) {
             (Some(ci), Some(co)) => {
-                let checkin = parse_canonical_date("checkin", ci)?;
-                let checkout = parse_canonical_date("checkout", co)?;
-                if checkout <= checkin {
-                    return Err(invalid("checkout date must be after checkin date".into()));
-                }
-                let earliest = today.checked_sub_days(Days::new(1)).unwrap_or(today);
-                if checkin < earliest {
-                    return Err(invalid(format!(
-                        "checkin date {ci} is in the past (today is {today})"
-                    )));
-                }
-                if (checkin - today).num_days() > limits::MAX_BOOKING_HORIZON_DAYS {
-                    return Err(invalid(format!(
-                        "checkin date {ci} is more than {} days ahead",
-                        limits::MAX_BOOKING_HORIZON_DAYS
-                    )));
-                }
-                let nights = (checkout - checkin).num_days();
-                if nights > limits::MAX_STAY_NIGHTS {
-                    return Err(invalid(format!(
-                        "stay of {nights} nights exceeds the maximum of {}",
-                        limits::MAX_STAY_NIGHTS
-                    )));
-                }
+                check_stay_dates(ci, co, today)?;
                 if self.adults == Some(0) {
                     return Err(invalid(
                         "adults must be at least 1 when dates are given".into(),
@@ -123,6 +220,8 @@ impl SearchParams {
                 ),
             });
         }
+
+        self.filters.validate()?;
 
         if let Some(ref cursor) = self.cursor {
             limits::check_cursor(cursor)?;
@@ -196,6 +295,25 @@ impl SearchParams {
         if let Some((key, value)) = self.property_type.as_deref().and_then(property_type_filter) {
             pairs.push((key.into(), value.into()));
         }
+        // Panel filters, spelled as Airbnb's own search URL spells them.
+        for (key, value) in [
+            ("min_bedrooms", self.filters.min_bedrooms),
+            ("min_beds", self.filters.min_beds),
+            ("min_bathrooms", self.filters.min_bathrooms),
+        ] {
+            if let Some(value) = value {
+                pairs.push((key.into(), value.to_string()));
+            }
+        }
+        for id in self.filters.amenity_ids() {
+            pairs.push(("amenities[]".into(), id.to_string()));
+        }
+        if self.filters.guest_favorite {
+            pairs.push(("guest_favorite".into(), "true".into()));
+        }
+        if self.filters.instant_book {
+            pairs.push(("ib".into(), "true".into()));
+        }
         if let Some(ref cursor) = self.cursor {
             pairs.push(("cursor".into(), cursor.clone()));
         }
@@ -204,7 +322,7 @@ impl SearchParams {
     }
     /// Cache key covering every field that changes Airbnb's answer: location
     /// (trimmed, lower-cased, with `%` and the `:` separator escaped), dates,
-    /// guests, prices, property type and cursor.
+    /// guests, prices, property type, panel filters and cursor.
     /// Shared by the GraphQL (`gql:search:` prefix) and HTML (`search:` prefix) adapters.
     pub fn cache_key(&self) -> String {
         let mut key = self
@@ -240,6 +358,24 @@ impl SearchParams {
         if let Some(ref property_type) = self.property_type {
             key.push_str(&format!(":pt={}", property_type.trim().to_lowercase()));
         }
+        for (label, value) in [
+            ("br", self.filters.min_bedrooms),
+            ("beds", self.filters.min_beds),
+            ("ba", self.filters.min_bathrooms),
+        ] {
+            if let Some(value) = value {
+                key.push_str(&format!(":{label}={value}"));
+            }
+        }
+        if let Some(ids) = self.filters.amenity_id_list() {
+            key.push_str(&format!(":am={ids}"));
+        }
+        if self.filters.guest_favorite {
+            key.push_str(":gf");
+        }
+        if self.filters.instant_book {
+            key.push_str(":ib");
+        }
         if let Some(ref cursor) = self.cursor {
             key.push_str(&format!(":cur={cursor}"));
         }
@@ -249,6 +385,38 @@ impl SearchParams {
 
 fn invalid(reason: String) -> AirbnbError {
     AirbnbError::InvalidParams { reason }
+}
+
+/// Check a stay against `today`: both dates spelled exactly `YYYY-MM-DD`,
+/// check-in no earlier than yesterday (one day of slack for callers whose
+/// local date is behind UTC) and at most `limits::MAX_BOOKING_HORIZON_DAYS`
+/// days ahead, 1 to `limits::MAX_STAY_NIGHTS` nights. Returns the two dates.
+pub fn check_stay_dates(ci: &str, co: &str, today: NaiveDate) -> Result<(NaiveDate, NaiveDate)> {
+    let checkin = parse_canonical_date("checkin", ci)?;
+    let checkout = parse_canonical_date("checkout", co)?;
+    if checkout <= checkin {
+        return Err(invalid("checkout date must be after checkin date".into()));
+    }
+    let earliest = today.checked_sub_days(Days::new(1)).unwrap_or(today);
+    if checkin < earliest {
+        return Err(invalid(format!(
+            "checkin date {ci} is in the past (today is {today})"
+        )));
+    }
+    if checkin.signed_duration_since(today).num_days() > limits::MAX_BOOKING_HORIZON_DAYS {
+        return Err(invalid(format!(
+            "checkin date {ci} is more than {} days ahead",
+            limits::MAX_BOOKING_HORIZON_DAYS
+        )));
+    }
+    let nights = checkout.signed_duration_since(checkin).num_days();
+    if nights > limits::MAX_STAY_NIGHTS {
+        return Err(invalid(format!(
+            "stay of {nights} nights exceeds the maximum of {}",
+            limits::MAX_STAY_NIGHTS
+        )));
+    }
+    Ok((checkin, checkout))
 }
 
 /// Parse a `YYYY-MM-DD` date and require that exact spelling.
@@ -305,6 +473,7 @@ mod tests {
             max_price: None,
             property_type: None,
             cursor: None,
+            ..SearchParams::default()
         }
     }
 
@@ -632,6 +801,149 @@ mod tests {
                 .iter()
                 .any(|(key, _)| key == "property_type")
         );
+    }
+
+    fn filtered() -> SearchParams {
+        SearchParams {
+            filters: SearchFilters {
+                min_bedrooms: Some(2),
+                min_beds: Some(3),
+                min_bathrooms: Some(1),
+                amenities: vec![" Pool ".into(), "wifi".into(), "POOL".into()],
+                guest_favorite: true,
+                instant_book: true,
+            },
+            ..base_params()
+        }
+    }
+
+    #[test]
+    fn amenity_filters_are_known_by_name_whatever_the_case() {
+        assert_eq!(amenity_filter_id("pool"), Some(7));
+        assert_eq!(amenity_filter_id("  Air Conditioning "), Some(5));
+        assert_eq!(amenity_filter_id("self check-in"), Some(51));
+        assert_eq!(amenity_filter_id("sauna"), None);
+        assert_eq!(amenity_filter_id(""), None);
+        let names = amenity_filter_names();
+        assert!(names.starts_with("wifi, air conditioning, pool"), "{names}");
+        assert_eq!(names.split(", ").count(), AMENITY_FILTERS.len());
+        let mut ids: Vec<u32> = AMENITY_FILTERS.iter().map(|(_, id)| *id).collect();
+        ids.dedup();
+        assert_eq!(
+            ids.len(),
+            AMENITY_FILTERS.len(),
+            "ids are distinct and sorted"
+        );
+        assert!(ids.is_sorted());
+    }
+
+    #[test]
+    fn filters_are_validated_never_adjusted() {
+        type Change = fn(&mut SearchFilters);
+        assert!(SearchFilters::default().is_empty());
+        assert!(SearchFilters::default().validate().is_ok());
+        assert!(!filtered().filters.is_empty());
+        assert!(filtered().validate().is_ok());
+
+        let cases: [(&str, Change); 6] = [
+            ("min_bedrooms", |f| f.min_bedrooms = Some(0)),
+            ("min_bedrooms", |f| f.min_bedrooms = Some(17)),
+            ("min_beds", |f| f.min_beds = Some(0)),
+            ("min_bathrooms", |f| f.min_bathrooms = Some(17)),
+            ("unsupported amenity filter \"sauna\"", |f| {
+                f.amenities = vec!["sauna".into()];
+            }),
+            ("at most 10 entries, got 11", |f| {
+                f.amenities = vec!["wifi".into(); 11];
+            }),
+        ];
+        for (expected, change) in cases {
+            let mut params = base_params();
+            change(&mut params.filters);
+            let err = params.validate().unwrap_err().to_string();
+            assert!(err.contains(expected), "{expected}: {err}");
+        }
+        let unknown = SearchFilters {
+            amenities: vec!["sauna".into()],
+            ..SearchFilters::default()
+        };
+        let err = unknown.validate().unwrap_err().to_string();
+        assert!(
+            err.contains("expected one of: wifi, air conditioning"),
+            "{err}"
+        );
+    }
+
+    #[test]
+    fn amenity_ids_are_sorted_and_deduplicated() {
+        let filters = filtered().filters;
+        assert_eq!(filters.amenity_ids(), [4, 7]);
+        assert_eq!(filters.amenity_id_list().as_deref(), Some("4,7"));
+        assert_eq!(SearchFilters::default().amenity_id_list(), None);
+    }
+
+    #[test]
+    fn filters_enter_the_query_pairs_with_airbnb_names() {
+        let pairs = filtered().to_query_pairs();
+        let get = |name: &str| -> Vec<&str> {
+            pairs
+                .iter()
+                .filter(|(key, _)| key == name)
+                .map(|(_, value)| value.as_str())
+                .collect()
+        };
+        assert_eq!(get("min_bedrooms"), ["2"]);
+        assert_eq!(get("min_beds"), ["3"]);
+        assert_eq!(get("min_bathrooms"), ["1"]);
+        assert_eq!(get("amenities[]"), ["4", "7"]);
+        assert_eq!(get("guest_favorite"), ["true"]);
+        assert_eq!(get("ib"), ["true"]);
+
+        let plain = base_params().to_query_pairs();
+        for name in [
+            "min_bedrooms",
+            "min_beds",
+            "min_bathrooms",
+            "amenities[]",
+            "guest_favorite",
+            "ib",
+        ] {
+            assert!(!plain.iter().any(|(key, _)| key == name), "{name}");
+        }
+    }
+
+    #[test]
+    fn filters_enter_the_cache_key() {
+        assert_eq!(
+            filtered().cache_key(),
+            "paris:br=2:beds=3:ba=1:am=4,7:gf:ib"
+        );
+        let mut one = base_params();
+        one.filters.guest_favorite = true;
+        assert_eq!(one.cache_key(), "paris:gf");
+        assert_ne!(one.cache_key(), base_params().cache_key());
+        // The same amenities in another order and case are the same search.
+        let mut a = base_params();
+        a.filters.amenities = vec!["wifi".into(), "pool".into()];
+        let mut b = base_params();
+        b.filters.amenities = vec!["Pool".into(), "WIFI".into()];
+        assert_eq!(a.cache_key(), b.cache_key());
+    }
+
+    #[test]
+    fn stay_dates_are_checked_once_for_searches_and_quotes() {
+        let today = NaiveDate::from_ymd_opt(2026, 11, 12).unwrap();
+        let (checkin, checkout) = check_stay_dates("2026-12-01", "2026-12-08", today).unwrap();
+        assert_eq!(checkout.signed_duration_since(checkin).num_days(), 7);
+        for (ci, co) in [
+            ("2026-12-08", "2026-12-01"),
+            ("2026-12-01", "2026-12-01"),
+            ("2026-11-01", "2026-11-20"),
+            ("01/12/2026", "2026-12-08"),
+            ("2029-12-01", "2029-12-08"),
+        ] {
+            assert!(check_stay_dates(ci, co, today).is_err(), "{ci}..{co}");
+        }
     }
 
     #[test]

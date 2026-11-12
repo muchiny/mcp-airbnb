@@ -68,9 +68,9 @@ class DetectorTests(unittest.TestCase):
     def test_occupancy_that_counts_past_days_is_flagged(self):
         calendar = (
             "Price calendar for listing 1 (USD)\n"
-            "2026-09-01          -  No (Past date)          1\n"
-            "2026-09-02          -  No (Past date)          1\n"
-            "2026-09-29          -        Yes          1\n"
+            "From        To          Nights  Available                   Min nights     Price\n"
+            "2026-09-01  2026-09-02       2  No (Past date)                       1         -\n"
+            "2026-09-29  2026-09-29       1  Yes                                  1         -\n"
         )
         # Audit-time wording, then P2's wording of OccupancyEstimate's Display.
         for bad, good in (
@@ -102,6 +102,28 @@ class DetectorTests(unittest.TestCase):
         self.assertEqual([f.code for f in ls.flag_mixed_currencies(mixed)], ["mixed-currencies"])
         self.assertEqual(ls.flag_mixed_currencies("$60/night\n$70/night"), [])
         self.assertEqual(ls.listing_ids(mixed), ["1", "2"])
+
+    def test_pay_nothing_today_is_not_a_zero_price(self):
+        note = "  - $0 today · Free cancellation before May 13\n  - Pay $0 today with no extra fees."
+        self.assertEqual(ls.flag_zero_prices(note), [])
+        self.assertEqual([f.code for f in ls.flag_zero_prices("Total: $0 ($0.00 per night)")], ["zero-price"])
+
+    def test_fallback_warning_and_sources_not_ok_are_flagged(self):
+        status = (
+            "| Check | Status | Detail |\n|---|---|---|\n"
+            "| search | OK | 18 listings, 18 with a price |\n"
+            "| listing details | DEGRADED | 0 amenities; missing: amenities |\n"
+            "| reviews | FAILED | Airbnb API changed for StaysPdpReviewsQuery |\n"
+            "| price quote | SKIPPED | no listing to check |\n"
+        )
+        self.assertEqual(
+            [f.code for f in ls.flag_failed_sources(status)],
+            ["source-not-ok", "source-not-ok", "source-not-ok"],
+        )
+        warned = "<<<END UNTRUSTED AIRBNB DATA>>>\n\nPARTIAL DATA WARNING (from the server, not from Airbnb): ..."
+        self.assertEqual([f.code for f in ls.flag_fallback_in_use(warned)], ["html-fallback"])
+        self.assertEqual(ls.flag_fallback_in_use("all good"), [])
+        self.assertEqual({f.code for f in ls.generic_flags(status + warned)}, {"source-not-ok", "html-fallback"})
 
     def test_resource_uris_with_whitespace_are_flagged(self):
         uris = ["airbnb://search/Lyon, France", "airbnb://search/Lyon%2C%20France", "airbnb://listing/1"]

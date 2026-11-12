@@ -5,8 +5,10 @@ use async_trait::async_trait;
 use crate::domain::analytics::{HostProfile, NeighborhoodStats, OccupancyEstimate};
 use crate::domain::calendar::{CalendarDay, PriceCalendar};
 use crate::domain::listing::{Listing, ListingDetail, SearchResult};
+use crate::domain::quote::{PriceQuote, QuoteRequest};
 use crate::domain::review::{Review, ReviewsPage, ReviewsSummary};
 use crate::domain::search_params::SearchParams;
+use crate::domain::status::Degradation;
 use crate::error::Result;
 use crate::ports::airbnb_client::AirbnbClient;
 
@@ -17,6 +19,7 @@ type CalendarFn = Box<dyn Fn(&str, u32) -> Result<PriceCalendar> + Send + Sync>;
 type HostProfileFn = Box<dyn Fn(&str) -> Result<HostProfile> + Send + Sync>;
 type NeighborhoodFn = Box<dyn Fn(&SearchParams) -> Result<NeighborhoodStats> + Send + Sync>;
 type OccupancyFn = Box<dyn Fn(&str, u32) -> Result<OccupancyEstimate> + Send + Sync>;
+type QuoteFn = Box<dyn Fn(&QuoteRequest) -> Result<PriceQuote> + Send + Sync>;
 
 #[allow(clippy::struct_field_names)]
 pub struct MockAirbnbClient {
@@ -27,6 +30,9 @@ pub struct MockAirbnbClient {
     host_profile_fn: Mutex<HostProfileFn>,
     neighborhood_fn: Mutex<NeighborhoodFn>,
     occupancy_fn: Mutex<OccupancyFn>,
+    quote_fn: Mutex<QuoteFn>,
+    degradations: Vec<Degradation>,
+    cache_clears: std::sync::Arc<std::sync::atomic::AtomicUsize>,
 }
 
 impl Default for MockAirbnbClient {
@@ -47,7 +53,27 @@ impl MockAirbnbClient {
                 Ok(make_neighborhood_stats(&params.location))
             })),
             occupancy_fn: Mutex::new(Box::new(|id, _| Ok(make_occupancy_estimate(id)))),
+            quote_fn: Mutex::new(Box::new(|request| {
+                Ok(make_price_quote(request, Some(100.0)))
+            })),
+            degradations: Vec::new(),
+            cache_clears: std::sync::Arc::default(),
         }
+    }
+
+    /// Counter of `clear_cache` calls, to read after the mock is moved.
+    pub fn cache_clears(&self) -> std::sync::Arc<std::sync::atomic::AtomicUsize> {
+        std::sync::Arc::clone(&self.cache_clears)
+    }
+
+    /// Report `operation` as served by the HTML fallback after `error`.
+    #[must_use]
+    pub fn with_degradation(mut self, operation: &str, error: &str) -> Self {
+        self.degradations.push(Degradation {
+            operation: operation.to_string(),
+            error: error.to_string(),
+        });
+        self
     }
 
     #[must_use]
@@ -112,6 +138,15 @@ impl MockAirbnbClient {
         *self.occupancy_fn.lock().unwrap() = Box::new(f);
         self
     }
+
+    #[must_use]
+    pub fn with_quote(
+        self,
+        f: impl Fn(&QuoteRequest) -> Result<PriceQuote> + Send + Sync + 'static,
+    ) -> Self {
+        *self.quote_fn.lock().unwrap() = Box::new(f);
+        self
+    }
 }
 
 #[async_trait]
@@ -136,6 +171,11 @@ impl AirbnbClient for MockAirbnbClient {
         f(id, months)
     }
 
+    async fn get_price_quote(&self, request: &QuoteRequest) -> Result<PriceQuote> {
+        let f = self.quote_fn.lock().unwrap();
+        f(request)
+    }
+
     async fn get_host_profile(&self, listing_id: &str) -> Result<HostProfile> {
         let f = self.host_profile_fn.lock().unwrap();
         f(listing_id)
@@ -150,9 +190,42 @@ impl AirbnbClient for MockAirbnbClient {
         let f = self.occupancy_fn.lock().unwrap();
         f(id, months)
     }
+
+    fn degradations(&self) -> Vec<Degradation> {
+        self.degradations.clone()
+    }
+
+    fn clear_cache(&self) {
+        self.cache_clears
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    }
 }
 
 // --- Factory functions ---
+
+/// A 7-night quote: bookable at `nightly` per night, or unavailable.
+pub fn make_price_quote(request: &QuoteRequest, nightly: Option<f64>) -> PriceQuote {
+    let total = nightly.map(|nightly| nightly * 7.0);
+    PriceQuote {
+        listing_id: request.listing_id.clone(),
+        checkin: request.checkin.clone(),
+        checkout: request.checkout.clone(),
+        nights: 7,
+        adults: request.adults,
+        available: nightly.is_some(),
+        unavailability_message: nightly
+            .is_none()
+            .then(|| "Those dates are not available".to_string()),
+        instant_book: Some(nightly.is_some()),
+        total_display: total.map(|total| format!("${total:.0}")),
+        total,
+        nightly,
+        listed_nightly: None,
+        currency: "$".to_string(),
+        breakdown: vec![],
+        notes: vec![],
+    }
+}
 
 pub fn make_listing(id: &str, name: &str, price: f64) -> Listing {
     Listing {
@@ -214,6 +287,10 @@ pub fn make_listing_detail(id: &str) -> ListingDetail {
         cleaning_fee: None,
         service_fee: None,
         neighborhood: None,
+        is_guest_favorite: None,
+        highlights: vec![],
+        category_ratings: vec![],
+        review_tags: vec![],
     }
 }
 
@@ -236,6 +313,8 @@ pub fn make_reviews_page(listing_id: &str, reviews: Vec<Review>) -> ReviewsPage 
         summary: None,
         reviews,
         next_cursor: None,
+        total_reviews: None,
+        review_tags: vec![],
     }
 }
 
@@ -298,6 +377,8 @@ pub fn make_host_profile(name: &str) -> HostProfile {
         description: None,
         profile_picture_url: None,
         identity_verified: Some(true),
+        rating: None,
+        review_count: None,
     }
 }
 
@@ -327,6 +408,8 @@ pub fn make_occupancy_estimate(listing_id: &str) -> OccupancyEstimate {
         occupancy_rate: 0.0,
         past_days_excluded: 0,
         blocked_days_excluded: 0,
+        closed_periods: vec![],
+        open_season_rate: None,
         currency: "$".into(),
         average_available_price: None,
         weekend_avg_price: None,
@@ -354,6 +437,13 @@ pub fn fixture_json(rel: &str) -> serde_json::Value {
     serde_json::from_str(&text).unwrap_or_else(|e| panic!("fixture {path} is not valid JSON: {e}"))
 }
 
+/// Load a committed, anonymized 2026-11 capture
+/// (see `tests/fixtures/airbnb/2026-11/README.md`). `rel` is relative to that
+/// directory.
+pub fn fixture_2026_11(rel: &str) -> serde_json::Value {
+    fixture_json(&format!("../2026-11/{rel}"))
+}
+
 /// Wrap query payloads the way Airbnb embeds them in a page:
 /// `<script id="data-deferred-state-0">{"<wrapper_key>": [[key, payload], ...]}</script>`.
 /// `wrapper_key` is `niobeClientData` or `niobeMinimalClientData`.
@@ -379,7 +469,11 @@ pub fn niobe_page(wrapper_key: &str, entries: &[(&str, &serde_json::Value)]) -> 
 mod tests {
     use super::*;
 
-    const COMMITTED_FIXTURES: [&str; 8] = [
+    const COMMITTED_FIXTURES: [&str; 12] = [
+        "../2026-11/StaysPdpBookItQuery.response.json",
+        "../2026-11/StaysPdpSections.villa.response.json",
+        "../2026-11/StaysPdpSections.apartment.response.json",
+        "../2026-11/StaysPdpSections.hotel.response.json",
         "graphql/StaysSearch.request.json",
         "graphql/StaysSearch.response.json",
         "graphql/StaysSearch.validation_error.json",

@@ -135,7 +135,9 @@ fn stay_nights(item: &Value) -> Option<u32> {
             .as_str()
             .and_then(|d| NaiveDate::parse_from_str(d, "%Y-%m-%d").ok())
     };
-    let nights = (date("checkout")? - date("checkin")?).num_days();
+    let nights = date("checkout")?
+        .signed_duration_since(date("checkin")?)
+        .num_days();
     u32::try_from(nights).ok().filter(|n| *n > 0)
 }
 

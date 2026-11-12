@@ -1,6 +1,7 @@
 use base64::Engine as _;
 use serde_json::Value;
 
+use crate::domain::listing::ReviewTag;
 use crate::domain::review::{Review, ReviewsPage, ReviewsSummary};
 use crate::error::{AirbnbError, Result};
 
@@ -104,6 +105,8 @@ pub fn parse_reviews_page(
         summary,
         reviews,
         next_cursor,
+        total_reviews: total.and_then(|total| u32::try_from(total).ok()),
+        review_tags: parse_review_tags(reviews_data),
     })
 }
 
@@ -206,17 +209,59 @@ fn parse_summary(data: &Value) -> Option<ReviewsSummary> {
     })
 }
 
+/// Line breaks Airbnb writes as `<br/>` become newlines.
+fn plain_text(html: &str) -> String {
+    html.replace("<br/>", "\n")
+        .replace("<br />", "\n")
+        .replace("<br>", "\n")
+}
+
+/// Non-empty string at `pointer`.
+fn text_at<'a>(review: &'a Value, pointer: &str) -> Option<&'a str> {
+    review
+        .pointer(pointer)
+        .and_then(Value::as_str)
+        .filter(|text| !text.trim().is_empty())
+}
+
+/// Topics guests mention (`metadata.reviewTags`).
+fn parse_review_tags(reviews_data: &Value) -> Vec<ReviewTag> {
+    reviews_data
+        .pointer("/metadata/reviewTags")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|tag| {
+            Some(ReviewTag {
+                name: tag
+                    .get("localizedName")
+                    .or_else(|| tag.get("name"))
+                    .and_then(Value::as_str)?
+                    .to_string(),
+                count: tag
+                    .get("count")
+                    .and_then(Value::as_u64)
+                    .and_then(|count| u32::try_from(count).ok())?,
+            })
+        })
+        .collect()
+}
+
+/// One review. Airbnb sends the original text (`comments`, `language`) and,
+/// for reviews written in another language than the request locale, a
+/// translation in `localizedReview`. The translation is what the page shows,
+/// so it is the `comment`; `language` keeps the original language and
+/// `is_translated` says a translation was used.
 fn parse_single_review(review: &Value) -> Option<Review> {
-    let comment = review
+    let original = review
         .get("comments")
         .or_else(|| review.get("comment"))
         .or_else(|| review.get("text"))
         .or_else(|| review.get("body"))
         .or_else(|| review.get("content"))
-        .and_then(Value::as_str)?
-        .replace("<br/>", "\n")
-        .replace("<br />", "\n")
-        .replace("<br>", "\n");
+        .and_then(Value::as_str);
+    let translated = text_at(review, "/localizedReview/comments");
+    let comment = plain_text(translated.or(original)?);
 
     let author = review
         .pointer("/reviewer/firstName")
@@ -234,15 +279,16 @@ fn parse_single_review(review: &Value) -> Option<Review> {
 
     let rating = review.get("rating").and_then(Value::as_f64);
 
-    let response = review
-        .get("response")
-        .or_else(|| review.pointer("/hostResponse/comments"))
-        .and_then(Value::as_str)
-        .map(String::from);
+    let response = text_at(review, "/localizedReview/response")
+        .or_else(|| text_at(review, "/response"))
+        .or_else(|| text_at(review, "/hostResponse/comments"))
+        .map(plain_text);
 
-    let reviewer_location = review
-        .pointer("/reviewer/location")
-        .and_then(Value::as_str)
+    // `localizedReviewerLocation` is a place ("Paris, France") or, when the
+    // guest shares none, a tenure ("8 years on Airbnb"), which is not a place.
+    let reviewer_location = text_at(review, "/reviewer/location")
+        .or_else(|| text_at(review, "/localizedReviewerLocation"))
+        .filter(|place| !place.ends_with("on Airbnb"))
         .map(String::from);
 
     let language = review
@@ -250,7 +296,11 @@ fn parse_single_review(review: &Value) -> Option<Review> {
         .and_then(Value::as_str)
         .map(String::from);
 
-    let is_translated = review.get("isTranslated").and_then(Value::as_bool);
+    let is_translated = if translated.is_some() {
+        Some(true)
+    } else {
+        review.get("isTranslated").and_then(Value::as_bool)
+    };
 
     Some(Review {
         author,
@@ -634,5 +684,73 @@ mod tests {
             }
         });
         assert_eq!(build_reviews_variables("38817969", 0), expected);
+    }
+
+    #[test]
+    fn translated_reviews_use_the_translation_and_keep_the_original_language() {
+        let json = serde_json::json!({"data": {"presentation": {"stayProductDetailPage": {"reviews": {
+            "metadata": {"reviewsCount": 54, "reviewTags": [
+                {"name": "POOL", "localizedName": "Pool", "count": 24},
+                {"name": "BROKEN"}
+            ]},
+            "reviews": [
+                {
+                    "comments": "Sehr sch\u{f6}ne Villa",
+                    "language": "de",
+                    "createdAt": "2026-09-12T14:23:48Z",
+                    "rating": 5,
+                    "localizedReviewerLocation": "8 years on Airbnb",
+                    "response": "Danke<br/>bis bald",
+                    "localizedReview": {
+                        "comments": "Very nice villa<br/>Great pool",
+                        "commentsLanguage": "en",
+                        "response": "Thank you<br/>see you soon"
+                    },
+                    "reviewer": {"firstName": "Guest A"}
+                },
+                {
+                    "comments": "Lovely stay",
+                    "language": "en",
+                    "localizedReviewerLocation": "Lyon, France",
+                    "localizedReview": null,
+                    "response": null,
+                    "reviewer": {"firstName": "Guest B"}
+                }
+            ]
+        }}}}});
+        let page = parse_reviews_page(&json, "45490342", 0).unwrap();
+        assert_eq!(page.total_reviews, Some(54));
+        assert_eq!(
+            page.review_tags,
+            [ReviewTag {
+                name: "Pool".into(),
+                count: 24
+            }]
+        );
+        let translated = &page.reviews[0];
+        assert_eq!(translated.comment, "Very nice villa\nGreat pool");
+        assert_eq!(translated.language.as_deref(), Some("de"));
+        assert_eq!(translated.is_translated, Some(true));
+        assert_eq!(
+            translated.response.as_deref(),
+            Some("Thank you\nsee you soon")
+        );
+        assert_eq!(
+            translated.reviewer_location, None,
+            "a tenure is not a place"
+        );
+        let original = &page.reviews[1];
+        assert_eq!(original.comment, "Lovely stay");
+        assert_eq!(original.is_translated, None);
+        assert_eq!(original.reviewer_location.as_deref(), Some("Lyon, France"));
+        assert_eq!(original.response, None);
+
+        let text = page.to_string();
+        assert!(text.contains("Showing 2 of 54 reviews"), "{text}");
+        assert!(text.contains("Guests mention: Pool (24)"), "{text}");
+        assert!(
+            text.contains("(2026-09-12) - 5.0* [translated from de]"),
+            "{text}"
+        );
     }
 }

@@ -1,6 +1,6 @@
 ---
 name: mcp-smoke
-description: Smoke-test the mcp-airbnb MCP server by building it, sending an `initialize` + `tools/list` JSON-RPC request via stdin, and verifying the response contains the expected 18 tools. Use when you've changed anything in src/mcp/, src/application/, or the AirbnbClient trait and want a quick end-to-end sanity check before running the full test suite.
+description: Smoke-test the mcp-airbnb MCP server by building it, sending an `initialize` + `tools/list` JSON-RPC request via stdin, and verifying the response contains the expected 21 tools. Use when you've changed anything in src/mcp/, src/application/, or the AirbnbClient trait and want a quick end-to-end sanity check before running the full test suite.
 ---
 
 # /mcp-smoke — MCP server smoke test
@@ -33,12 +33,12 @@ initialize + tools/list, nothing more. For behavioural assertions, use
 
 3. **Verify the response**:
    - `id:1` — `result.serverInfo.name` should be `"mcp-airbnb"`
-   - `id:2` — `result.tools` should be an array of length **18**, and
-     should contain `airbnb_search`, `airbnb_listing_details`,
+   - `id:2` — `result.tools` should be an array of length **21** (the output
+     has one JSON object per line, one per reply), and should contain `airbnb_search`, `airbnb_listing_details`,
      `airbnb_optimal_pricing` (spot-check three)
 
 4. **Report** a one-line status:
-   - ✅ `mcp-airbnb smoke passed: 18 tools listed, server name OK`
+   - ✅ `mcp-airbnb smoke passed: 21 tools listed, server name OK`
    - ❌ `mcp-airbnb smoke FAILED: <reason>` — include the raw response for
      whichever request failed
 
@@ -47,8 +47,11 @@ initialize + tools/list, nothing more. For behavioural assertions, use
 - Stderr is expected to contain tracing logs (`Starting mcp-airbnb server`,
   `GraphQL mode enabled`, …). Those are noise, not failures — filter with
   `2>/dev/null` as shown above.
-- The server will keep running after `tools/list` because stdio stays open;
-  the `timeout 5` caps the test at 5 seconds so stdin EOF isn't required.
+- The brace group closes stdin once the three lines are written, and the
+  server exits on that EOF (about 0.2 s, exit code 0), so `timeout 5` is only
+  a safety net. If the reply to `id:2` is ever missing, add a short `sleep 1`
+  as the last command of the brace group so stdin stays open until the
+  server has answered.
 - If the binary doesn't exist yet, the skill runs `cargo build --bin mcp-airbnb`
   first — do not skip this step even if you "just built".
 - This skill assumes you are in the `mcp-airbnb` repo root. If `cargo build`
@@ -56,7 +59,7 @@ initialize + tools/list, nothing more. For behavioural assertions, use
 
 ## Live behaviour
 
-This skill only checks the handshake. To exercise all 18 tools against the
+This skill only checks the handshake. To exercise all 21 tools against the
 real site (opt-in, rate-limited, never in CI):
 
 ```bash

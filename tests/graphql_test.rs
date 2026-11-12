@@ -5,7 +5,8 @@ use mcp_airbnb::adapters::graphql::client::AirbnbGraphQLClient;
 use mcp_airbnb::adapters::rate_limiter::RateLimiter;
 use mcp_airbnb::adapters::shared::ApiKeyManager;
 use mcp_airbnb::config::types::{CacheConfig, ScraperConfig};
-use mcp_airbnb::domain::search_params::SearchParams;
+use mcp_airbnb::domain::quote::QuoteRequest;
+use mcp_airbnb::domain::search_params::{SearchFilters, SearchParams};
 use mcp_airbnb::error::AirbnbError;
 use mcp_airbnb::ports::airbnb_client::AirbnbClient;
 
@@ -89,6 +90,7 @@ fn base_params() -> SearchParams {
         max_price: None,
         property_type: None,
         cursor: None,
+        ..SearchParams::default()
     }
 }
 
@@ -1141,7 +1143,7 @@ async fn graphql_search_posts_cursor_filters_and_current_hash() {
     assert!(
         post.url
             .path()
-            .ends_with("/0afc7d440ee66286e44038530dc8d2af77d795e434e5cc5c8a8034c93cb377cf"),
+            .ends_with("/58d7ae3d927963c14176145186ec1f28814c942d7203b5bd179a77b161566263"),
         "{}",
         post.url
     );
@@ -1149,7 +1151,7 @@ async fn graphql_search_posts_cursor_filters_and_current_hash() {
     assert_eq!(body["operationName"], "StaysSearch");
     assert_eq!(
         body["extensions"]["persistedQuery"]["sha256Hash"],
-        "0afc7d440ee66286e44038530dc8d2af77d795e434e5cc5c8a8034c93cb377cf"
+        "58d7ae3d927963c14176145186ec1f28814c942d7203b5bd179a77b161566263"
     );
     let request = &body["variables"]["staysSearchRequest"];
     assert_eq!(request["cursor"], "CURSOR_2");
@@ -1355,4 +1357,197 @@ async fn graphql_422_on_a_persisted_query_is_upstream_schema() {
         .expect_err("stale hash");
     assert!(matches!(err, AirbnbError::UpstreamSchema { .. }), "{err}");
     assert!(err.to_string().contains("graphql_hashes"), "{err}");
+}
+
+// ---------------------------------------------------------------------------
+// Price quote (StaysPdpBookItQuery)
+// ---------------------------------------------------------------------------
+
+const BOOK_IT_CAPTURE: &str =
+    include_str!("fixtures/airbnb/2026-11/StaysPdpBookItQuery.response.json");
+
+fn quote_request(adults: u32) -> QuoteRequest {
+    let checkin = chrono::Utc::now().date_naive() + chrono::Days::new(60);
+    let checkout = checkin + chrono::Days::new(7);
+    QuoteRequest {
+        listing_id: "45490342".into(),
+        checkin: checkin.to_string(),
+        checkout: checkout.to_string(),
+        adults,
+    }
+}
+
+#[tokio::test]
+async fn graphql_price_quote_sends_the_stay_and_parses_the_booking_panel() {
+    let server = MockServer::start().await;
+    let client = build_client(&server).await;
+    let capture: serde_json::Value = serde_json::from_str(BOOK_IT_CAPTURE).unwrap();
+    let default_hash = mcp_airbnb::config::types::GraphQLHashes::default().stays_pdp_book_it;
+
+    Mock::given(method("GET"))
+        .and(path_regex("/api/v3/StaysPdpBookItQuery/.*"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(capture))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let request = quote_request(2);
+    let quote = client.get_price_quote(&request).await.unwrap();
+    assert!(quote.available);
+    assert_eq!(quote.nights, 7);
+    assert_eq!(quote.total, Some(1400.0));
+    assert_eq!(quote.nightly, Some(200.0));
+    assert_eq!(quote.total_display.as_deref(), Some("$1,400"));
+    assert_eq!(quote.checkin, request.checkin);
+
+    let requests = server.received_requests().await.unwrap();
+    let sent = requests
+        .iter()
+        .find(|r| r.url.path().contains("StaysPdpBookItQuery"))
+        .expect("the quote request was sent");
+    assert!(
+        sent.url.path().contains(&default_hash),
+        "path carries the configured persisted-query id: {}",
+        sent.url.path()
+    );
+    let variables = graphql_variables(sent);
+    assert_eq!(variables["id"], "RGVtYW5kU3RheUxpc3Rpbmc6NDU0OTAzNDI=");
+    assert_eq!(variables["dateRange"]["startDate"], request.checkin);
+    assert_eq!(variables["dateRange"]["endDate"], request.checkout);
+    assert_eq!(variables["guestCounts"]["numberOfAdults"], 2);
+}
+
+#[tokio::test]
+async fn graphql_price_quote_is_cached_per_stay_and_guest_count() {
+    let server = MockServer::start().await;
+    let cache = Arc::new(MemoryCache::new(100));
+    let client = build_client_with_cache(&server, cache).await;
+    let capture: serde_json::Value = serde_json::from_str(BOOK_IT_CAPTURE).unwrap();
+
+    Mock::given(method("GET"))
+        .and(path_regex("/api/v3/StaysPdpBookItQuery/.*"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(capture))
+        .expect(2) // two adults, then four; the repeat is a cache hit
+        .mount(&server)
+        .await;
+
+    client.get_price_quote(&quote_request(2)).await.unwrap();
+    client.get_price_quote(&quote_request(2)).await.unwrap();
+    let four = client.get_price_quote(&quote_request(4)).await.unwrap();
+    assert_eq!(four.adults, 4);
+}
+
+#[tokio::test]
+async fn graphql_price_quote_of_an_unbookable_stay_is_not_an_error() {
+    let server = MockServer::start().await;
+    let client = build_client(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path_regex("/api/v3/StaysPdpBookItQuery/.*"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "data": {"node": {"pdpPresentation": {"bookIt": {
+                "structuredDisplayPrice": null,
+                "availability": {
+                    "isAvailable": false,
+                    "canInstantBook": false,
+                    "unavailabilityMessage": "Minimum stay is 7 nights",
+                    "unavailabilityReason": "DATE"
+                }
+            }}}}
+        })))
+        .mount(&server)
+        .await;
+
+    let quote = client.get_price_quote(&quote_request(2)).await.unwrap();
+    assert!(!quote.available);
+    assert_eq!(
+        quote.unavailability_message.as_deref(),
+        Some("Minimum stay is 7 nights")
+    );
+    assert_eq!(quote.total, None);
+}
+
+#[tokio::test]
+async fn graphql_price_quote_drift_names_the_config_key_and_bad_input_makes_no_request() {
+    let server = MockServer::start().await;
+    let client = build_client(&server).await;
+
+    Mock::given(method("GET"))
+        .and(path_regex("/api/v3/StaysPdpBookItQuery/.*"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "data": {"node": null}
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let err = client.get_price_quote(&quote_request(2)).await.unwrap_err();
+    let text = err.to_string();
+    assert!(
+        matches!(err, AirbnbError::UpstreamSchema { .. }),
+        "got {text}"
+    );
+    assert!(text.contains("StaysPdpBookItQuery"), "{text}");
+    assert!(text.contains("stays_pdp_book_it"), "{text}");
+
+    // Zero adults, and a stay in the past: rejected before any request.
+    assert!(matches!(
+        client.get_price_quote(&quote_request(0)).await,
+        Err(AirbnbError::InvalidParams { .. })
+    ));
+    let past = QuoteRequest {
+        checkin: "2020-01-01".into(),
+        checkout: "2020-01-08".into(),
+        ..quote_request(2)
+    };
+    assert!(matches!(
+        client.get_price_quote(&past).await,
+        Err(AirbnbError::InvalidParams { .. })
+    ));
+}
+
+#[tokio::test]
+async fn graphql_search_sends_the_panel_filters_and_keys_the_cache_on_them() {
+    let server = MockServer::start().await;
+    let cache = Arc::new(MemoryCache::new(100));
+    let client = build_client_with_cache(&server, cache).await;
+
+    Mock::given(method("POST"))
+        .and(path_regex("/api/v3/StaysSearch/.*"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(search_response_json()))
+        .expect(2) // unfiltered, then filtered; the repeat is a cache hit
+        .mount(&server)
+        .await;
+
+    let mut filtered = base_params();
+    filtered.filters = SearchFilters {
+        min_bedrooms: Some(2),
+        amenities: vec!["pool".into(), "wifi".into()],
+        guest_favorite: true,
+        ..SearchFilters::default()
+    };
+    client.search_listings(&base_params()).await.unwrap();
+    client.search_listings(&filtered).await.unwrap();
+    client.search_listings(&filtered).await.unwrap();
+
+    let requests = server.received_requests().await.unwrap();
+    let body: serde_json::Value = requests
+        .iter()
+        .rfind(|r| r.url.path().contains("StaysSearch"))
+        .map(|r| serde_json::from_slice(&r.body).unwrap())
+        .expect("a search request");
+    let raw = body["variables"]["staysSearchRequest"]["rawParams"]
+        .as_array()
+        .expect("rawParams");
+    let values = |name: &str| -> Vec<String> {
+        raw.iter()
+            .filter(|p| p["filterName"] == name)
+            .flat_map(|p| p["filterValues"].as_array().cloned().unwrap_or_default())
+            .filter_map(|v| v.as_str().map(String::from))
+            .collect()
+    };
+    assert_eq!(values("minBedrooms"), ["2"]);
+    assert_eq!(values("amenities"), ["4", "7"]);
+    assert_eq!(values("guestFavorite"), ["true"]);
+    assert_eq!(values("ib"), Vec::<String>::new());
 }

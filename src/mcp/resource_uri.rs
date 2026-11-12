@@ -16,6 +16,8 @@
 
 use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, percent_decode_str, utf8_percent_encode};
 
+use crate::application::analytical_handlers::{RankRequest, StayFilter};
+use crate::domain::quote::QuoteRequest;
 use crate::domain::search_params::SearchParams;
 
 /// Bytes kept literal: the RFC 3986 unreserved set.
@@ -49,8 +51,8 @@ pub struct TemplateSpec {
     pub description: &'static str,
 }
 
-/// The 18 resource templates, one per tool.
-pub const TEMPLATES: [TemplateSpec; 18] = [
+/// The 21 resource templates, one per tool.
+pub const TEMPLATES: [TemplateSpec; 21] = [
     TemplateSpec {
         uri_template: "airbnb://listing/{id}",
         name: "Airbnb Listing",
@@ -62,6 +64,12 @@ pub const TEMPLATES: [TemplateSpec; 18] = [
         name: "Price Calendar",
         title: "Availability calendar",
         description: "Daily availability for `months` months (from airbnb_price_calendar)",
+    },
+    TemplateSpec {
+        uri_template: "airbnb://listing/{id}/quote{?checkin,checkout,adults,weeks}",
+        name: "Price Quote",
+        title: "Dated price quote",
+        description: "Price and availability of a stay, for `weeks` consecutive weekly stays (from airbnb_price_quote)",
     },
     TemplateSpec {
         uri_template: "airbnb://listing/{id}/reviews{?cursor}",
@@ -82,7 +90,7 @@ pub const TEMPLATES: [TemplateSpec; 18] = [
         description: "Occupancy over `months` months (from airbnb_occupancy_estimate)",
     },
     TemplateSpec {
-        uri_template: "airbnb://search/{location}{?checkin,checkout,adults,children,infants,pets,min_price,max_price,property_type,cursor}",
+        uri_template: "airbnb://search/{location}{?checkin,checkout,adults,children,infants,pets,min_price,max_price,property_type,min_bedrooms,min_beds,min_bathrooms,amenities,guest_favorite,instant_book,cursor}",
         name: "Search Results",
         title: "Search results",
         description: "One page of search results for these exact filters (from airbnb_search)",
@@ -112,7 +120,7 @@ pub const TEMPLATES: [TemplateSpec; 18] = [
         description: "Orphan nights and booking gaps (from airbnb_gap_finder)",
     },
     TemplateSpec {
-        uri_template: "airbnb://analysis/revenue{?id,location,months}",
+        uri_template: "airbnb://analysis/revenue{?id,location,months,checkin,checkout,adults,property_type,min_bedrooms}",
         name: "Revenue Estimate",
         title: "Revenue estimate",
         description: "Revenue projection for a listing `id` and/or a `location` (from airbnb_revenue_estimate)",
@@ -124,7 +132,7 @@ pub const TEMPLATES: [TemplateSpec; 18] = [
         description: "Quality audit 0-100 (from airbnb_listing_score)",
     },
     TemplateSpec {
-        uri_template: "airbnb://analysis/amenities/{id}{?location}",
+        uri_template: "airbnb://analysis/amenities/{id}{?location,checkin,checkout,adults,property_type,min_bedrooms}",
         name: "Amenity Analysis",
         title: "Amenity analysis",
         description: "Amenities vs the neighborhood (from airbnb_amenity_analysis)",
@@ -148,16 +156,28 @@ pub const TEMPLATES: [TemplateSpec; 18] = [
         description: "Sentiment over `max_pages` review pages (from airbnb_review_sentiment)",
     },
     TemplateSpec {
-        uri_template: "airbnb://analysis/positioning/{id}{?location}",
+        uri_template: "airbnb://analysis/positioning/{id}{?location,checkin,checkout,adults,property_type,min_bedrooms}",
         name: "Competitive Positioning",
         title: "Competitive positioning",
         description: "5-axis position vs the neighborhood (from airbnb_competitive_positioning)",
     },
     TemplateSpec {
-        uri_template: "airbnb://analysis/pricing/{id}{?location,months}",
+        uri_template: "airbnb://analysis/pricing/{id}{?location,months,checkin,checkout,adults,property_type,min_bedrooms}",
         name: "Optimal Pricing",
         title: "Optimal pricing",
         description: "Pricing recommendation (from airbnb_optimal_pricing)",
+    },
+    TemplateSpec {
+        uri_template: "airbnb://analysis/rank/{id}{?location,checkin,checkout,adults,children,property_type,min_bedrooms,amenities,max_pages}",
+        name: "Search Rank",
+        title: "Search rank",
+        description: "Position of the listing in a search of `location` for a stay and filters (from airbnb_search_rank)",
+    },
+    TemplateSpec {
+        uri_template: "airbnb://status{?location}",
+        name: "Source Status",
+        title: "Source status",
+        description: "Health of every upstream operation and fallbacks in use (from airbnb_status)",
     },
 ];
 
@@ -194,6 +214,11 @@ fn with_query(mut uri: String, pairs: &[(&str, Option<String>)]) -> String {
 
 fn text(value: Option<&str>) -> Option<String> {
     value.map(encode)
+}
+
+/// `true` for a set flag, nothing for an unset one.
+fn flag(value: bool) -> Option<String> {
+    value.then(|| "true".to_string())
 }
 
 fn number(value: Option<u32>) -> Option<String> {
@@ -234,7 +259,7 @@ pub fn occupancy(id: &str, months: u32) -> String {
     )
 }
 
-/// `airbnb://search/{location}{?checkin,checkout,adults,children,infants,pets,min_price,max_price,property_type,cursor}`
+/// `airbnb://search/{location}{?checkin,checkout,adults,children,infants,pets,min_price,max_price,property_type,min_bedrooms,min_beds,min_bathrooms,amenities,guest_favorite,instant_book,cursor}`
 pub fn search(params: &SearchParams) -> String {
     with_query(
         format!("{SCHEME}search/{}", encode(&params.location)),
@@ -248,6 +273,12 @@ pub fn search(params: &SearchParams) -> String {
             ("min_price", number(params.min_price)),
             ("max_price", number(params.max_price)),
             ("property_type", text(params.property_type.as_deref())),
+            ("min_bedrooms", number(params.filters.min_bedrooms)),
+            ("min_beds", number(params.filters.min_beds)),
+            ("min_bathrooms", number(params.filters.min_bathrooms)),
+            ("amenities", params.filters.amenity_id_list()),
+            ("guest_favorite", flag(params.filters.guest_favorite)),
+            ("instant_book", flag(params.filters.instant_book)),
             ("cursor", text(params.cursor.as_deref())),
         ],
     )
@@ -310,17 +341,16 @@ pub fn gaps(id: &str, months: u32) -> String {
     )
 }
 
-/// `airbnb://analysis/revenue{?id,location,months}`. Named parameters, so a
+/// `airbnb://analysis/revenue{?id,location,months,checkin,checkout,adults,property_type,min_bedrooms}`. Named parameters, so a
 /// listing id and a location that look alike never collide.
-pub fn revenue(id: Option<&str>, location: Option<&str>, months: u32) -> String {
-    with_query(
-        format!("{SCHEME}analysis/revenue"),
-        &[
-            ("id", text(id)),
-            ("location", text(location)),
-            ("months", Some(months.to_string())),
-        ],
-    )
+pub fn revenue(id: Option<&str>, location: Option<&str>, months: u32, stay: &StayFilter) -> String {
+    let mut pairs = vec![
+        ("id", text(id)),
+        ("location", text(location)),
+        ("months", Some(months.to_string())),
+    ];
+    pairs.extend(stay_pairs(stay));
+    with_query(format!("{SCHEME}analysis/revenue"), &pairs)
 }
 
 /// `airbnb://analysis/score/{id}`
@@ -328,12 +358,11 @@ pub fn score(id: &str) -> String {
     format!("{SCHEME}analysis/score/{}", encode(id))
 }
 
-/// `airbnb://analysis/amenities/{id}{?location}`
-pub fn amenities(id: &str, location: Option<&str>) -> String {
-    with_query(
-        format!("{SCHEME}analysis/amenities/{}", encode(id)),
-        &[("location", text(location))],
-    )
+/// `airbnb://analysis/amenities/{id}{?location,checkin,checkout,adults,property_type,min_bedrooms}`
+pub fn amenities(id: &str, location: Option<&str>, stay: &StayFilter) -> String {
+    let mut pairs = vec![("location", text(location))];
+    pairs.extend(stay_pairs(stay));
+    with_query(format!("{SCHEME}analysis/amenities/{}", encode(id)), &pairs)
 }
 
 /// `airbnb://analysis/market/{locations}{?checkin,checkout,property_type}`
@@ -366,23 +395,73 @@ pub fn sentiment(id: &str, max_pages: u32) -> String {
     )
 }
 
-/// `airbnb://analysis/positioning/{id}{?location}`
-pub fn positioning(id: &str, location: Option<&str>) -> String {
+/// `airbnb://analysis/positioning/{id}{?location,checkin,checkout,adults,property_type,min_bedrooms}`
+pub fn positioning(id: &str, location: Option<&str>, stay: &StayFilter) -> String {
+    let mut pairs = vec![("location", text(location))];
+    pairs.extend(stay_pairs(stay));
     with_query(
         format!("{SCHEME}analysis/positioning/{}", encode(id)),
-        &[("location", text(location))],
+        &pairs,
     )
 }
 
-/// `airbnb://analysis/pricing/{id}{?location,months}`
-pub fn pricing(id: &str, location: Option<&str>, months: u32) -> String {
+/// `airbnb://analysis/pricing/{id}{?location,months,checkin,checkout,adults,property_type,min_bedrooms}`
+pub fn pricing(id: &str, location: Option<&str>, months: u32, stay: &StayFilter) -> String {
+    let mut pairs = vec![
+        ("location", text(location)),
+        ("months", Some(months.to_string())),
+    ];
+    pairs.extend(stay_pairs(stay));
+    with_query(format!("{SCHEME}analysis/pricing/{}", encode(id)), &pairs)
+}
+
+/// Query pairs of a stay filter, in template order:
+/// `checkin,checkout,adults,property_type,min_bedrooms`.
+fn stay_pairs(stay: &StayFilter) -> [(&'static str, Option<String>); 5] {
+    [
+        ("checkin", text(stay.checkin.as_deref())),
+        ("checkout", text(stay.checkout.as_deref())),
+        ("adults", number(stay.adults)),
+        ("property_type", text(stay.property_type.as_deref())),
+        ("min_bedrooms", number(stay.filters.min_bedrooms)),
+    ]
+}
+
+/// `airbnb://listing/{id}/quote{?checkin,checkout,adults,weeks}`
+pub fn quote(request: &QuoteRequest, weeks: u32) -> String {
     with_query(
-        format!("{SCHEME}analysis/pricing/{}", encode(id)),
+        format!("{SCHEME}listing/{}/quote", encode(&request.listing_id)),
         &[
-            ("location", text(location)),
-            ("months", Some(months.to_string())),
+            ("checkin", text(Some(&request.checkin))),
+            ("checkout", text(Some(&request.checkout))),
+            ("adults", Some(request.adults.to_string())),
+            ("weeks", Some(weeks.to_string())),
         ],
     )
+}
+
+/// `airbnb://analysis/rank/{id}{?location,checkin,checkout,adults,children,property_type,min_bedrooms,amenities,max_pages}`
+pub fn rank(request: &RankRequest) -> String {
+    let stay = &request.stay;
+    with_query(
+        format!("{SCHEME}analysis/rank/{}", encode(&request.listing_id)),
+        &[
+            ("location", text(request.location.as_deref())),
+            ("checkin", text(stay.checkin.as_deref())),
+            ("checkout", text(stay.checkout.as_deref())),
+            ("adults", number(stay.adults)),
+            ("children", number(stay.children)),
+            ("property_type", text(stay.property_type.as_deref())),
+            ("min_bedrooms", number(stay.filters.min_bedrooms)),
+            ("amenities", stay.filters.amenity_id_list()),
+            ("max_pages", Some(request.max_pages.to_string())),
+        ],
+    )
+}
+
+/// `airbnb://status{?location}`
+pub fn status(location: Option<&str>) -> String {
+    with_query(format!("{SCHEME}status"), &[("location", text(location))])
 }
 
 /// Normalise a URI received in `resources/read` before the lookup.
@@ -423,6 +502,7 @@ fn push_canonical(out: &mut String, run: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::domain::search_params::SearchFilters;
 
     /// Independent RFC 3986 encoder: expected values must not come from the code under test.
     fn rfc_encode(value: &str) -> String {
@@ -569,7 +649,7 @@ mod tests {
             )
         );
         assert_eq!(
-            revenue(None, Some("Lyon, France"), 12),
+            revenue(None, Some("Lyon, France"), 12, &StayFilter::default()),
             expand(
                 template("Revenue Estimate"),
                 &[
@@ -579,7 +659,7 @@ mod tests {
             )
         );
         assert_eq!(
-            pricing("42", Some("Lyon"), 6),
+            pricing("42", Some("Lyon"), 6, &StayFilter::default()),
             expand(
                 template("Optimal Pricing"),
                 &[
@@ -627,6 +707,45 @@ mod tests {
             max_price: Some(300),
             property_type: Some("Private room".into()),
             cursor: Some("c?u&r=s,o r".into()),
+            filters: SearchFilters {
+                min_bedrooms: Some(2),
+                min_beds: Some(3),
+                min_bathrooms: Some(1),
+                amenities: vec!["Pool".into(), "wifi".into()],
+                guest_favorite: true,
+                instant_book: true,
+            },
+        };
+        // A dated stay with every comparable filter the analyses accept.
+        let stay = StayFilter {
+            checkin: Some("2026-10-01".into()),
+            checkout: Some("2026-10-05".into()),
+            adults: Some(4),
+            children: Some(1),
+            property_type: Some("Entire home".into()),
+            filters: SearchFilters {
+                min_bedrooms: Some(2),
+                amenities: vec!["pool".into(), "wifi".into()],
+                ..SearchFilters::default()
+            },
+        };
+        let stay_vars = |mut vars: Vec<(&'static str, Var<'static>)>| {
+            vars.push(("adults", Var::One("4")));
+            vars.push(("property_type", Var::One("Entire home")));
+            vars.push(("min_bedrooms", Var::One("2")));
+            with_dates(vars)
+        };
+        let quoted = QuoteRequest {
+            listing_id: ID.into(),
+            checkin: "2026-10-01".into(),
+            checkout: "2026-10-05".into(),
+            adults: 3,
+        };
+        let ranked = RankRequest {
+            listing_id: ID.into(),
+            location: Some(PLACE.into()),
+            stay: stay.clone(),
+            max_pages: 15,
         };
         let cases: Vec<Case<'_>> = vec![
             (listing(ID), "Airbnb Listing", vec![("id", Var::One(ID))]),
@@ -654,9 +773,41 @@ mod tests {
                     ("min_price", Var::One("50")),
                     ("max_price", Var::One("300")),
                     ("property_type", Var::One("Private room")),
+                    ("min_bedrooms", Var::One("2")),
+                    ("min_beds", Var::One("3")),
+                    ("min_bathrooms", Var::One("1")),
+                    ("amenities", Var::List(&["4", "7"])),
+                    ("guest_favorite", Var::One("true")),
+                    ("instant_book", Var::One("true")),
                     ("cursor", Var::One("c?u&r=s,o r")),
                 ]),
             ),
+            (
+                quote(&quoted, 12),
+                "Price Quote",
+                with_dates(vec![
+                    ("id", Var::One(ID)),
+                    ("adults", Var::One("3")),
+                    ("weeks", Var::One("12")),
+                ]),
+            ),
+            (
+                rank(&ranked),
+                "Search Rank",
+                stay_vars(vec![
+                    ("id", Var::One(ID)),
+                    ("location", Var::One(PLACE)),
+                    ("children", Var::One("1")),
+                    ("amenities", Var::List(&["4", "7"])),
+                    ("max_pages", Var::One("15")),
+                ]),
+            ),
+            (
+                status(Some(PLACE)),
+                "Source Status",
+                vec![("location", Var::One(PLACE))],
+            ),
+            (status(None), "Source Status", vec![]),
             (
                 neighborhood(&full),
                 "Neighborhood Stats",
@@ -696,19 +847,19 @@ mod tests {
                 vec![("id", Var::One(ID)), ("months", Var::One("2"))],
             ),
             (
-                revenue(Some(ID), Some(PLACE), 24),
+                revenue(Some(ID), Some(PLACE), 24, &stay),
                 "Revenue Estimate",
-                vec![
+                stay_vars(vec![
                     ("id", Var::One(ID)),
                     ("location", Var::One(PLACE)),
                     ("months", Var::One("24")),
-                ],
+                ]),
             ),
             (score(ID), "Listing Score", vec![("id", Var::One(ID))]),
             (
-                amenities(ID, Some(PLACE)),
+                amenities(ID, Some(PLACE), &stay),
                 "Amenity Analysis",
-                vec![("id", Var::One(ID)), ("location", Var::One(PLACE))],
+                stay_vars(vec![("id", Var::One(ID)), ("location", Var::One(PLACE))]),
             ),
             (
                 market(
@@ -730,19 +881,19 @@ mod tests {
                 vec![("id", Var::One(ID)), ("max_pages", Var::One("10"))],
             ),
             (
-                positioning(ID, Some(PLACE)),
+                positioning(ID, Some(PLACE), &stay),
                 "Competitive Positioning",
-                vec![("id", Var::One(ID)), ("location", Var::One(PLACE))],
+                stay_vars(vec![("id", Var::One(ID)), ("location", Var::One(PLACE))]),
             ),
             (
-                positioning(ID, None),
+                positioning(ID, None, &StayFilter::default()),
                 "Competitive Positioning",
                 vec![("id", Var::One(ID))],
             ),
             (
-                pricing(ID, None, 6),
+                pricing(ID, None, 6, &stay),
                 "Optimal Pricing",
-                vec![("id", Var::One(ID)), ("months", Var::One("6"))],
+                stay_vars(vec![("id", Var::One(ID)), ("months", Var::One("6"))]),
             ),
         ];
         let mut covered = std::collections::HashSet::new();
@@ -788,8 +939,8 @@ mod tests {
         assert_ne!(search(&page1), search(&page2));
         // MCP-3: a listing id and a location spelled the same used to share a key.
         assert_ne!(
-            revenue(Some("12345"), None, 12),
-            revenue(None, Some("12345"), 12)
+            revenue(Some("12345"), None, 12, &StayFilter::default()),
+            revenue(None, Some("12345"), 12, &StayFilter::default())
         );
         // MCP-3: ids ["1","2"] and location "1_2" used to share a key.
         assert_ne!(
@@ -818,7 +969,7 @@ mod tests {
                 None,
             ),
             reviews("42", Some("24")),
-            revenue(None, Some("Rome, Italy"), 12),
+            revenue(None, Some("Rome, Italy"), 12, &StayFilter::default()),
             compare_ids(&["1", "2"]),
         ] {
             assert_eq!(canonicalize(&uri), uri);
@@ -847,8 +998,8 @@ mod tests {
     }
 
     #[test]
-    fn eighteen_distinct_templates_one_per_tool() {
-        assert_eq!(TEMPLATES.len(), 18);
+    fn twenty_one_distinct_templates_one_per_tool() {
+        assert_eq!(TEMPLATES.len(), 21);
         let mut seen = std::collections::HashSet::new();
         // Names must be unique too: the tests look templates up by name.
         let mut names = std::collections::HashSet::new();

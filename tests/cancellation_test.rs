@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use async_trait::async_trait;
-use rmcp::model::{CallToolRequest, CallToolRequestParams, ClientInfo, ClientRequest};
+use rmcp::model::{CallToolRequest, CallToolRequestParams, ClientConfig, ClientRequest};
 use rmcp::service::PeerRequestOptions;
 use rmcp::{ClientHandler, ServiceExt};
 use tokio::sync::Notify;
@@ -13,6 +13,7 @@ use tokio::sync::Notify;
 use mcp_airbnb::domain::analytics::{HostProfile, NeighborhoodStats, OccupancyEstimate};
 use mcp_airbnb::domain::calendar::PriceCalendar;
 use mcp_airbnb::domain::listing::{ListingDetail, SearchResult};
+use mcp_airbnb::domain::quote::{PriceQuote, QuoteRequest};
 use mcp_airbnb::domain::review::ReviewsPage;
 use mcp_airbnb::domain::search_params::SearchParams;
 use mcp_airbnb::error::{AirbnbError, Result};
@@ -23,8 +24,8 @@ use mcp_airbnb::ports::airbnb_client::AirbnbClient;
 struct DummyClient;
 
 impl ClientHandler for DummyClient {
-    fn get_info(&self) -> ClientInfo {
-        ClientInfo::default()
+    fn get_info(&self) -> ClientConfig {
+        ClientConfig::default()
     }
 }
 
@@ -78,6 +79,10 @@ impl AirbnbClient for HangingClient {
     }
 
     async fn get_occupancy_estimate(&self, _id: &str, _months: u32) -> Result<OccupancyEstimate> {
+        Err(not_used())
+    }
+
+    async fn get_price_quote(&self, _request: &QuoteRequest) -> Result<PriceQuote> {
         Err(not_used())
     }
 }

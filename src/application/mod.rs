@@ -157,10 +157,11 @@ pub fn build_client(config: Config) -> Result<Arc<dyn AirbnbClient>> {
             rate_limiter,
         )
         .map_err(|e| anyhow::anyhow!("failed to create scraper client: {e}"))?;
-        Ok(Arc::new(CompositeClient::new(
-            Box::new(graphql),
-            Box::new(scraper),
-        )))
+        let primary_fetches = graphql.fetch_counter();
+        Ok(Arc::new(
+            CompositeClient::new(Box::new(graphql), Box::new(scraper))
+                .with_primary_fetches(primary_fetches),
+        ))
     } else {
         tracing::info!("GraphQL disabled — using HTML scraper only");
         Ok(Arc::new(

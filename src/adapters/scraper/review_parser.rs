@@ -139,6 +139,8 @@ fn extract_reviews_from_pdp_sections(
         summary,
         reviews,
         next_cursor: None,
+        total_reviews: None,
+        review_tags: vec![],
     })
 }
 
@@ -207,6 +209,8 @@ fn extract_reviews_from_json(data: &serde_json::Value, listing_id: &str) -> Opti
         summary,
         reviews,
         next_cursor: None,
+        total_reviews: None,
+        review_tags: vec![],
     })
 }
 
@@ -244,9 +248,8 @@ fn find_reviews_data(data: &serde_json::Value) -> Option<&serde_json::Value> {
 }
 
 fn deep_find_reviews(data: &serde_json::Value, max_depth: u32) -> Option<&serde_json::Value> {
-    if max_depth == 0 {
-        return None;
-    }
+    // Depth budget of the levels below; `None` once it is used up.
+    let deeper = max_depth.checked_sub(1)?;
     match data {
         serde_json::Value::Object(map) => {
             if let Some(reviews) = map.get("reviews")
@@ -262,7 +265,7 @@ fn deep_find_reviews(data: &serde_json::Value, max_depth: u32) -> Option<&serde_
                 }
             }
             for value in map.values() {
-                if let Some(result) = deep_find_reviews(value, max_depth - 1) {
+                if let Some(result) = deep_find_reviews(value, deeper) {
                     return Some(result);
                 }
             }
@@ -270,7 +273,7 @@ fn deep_find_reviews(data: &serde_json::Value, max_depth: u32) -> Option<&serde_
         }
         serde_json::Value::Array(arr) => {
             for item in arr {
-                if let Some(result) = deep_find_reviews(item, max_depth - 1) {
+                if let Some(result) = deep_find_reviews(item, deeper) {
                     return Some(result);
                 }
             }
@@ -427,6 +430,8 @@ fn parse_reviews_css(document: &Html, html: &str, listing_id: &str) -> Result<Re
         summary: None,
         reviews,
         next_cursor: None,
+        total_reviews: None,
+        review_tags: vec![],
     })
 }
 

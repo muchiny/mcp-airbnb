@@ -161,9 +161,8 @@ fn find_calendar_data(data: &serde_json::Value) -> Option<&serde_json::Value> {
 }
 
 fn deep_find_calendar(data: &Value, max_depth: u32) -> Option<&Value> {
-    if max_depth == 0 {
-        return None;
-    }
+    // Depth budget of the levels below; `None` once it is used up.
+    let deeper = max_depth.checked_sub(1)?;
     match data {
         Value::Object(map) => {
             if map.contains_key("calendarMonths") || map.contains_key("calendar_months") {
@@ -177,7 +176,7 @@ fn deep_find_calendar(data: &Value, max_depth: u32) -> Option<&Value> {
                 return Some(data);
             }
             map.values()
-                .find_map(|value| deep_find_calendar(value, max_depth - 1))
+                .find_map(|value| deep_find_calendar(value, deeper))
         }
         Value::Array(items) => {
             if is_day_list(items) {
@@ -185,7 +184,7 @@ fn deep_find_calendar(data: &Value, max_depth: u32) -> Option<&Value> {
             }
             items
                 .iter()
-                .find_map(|item| deep_find_calendar(item, max_depth - 1))
+                .find_map(|item| deep_find_calendar(item, deeper))
         }
         _ => None,
     }

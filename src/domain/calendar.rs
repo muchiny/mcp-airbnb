@@ -1,7 +1,7 @@
-#![allow(clippy::cast_precision_loss)]
-
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
+
+use super::num::count_f64;
 
 /// Reason why a calendar day is unavailable.
 #[derive(Debug, Clone, Serialize, Deserialize, schemars::JsonSchema, PartialEq)]
@@ -133,23 +133,22 @@ impl PriceCalendar {
             self.min_price = None;
             self.max_price = None;
         } else {
-            self.average_price = Some(prices.iter().sum::<f64>() / prices.len() as f64);
+            self.average_price = Some(prices.iter().sum::<f64>() / count_f64(prices.len()));
             self.min_price = prices.iter().copied().reduce(f64::min);
             self.max_price = prices.iter().copied().reduce(f64::max);
         }
-        let open = dated
-            .iter()
-            .filter(|d| d.status() == DayStatus::Open)
-            .count();
         let occupied = dated
             .iter()
             .filter(|d| d.status() == DayStatus::Occupied)
             .count();
-        let considered = open + occupied;
+        let considered = dated
+            .iter()
+            .filter(|d| matches!(d.status(), DayStatus::Open | DayStatus::Occupied))
+            .count();
         self.occupancy_rate = if considered == 0 {
             None
         } else {
-            Some(occupied as f64 / considered as f64 * 100.0)
+            Some(count_f64(occupied) / count_f64(considered) * 100.0)
         };
     }
 
@@ -182,23 +181,61 @@ impl PriceCalendar {
     /// date starts a new run. Gap and stay-length analytics must treat only
     /// days inside one run as adjacent nights.
     pub fn contiguous_runs(&self) -> Vec<&[CalendarDay]> {
-        let mut runs = Vec::new();
-        let mut start = 0;
-        for (i, pair) in self.days.windows(2).enumerate() {
-            let adjacent = matches!(
-                (
-                    NaiveDate::parse_from_str(&pair[0].date, "%Y-%m-%d"),
-                    NaiveDate::parse_from_str(&pair[1].date, "%Y-%m-%d"),
-                ),
-                (Ok(previous), Ok(next)) if previous.succ_opt() == Some(next)
-            );
-            if !adjacent {
-                runs.push(&self.days[start..=i]);
-                start = i + 1;
+        self.days
+            .chunk_by(|previous, next| {
+                matches!(
+                    (
+                        NaiveDate::parse_from_str(&previous.date, "%Y-%m-%d"),
+                        NaiveDate::parse_from_str(&next.date, "%Y-%m-%d"),
+                    ),
+                    (Ok(previous), Ok(next)) if previous.succ_opt() == Some(next)
+                )
+            })
+            .collect()
+    }
+}
+
+/// A run of consecutive calendar days with the same availability, reason,
+/// minimum stay and price: one row of the printed calendar.
+#[derive(Debug, Clone)]
+struct DayRun<'a> {
+    first: &'a CalendarDay,
+    last: &'a CalendarDay,
+    nights: u32,
+}
+
+impl PriceCalendar {
+    /// The days grouped into runs of consecutive dates with identical
+    /// availability, reason, minimum stay and price. A missing or unparsable
+    /// date starts a new run.
+    fn day_runs(&self) -> Vec<DayRun<'_>> {
+        let mut runs: Vec<DayRun<'_>> = Vec::new();
+        for day in &self.days {
+            let extends = runs.last().is_some_and(|run| {
+                let consecutive = match (run.last.parsed_date(), day.parsed_date()) {
+                    (Some(previous), Some(date)) => previous.succ_opt() == Some(date),
+                    _ => false,
+                };
+                // The reason is printed for unavailable days only.
+                let same_reason =
+                    day.available || run.first.unavailability_reason == day.unavailability_reason;
+                consecutive
+                    && run.first.available == day.available
+                    && same_reason
+                    && run.first.min_nights == day.min_nights
+                    && run.first.price == day.price
+            });
+            match runs.last_mut() {
+                Some(run) if extends => {
+                    run.last = day;
+                    run.nights = run.nights.saturating_add(1);
+                }
+                _ => runs.push(DayRun {
+                    first: day,
+                    last: day,
+                    nights: 1,
+                }),
             }
-        }
-        if start < self.days.len() {
-            runs.push(&self.days[start..]);
         }
         runs
     }
@@ -210,11 +247,6 @@ impl std::fmt::Display for PriceCalendar {
             f,
             "Price calendar for listing {} ({})",
             self.listing_id, self.currency
-        )?;
-        writeln!(
-            f,
-            "{:<12} {:>8} {:>10} {:>10}",
-            "Date", "Price", "Available", "Min nights"
         )?;
         if let Some(occ) = self.occupancy_rate {
             let considered = self
@@ -247,8 +279,21 @@ impl std::fmt::Display for PriceCalendar {
                 "Nightly prices: unavailable (Airbnb's calendar does not publish per-day prices for this listing)"
             )?;
         }
-        writeln!(f, "{}", "-".repeat(44))?;
-        for day in &self.days {
+        let runs = self.day_runs();
+        writeln!(
+            f,
+            "{} days in {} date ranges (consecutive days with the same status are one row):",
+            self.days.len(),
+            runs.len()
+        )?;
+        writeln!(
+            f,
+            "{:<10}  {:<10}  {:>6}  {:<26}  {:>10}  {:>8}",
+            "From", "To", "Nights", "Available", "Min nights", "Price"
+        )?;
+        writeln!(f, "{}", "-".repeat(80))?;
+        for run in &runs {
+            let day = run.first;
             let price = day
                 .price
                 .map_or_else(|| "-".to_string(), |p| format!("{}{p:.0}", self.currency));
@@ -264,8 +309,8 @@ impl std::fmt::Display for PriceCalendar {
                 .map_or_else(|| "-".to_string(), |n| n.to_string());
             writeln!(
                 f,
-                "{:<12} {:>8} {:>10} {:>10}",
-                day.date, price, available, min_nights
+                "{:<10}  {:<10}  {:>6}  {:<26}  {:>10}  {:>8}",
+                day.date, run.last.date, run.nights, available, min_nights, price
             )?;
         }
         Ok(())
@@ -580,8 +625,144 @@ mod tests {
         // Missing price and min_nights should show "-"
         let lines: Vec<&str> = s.lines().collect();
         let day_line = lines.iter().find(|l| l.contains("2025-06-01")).unwrap();
-        // Date "2025-06-01" has 2 hyphens, plus 2 placeholder "-" for price and min_nights = 4
-        assert_eq!(day_line.matches('-').count(), 4);
+        // The row carries the date twice (from, to): 4 hyphens, plus the two
+        // placeholders "-" for the minimum stay and the price.
+        assert_eq!(day_line.matches('-').count(), 6);
+        assert!(day_line.trim_end().ends_with('-'), "{day_line}");
+    }
+
+    fn stay_day(date: &str, available: bool, min_nights: Option<u32>) -> CalendarDay {
+        CalendarDay {
+            date: date.into(),
+            price: None,
+            available,
+            min_nights,
+            max_nights: None,
+            closed_to_arrival: None,
+            closed_to_departure: None,
+            unavailability_reason: None,
+        }
+    }
+
+    fn ranged_calendar(days: Vec<CalendarDay>) -> PriceCalendar {
+        PriceCalendar {
+            listing_id: "1".into(),
+            currency: "$".into(),
+            days,
+            average_price: None,
+            occupancy_rate: Some(40.0),
+            min_price: None,
+            max_price: None,
+        }
+    }
+
+    #[test]
+    fn calendar_display_groups_identical_consecutive_days_into_ranges() {
+        let mut days = vec![
+            stay_day("2027-06-01", false, Some(3)),
+            stay_day("2027-06-02", false, Some(3)),
+            stay_day("2027-06-03", true, Some(3)),
+            stay_day("2027-06-04", true, Some(3)),
+            stay_day("2027-06-05", true, Some(7)),
+        ];
+        let mut past = stay_day("2027-05-31", false, None);
+        past.unavailability_reason = Some(UnavailabilityReason::PastDate);
+        days.insert(0, past);
+        let text = ranged_calendar(days).to_string();
+        let rows: Vec<&str> = text.lines().filter(|l| l.starts_with("20")).collect();
+        assert_eq!(
+            rows.len(),
+            4,
+            "past day, 2 unavailable, 2 open with a 3-night minimum, 1 with 7: {text}"
+        );
+        let cells = |row: &str| -> Vec<String> {
+            row.split("  ")
+                .map(str::trim)
+                .filter(|cell| !cell.is_empty())
+                .map(String::from)
+                .collect()
+        };
+        assert_eq!(
+            cells(rows[0]),
+            ["2027-05-31", "2027-05-31", "1", "No (Past date)", "-", "-"]
+        );
+        assert_eq!(
+            cells(rows[1]),
+            ["2027-06-01", "2027-06-02", "2", "No", "3", "-"]
+        );
+        assert_eq!(
+            cells(rows[2]),
+            ["2027-06-03", "2027-06-04", "2", "Yes", "3", "-"]
+        );
+        assert_eq!(
+            cells(rows[3]),
+            ["2027-06-05", "2027-06-05", "1", "Yes", "7", "-"]
+        );
+        assert!(
+            text.contains("6 days in 4 date ranges"),
+            "the header says how the rows were built: {text}"
+        );
+    }
+
+    #[test]
+    fn calendar_display_puts_the_summary_before_the_table() {
+        let text = ranged_calendar(vec![stay_day("2027-06-01", true, None)]).to_string();
+        let position = |needle: &str| {
+            text.find(needle)
+                .unwrap_or_else(|| panic!("{needle}: {text}"))
+        };
+        assert!(position("Occupancy: 40.0%") < position("From "));
+        assert!(position("Nightly prices: unavailable") < position("From "));
+        assert!(position("From ") < position("2027-06-01"));
+    }
+
+    #[test]
+    fn open_days_are_one_range_whatever_reason_they_still_carry() {
+        let mut leftover = stay_day("2027-06-02", true, None);
+        leftover.unavailability_reason = Some(UnavailabilityReason::Unknown);
+        let cal = ranged_calendar(vec![
+            stay_day("2027-06-01", true, None),
+            leftover,
+            stay_day("2027-06-03", true, None),
+        ]);
+        assert_eq!(cal.day_runs().len(), 1, "{cal}");
+        // The reason still splits unavailable days: it is printed.
+        let mut booked = stay_day("2027-06-02", false, None);
+        booked.unavailability_reason = Some(UnavailabilityReason::Booked);
+        let cal = ranged_calendar(vec![stay_day("2027-06-01", false, None), booked]);
+        assert_eq!(cal.day_runs().len(), 2, "{cal}");
+    }
+
+    #[test]
+    fn calendar_ranges_break_on_a_missing_date_a_price_change_or_a_bad_date() {
+        let mut priced = stay_day("2027-06-04", true, None);
+        priced.price = Some(120.0);
+        let cal = ranged_calendar(vec![
+            stay_day("2027-06-01", true, None),
+            // 2027-06-02 is missing
+            stay_day("2027-06-03", true, None),
+            priced,
+            stay_day("not-a-date", true, None),
+            stay_day("2027-06-06", true, None),
+        ]);
+        let nights: Vec<u32> = cal.day_runs().iter().map(|run| run.nights).collect();
+        assert_eq!(nights, [1, 1, 1, 1, 1]);
+        assert!(cal.to_string().contains("$120"), "{cal}");
+
+        let year: Vec<CalendarDay> = (0..365u64)
+            .map(|offset| {
+                let date = chrono::NaiveDate::from_ymd_opt(2027, 1, 1).unwrap()
+                    + chrono::Days::new(offset);
+                stay_day(&date.to_string(), offset % 100 < 60, Some(2))
+            })
+            .collect();
+        let text = ranged_calendar(year).to_string();
+        assert!(
+            text.lines().count() < 20,
+            "a year of long runs is a short table, not 365 lines: {} lines",
+            text.lines().count()
+        );
+        assert_eq!(ranged_calendar(vec![]).day_runs().len(), 0);
     }
 
     #[test]
@@ -713,6 +894,30 @@ mod tests {
             ..cal.clone()
         };
         assert!(empty.contiguous_runs().is_empty());
+    }
+
+    #[test]
+    fn contiguous_runs_isolate_a_day_with_an_unparseable_date() {
+        let cal = calendar(vec![
+            day("2026-10-01", true, None),
+            day("2026-10-02", true, None),
+            day("not a date", true, None),
+            day("2026-10-03", true, None),
+            day("2026-10-04", true, None),
+        ]);
+        let runs: Vec<Vec<&str>> = cal
+            .contiguous_runs()
+            .iter()
+            .map(|run| run.iter().map(|d| d.date.as_str()).collect())
+            .collect();
+        assert_eq!(
+            runs,
+            vec![
+                vec!["2026-10-01", "2026-10-02"],
+                vec!["not a date"],
+                vec!["2026-10-03", "2026-10-04"],
+            ]
+        );
     }
 
     fn day(date: &str, available: bool, reason: Option<UnavailabilityReason>) -> CalendarDay {

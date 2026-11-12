@@ -14,13 +14,14 @@ use mcp_airbnb::domain::analytics::{
 };
 use mcp_airbnb::domain::calendar::{CalendarDay, PriceCalendar, UnavailabilityReason};
 use mcp_airbnb::domain::listing::{Listing, ListingDetail, SearchResult};
+use mcp_airbnb::domain::quote::{PriceQuote, QuoteRequest};
 use mcp_airbnb::domain::review::{Review, ReviewsPage, ReviewsSummary};
 use mcp_airbnb::domain::search_params::SearchParams;
 use mcp_airbnb::error::Result;
 use mcp_airbnb::mcp::server::AirbnbMcpServer;
 use mcp_airbnb::ports::airbnb_client::AirbnbClient;
 
-use rmcp::model::{CallToolRequestParams, CallToolResult, ClientInfo};
+use rmcp::model::{CallToolRequestParams, CallToolResult, ClientConfig};
 use rmcp::{ClientHandler, ServiceExt};
 
 // ---------------------------------------------------------------------------
@@ -133,6 +134,10 @@ impl AirbnbClient for FunctionalMock {
             cleaning_fee: Some(30.0),
             service_fee: Some(15.0),
             neighborhood: Some("Manhattan".into()),
+            is_guest_favorite: None,
+            highlights: vec![],
+            category_ratings: vec![],
+            review_tags: vec![],
         })
     }
 
@@ -172,6 +177,8 @@ impl AirbnbClient for FunctionalMock {
                 },
             ],
             next_cursor: None,
+            total_reviews: None,
+            review_tags: vec![],
         })
     }
 
@@ -241,6 +248,8 @@ impl AirbnbClient for FunctionalMock {
             description: Some("Passionate host in NYC".into()),
             profile_picture_url: Some("https://example.com/alice.jpg".into()),
             identity_verified: Some(true),
+            rating: None,
+            review_count: None,
         })
     }
 
@@ -281,6 +290,8 @@ impl AirbnbClient for FunctionalMock {
             occupancy_rate: 70.6,
             past_days_excluded: 0,
             blocked_days_excluded: 0,
+            closed_periods: vec![],
+            open_season_rate: None,
             currency: "$".into(),
             average_available_price: Some(105.0),
             weekend_avg_price: Some(130.0),
@@ -295,6 +306,26 @@ impl AirbnbClient for FunctionalMock {
             }],
         })
     }
+
+    async fn get_price_quote(&self, request: &QuoteRequest) -> Result<PriceQuote> {
+        Ok(PriceQuote {
+            listing_id: request.listing_id.clone(),
+            checkin: request.checkin.clone(),
+            checkout: request.checkout.clone(),
+            nights: 7,
+            adults: request.adults,
+            available: true,
+            unavailability_message: None,
+            instant_book: Some(true),
+            total_display: Some("$700".into()),
+            total: Some(700.0),
+            nightly: Some(100.0),
+            listed_nightly: None,
+            currency: "$".into(),
+            breakdown: vec![],
+            notes: vec![],
+        })
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -305,8 +336,8 @@ impl AirbnbClient for FunctionalMock {
 struct DummyClient;
 
 impl ClientHandler for DummyClient {
-    fn get_info(&self) -> ClientInfo {
-        ClientInfo::default()
+    fn get_info(&self) -> ClientConfig {
+        ClientConfig::default()
     }
 }
 
@@ -314,7 +345,7 @@ fn extract_text(result: &CallToolResult) -> String {
     result
         .content
         .first()
-        .and_then(|c| c.raw.as_text())
+        .and_then(|c| c.as_text())
         .map(|t| t.text.clone())
         .unwrap_or_default()
 }
@@ -812,6 +843,150 @@ async fn market_comparison_single_location_error() {
         text.contains('2') || text.contains("least"),
         "Error should mention minimum of 2, got: {text}"
     );
+
+    teardown(client, server_handle).await;
+}
+
+// ===========================================================================
+// Dated price, search rank and source status
+// ===========================================================================
+
+/// A stay 60 days ahead, 7 nights: stay dates must not be in the past.
+fn future_stay() -> (String, String) {
+    let checkin = chrono::Utc::now().date_naive() + chrono::Days::new(60);
+    let checkout = checkin + chrono::Days::new(7);
+    (checkin.to_string(), checkout.to_string())
+}
+
+#[tokio::test]
+async fn price_quote_via_mcp() {
+    let (client, server_handle) = setup().await;
+    let (checkin, checkout) = future_stay();
+
+    let result = client
+        .call_tool(tool_params(
+            "airbnb_price_quote",
+            serde_json::json!({ "id": "10", "checkin": checkin, "checkout": checkout, "adults": 2 }),
+        ))
+        .await
+        .expect("call_tool should succeed");
+    let text = extract_text(&result);
+    assert!(is_success(&result), "Expected success, got: {text}");
+    assert!(text.contains("# Price quote: listing 10"), "{text}");
+    assert!(
+        text.contains(&format!("Stay: {checkin} to {checkout}")),
+        "{text}"
+    );
+    assert!(text.contains("Total: $700"), "{text}");
+
+    let series = client
+        .call_tool(tool_params(
+            "airbnb_price_quote",
+            serde_json::json!({ "id": "10", "checkin": checkin, "checkout": checkout, "weeks": 4 }),
+        ))
+        .await
+        .expect("call_tool should succeed");
+    let text = extract_text(&series);
+    assert!(is_success(&series), "Expected success, got: {text}");
+    assert_eq!(
+        text.lines().filter(|line| line.starts_with("| 20")).count(),
+        4,
+        "one table row per week: {text}"
+    );
+
+    teardown(client, server_handle).await;
+}
+
+#[tokio::test]
+async fn search_rank_via_mcp() {
+    let (client, server_handle) = setup().await;
+
+    let result = client
+        .call_tool(tool_params(
+            "airbnb_search_rank",
+            serde_json::json!({ "id": "999999", "location": "Paris, France", "max_pages": 2 }),
+        ))
+        .await
+        .expect("call_tool should succeed");
+    let text = extract_text(&result);
+    assert!(is_success(&result), "Expected success, got: {text}");
+    assert!(text.contains("# Search rank: listing 999999"), "{text}");
+    assert!(text.contains("Position: not in"), "{text}");
+    assert!(text.contains("Top results:"), "{text}");
+
+    teardown(client, server_handle).await;
+}
+
+#[tokio::test]
+async fn status_via_mcp() {
+    let (client, server_handle) = setup().await;
+
+    let result = client
+        .call_tool(tool_params("airbnb_status", serde_json::json!({})))
+        .await
+        .expect("call_tool should succeed");
+    let text = extract_text(&result);
+    assert!(is_success(&result), "Expected success, got: {text}");
+    assert!(text.contains("# Airbnb source status"), "{text}");
+    for check in [
+        "| search |",
+        "| listing details |",
+        "| reviews |",
+        "| calendar |",
+        "| host profile |",
+        "| price quote |",
+    ] {
+        assert!(text.contains(check), "missing {check}: {text}");
+    }
+
+    teardown(client, server_handle).await;
+}
+
+#[tokio::test]
+async fn filtered_search_and_dated_positioning_via_mcp() {
+    let (client, server_handle) = setup().await;
+    let (checkin, checkout) = future_stay();
+
+    let search = client
+        .call_tool(tool_params(
+            "airbnb_search",
+            serde_json::json!({
+                "location": "Paris, France",
+                "min_bedrooms": 2,
+                "amenities": ["pool", "wifi"],
+                "guest_favorite": true
+            }),
+        ))
+        .await
+        .expect("call_tool should succeed");
+    assert!(is_success(&search), "{}", extract_text(&search));
+
+    let rejected = client
+        .call_tool(tool_params(
+            "airbnb_search",
+            serde_json::json!({ "location": "Paris, France", "amenities": ["sauna"] }),
+        ))
+        .await
+        .expect("call_tool should succeed");
+    assert!(!is_success(&rejected));
+    let text = extract_text(&rejected);
+    assert!(text.contains("unsupported amenity filter"), "{text}");
+    assert!(
+        text.contains("wifi, air conditioning, pool"),
+        "the accepted names are listed: {text}"
+    );
+
+    let positioning = client
+        .call_tool(tool_params(
+            "airbnb_competitive_positioning",
+            serde_json::json!({
+                "id": "10", "checkin": checkin, "checkout": checkout, "adults": 4,
+                "property_type": "Entire home", "min_bedrooms": 2
+            }),
+        ))
+        .await
+        .expect("call_tool should succeed");
+    assert!(is_success(&positioning), "{}", extract_text(&positioning));
 
     teardown(client, server_handle).await;
 }

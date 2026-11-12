@@ -1,0 +1,863 @@
+{
+ "data": {
+  "node": {
+   "__typename": "DemandStayListing",
+   "propertyType": "APARTMENT",
+   "spaceType": "ENTIRE_HOME",
+   "personCapacity": 4,
+   "description": {
+    "name": {
+     "__typename": "UGCText",
+     "localizedString": "Sample apartment - city center"
+    }
+   },
+   "listingRatingStats": {
+    "overallRatingStats": {
+     "ratingAverage": 4.91,
+     "ratingCount": "497"
+    }
+   },
+   "location": {
+    "coordinate": {
+     "latitude": 45.7714,
+     "longitude": 4.8345
+    }
+   },
+   "pdpPresentation": {
+    "__typename": "DemandStayListingPdpPresentationContainer",
+    "pdpType": "MARKETPLACE",
+    "title": {
+     "content": {
+      "__typename": "UGCText",
+      "localizedString": "Sample apartment - city center"
+     }
+    },
+    "descriptions": {
+     "longDescriptionHtml": {
+      "__typename": "UGCText",
+      "localizedString": "Sample description, first line.<br />Second line with <b>markup</b>."
+     },
+     "shortDescriptionHtml": {
+      "content": {
+       "__typename": "UGCText",
+       "localizedString": "Sample description, first line.<br />Second line with <b>markup</b>."
+      }
+     }
+    },
+    "amenities": {
+     "previewAmenitiesGroups": [
+      {
+       "title": null,
+       "amenities": [
+        {
+         "available": true,
+         "title": "Kitchen"
+        },
+        {
+         "available": true,
+         "title": "Wifi"
+        },
+        {
+         "available": true,
+         "title": "Dedicated workspace"
+        },
+        {
+         "available": true,
+         "title": "Free street parking"
+        },
+        {
+         "available": true,
+         "title": "TV"
+        },
+        {
+         "available": true,
+         "title": "Washer"
+        },
+        {
+         "available": true,
+         "title": "Crib"
+        },
+        {
+         "available": true,
+         "title": "Pack \u2019n play/Travel crib"
+        },
+        {
+         "available": true,
+         "title": "Children\u2019s books and toys"
+        },
+        {
+         "available": false,
+         "title": "Carbon monoxide alarm"
+        }
+       ]
+      }
+     ],
+     "seeAllAmenitiesGroups": [
+      {
+       "title": "Bathroom",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Hair dryer"
+        },
+        {
+         "available": true,
+         "title": "Cleaning products"
+        },
+        {
+         "available": true,
+         "title": "Shampoo"
+        },
+        {
+         "available": true,
+         "title": "Body soap"
+        },
+        {
+         "available": true,
+         "title": "Hot water"
+        },
+        {
+         "available": true,
+         "title": "Shower gel"
+        }
+       ]
+      },
+      {
+       "title": "Bedroom and laundry",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Washer"
+        },
+        {
+         "available": true,
+         "title": "Essentials"
+        },
+        {
+         "available": true,
+         "title": "Hangers"
+        },
+        {
+         "available": true,
+         "title": "Bed linens"
+        },
+        {
+         "available": true,
+         "title": "Extra pillows and blankets"
+        },
+        {
+         "available": true,
+         "title": "Room-darkening shades"
+        },
+        {
+         "available": true,
+         "title": "Iron"
+        },
+        {
+         "available": true,
+         "title": "Drying rack for clothing"
+        },
+        {
+         "available": true,
+         "title": "Clothing storage"
+        }
+       ]
+      },
+      {
+       "title": "Entertainment",
+       "amenities": [
+        {
+         "available": true,
+         "title": "TV"
+        },
+        {
+         "available": true,
+         "title": "Bluetooth sound system"
+        },
+        {
+         "available": true,
+         "title": "Books and reading material"
+        }
+       ]
+      },
+      {
+       "title": "Family",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Crib"
+        },
+        {
+         "available": true,
+         "title": "Pack \u2019n play/Travel crib"
+        },
+        {
+         "available": true,
+         "title": "Children\u2019s books and toys"
+        },
+        {
+         "available": true,
+         "title": "Board games"
+        }
+       ]
+      },
+      {
+       "title": "Heating and cooling",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Portable fans"
+        },
+        {
+         "available": true,
+         "title": "Heating"
+        }
+       ]
+      },
+      {
+       "title": "Home safety",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Smoke alarm"
+        }
+       ]
+      },
+      {
+       "title": "Internet and office",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Wifi"
+        },
+        {
+         "available": true,
+         "title": "Dedicated workspace"
+        },
+        {
+         "available": true,
+         "title": "Pocket wifi"
+        }
+       ]
+      },
+      {
+       "title": "Kitchen and dining",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Kitchen"
+        },
+        {
+         "available": true,
+         "title": "Refrigerator"
+        },
+        {
+         "available": true,
+         "title": "Microwave"
+        },
+        {
+         "available": true,
+         "title": "Cooking basics"
+        },
+        {
+         "available": true,
+         "title": "Dishes and silverware"
+        },
+        {
+         "available": true,
+         "title": "Hot water kettle"
+        },
+        {
+         "available": true,
+         "title": "Coffee maker"
+        },
+        {
+         "available": true,
+         "title": "Wine glasses"
+        },
+        {
+         "available": true,
+         "title": "Toaster"
+        },
+        {
+         "available": true,
+         "title": "Baking sheet"
+        },
+        {
+         "available": true,
+         "title": "Dining table"
+        },
+        {
+         "available": true,
+         "title": "Coffee"
+        }
+       ]
+      },
+      {
+       "title": "Parking and facilities",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Free street parking"
+        },
+        {
+         "available": true,
+         "title": "Paid parking off premises"
+        }
+       ]
+      },
+      {
+       "title": "Services",
+       "amenities": [
+        {
+         "available": true,
+         "title": "Long term stays allowed"
+        },
+        {
+         "available": true,
+         "title": "Self check-in"
+        },
+        {
+         "available": true,
+         "title": "Lockbox"
+        }
+       ]
+      },
+      {
+       "title": "Not included",
+       "amenities": [
+        {
+         "available": false,
+         "title": "Exterior security cameras on property"
+        },
+        {
+         "available": false,
+         "title": "Air conditioning"
+        },
+        {
+         "available": false,
+         "title": "Carbon monoxide alarm"
+        },
+        {
+         "available": false,
+         "title": "Private entrance"
+        }
+       ]
+      }
+     ]
+    },
+    "location": {
+     "subtitle": "Lyon, Auvergne-Rh\u00f4ne-Alpes, France",
+     "locationName": "1st Arrondissement, Lyon",
+     "latitude": 45.7714,
+     "longitude": 4.8345
+    },
+    "localizedLocation": "Lyon",
+    "hostInfo": {
+     "passportData": {
+      "name": "Host C",
+      "userId": "RGVtYW5kVXNlcjoxMDAwMDAz",
+      "isSuperhost": true,
+      "isVerified": true,
+      "profilePictureUrl": "https://example.com/fixture-image/host.jpg",
+      "ratingCount": 706,
+      "ratingAverage": 4.92,
+      "timeAsHost": {
+       "years": 7,
+       "months": 1
+      }
+     },
+     "highlights": [
+      {
+       "text": {
+        "content": {
+         "__typename": "UGCText",
+         "localizedString": "My work: Example"
+        }
+       }
+      },
+      {
+       "text": {
+        "content": {
+         "__typename": "UGCText",
+         "localizedString": ""
+        }
+       }
+      }
+     ],
+     "responseRateText": "Response rate: 100%",
+     "responseTimeText": "Responds within an hour",
+     "about": {
+      "__typename": "UGCText",
+      "localizedString": "Host bio redacted."
+     },
+     "overview": {
+      "title": {
+       "text": "Hosted by Host C"
+      }
+     }
+    },
+    "quality": {
+     "listingRatingStats": {
+      "overallRatingStats": {
+       "ratingAverage": 4.91,
+       "ratingCount": "497"
+      }
+     },
+     "isGuestFavorite": true,
+     "categoryRatings": [
+      {
+       "categoryType": "CLEANLINESS",
+       "localizedRating": "5.0",
+       "label": "Cleanliness"
+      },
+      {
+       "categoryType": "ACCURACY",
+       "localizedRating": "5.0",
+       "label": "Accuracy"
+      },
+      {
+       "categoryType": "CHECKIN",
+       "localizedRating": "4.9",
+       "label": "Check-in"
+      },
+      {
+       "categoryType": "COMMUNICATION",
+       "localizedRating": "5.0",
+       "label": "Communication"
+      },
+      {
+       "categoryType": "LOCATION",
+       "localizedRating": "4.8",
+       "label": "Location"
+      },
+      {
+       "categoryType": "VALUE",
+       "localizedRating": "4.8",
+       "label": "Value"
+      }
+     ],
+     "reviewTags": [
+      {
+       "name": "LOCATION",
+       "count": 300,
+       "localizedName": "Location"
+      },
+      {
+       "name": "NEARBY",
+       "count": 62,
+       "localizedName": "Nearby"
+      },
+      {
+       "name": "AMENITIES",
+       "count": 68,
+       "localizedName": "Amenities"
+      },
+      {
+       "name": "WALKABILITY",
+       "count": 64,
+       "localizedName": "Walkability"
+      },
+      {
+       "name": "CLEANLINESS",
+       "count": 169,
+       "localizedName": "Cleanliness"
+      },
+      {
+       "name": "INDOOR_SPACES",
+       "count": 141,
+       "localizedName": "Indoor spaces"
+      },
+      {
+       "name": "GETTING_AROUND",
+       "count": 50,
+       "localizedName": "Getting around"
+      },
+      {
+       "name": "COMFORT",
+       "count": 67,
+       "localizedName": "Comfort"
+      },
+      {
+       "name": "SLEEP",
+       "count": 35,
+       "localizedName": "Sleep quality"
+      },
+      {
+       "name": "HOSPITALITY",
+       "count": 266,
+       "localizedName": "Hospitality"
+      }
+     ]
+    },
+    "overview": {
+     "title": "Entire rental unit in Lyon, France",
+     "items": [
+      "4 guests",
+      "1 bedroom",
+      "2 beds",
+      "1 bath"
+     ]
+    },
+    "rules": {
+     "groupItems": [
+      {
+       "type": "HOUSE_RULES_STRUCTURED_RULES",
+       "title": "Standard house rules",
+       "items": [
+        {
+         "type": "HOUSE_RULES_PERSON_CAPACITY",
+         "title": "Up to 4 overnight guests",
+         "description": null
+        },
+        {
+         "type": "HOUSE_RULES_PETS",
+         "title": "No pets",
+         "description": null
+        },
+        {
+         "type": "HOUSE_RULES_SMOKING_ALLOWED",
+         "title": "No smoking",
+         "description": {
+          "__typename": "LocalizedText",
+          "text": "Including vaping and e-cigarettes"
+         }
+        },
+        {
+         "type": "HOUSE_RULES_QUIET_HOURS",
+         "title": "Quiet hours",
+         "description": {
+          "__typename": "LocalizedText",
+          "text": "9:00\u202fPM - 7:00\u202fAM"
+         }
+        },
+        {
+         "type": "HOUSE_RULES_EVENTS_ALLOWED",
+         "title": "No parties or events",
+         "description": null
+        },
+        {
+         "type": "HOUSE_RULES_COMMERCIAL_PHOTOGRAPHY_ALLOWED",
+         "title": "No commercial photography",
+         "description": {
+          "__typename": "LocalizedText",
+          "text": "Including commercial filming"
+         }
+        }
+       ]
+      },
+      {
+       "type": "HOUSE_RULES_HOST_REQUESTS",
+       "title": "Additional rules from the host",
+       "items": [
+        {
+         "type": "HOUSE_RULES_ADDITIONAL_RULES",
+         "title": "During the stay",
+         "description": {
+          "__typename": "PdpUGCText",
+          "content": {
+           "__typename": "UGCText",
+           "localizedString": "Host rule text redacted."
+          }
+         }
+        },
+        {
+         "type": "HOUSE_RULES_ADDITIONAL_REQUESTS",
+         "title": "Before checkout",
+         "description": {
+          "__typename": "PdpUGCText",
+          "content": {
+           "__typename": "UGCText",
+           "localizedString": "Host rule text redacted."
+          }
+         }
+        }
+       ]
+      }
+     ]
+    },
+    "heroMedia": {
+     "edges": [
+      {
+       "node": {
+        "image": {
+         "uri": "https://example.com/fixture-image/1.jpg"
+        }
+       }
+      },
+      {
+       "node": {
+        "image": {
+         "uri": "https://example.com/fixture-image/2.jpg"
+        }
+       }
+      },
+      {
+       "node": {
+        "image": {
+         "uri": "https://example.com/fixture-image/3.jpg"
+        }
+       }
+      }
+     ]
+    },
+    "mediaTour": {
+     "stops": [
+      {
+       "name": "Living room",
+       "items": [
+        {
+         "image": {
+          "uri": "https://example.com/fixture-image/4.jpg"
+         }
+        },
+        {
+         "image": {
+          "uri": "https://example.com/fixture-image/5.jpg"
+         }
+        }
+       ]
+      },
+      {
+       "name": "Full kitchen",
+       "items": [
+        {
+         "image": {
+          "uri": "https://example.com/fixture-image/6.jpg"
+         }
+        }
+       ]
+      }
+     ]
+    },
+    "highlights": [
+     {
+      "headline": {
+       "localizedContent": "Sample highlight 1"
+      },
+      "body": {
+       "localizedContent": "Sample highlight 1 body"
+      }
+     },
+     {
+      "headline": {
+       "localizedContent": "Sample highlight 2"
+      },
+      "body": {
+       "localizedContent": "Sample highlight 2 body"
+      }
+     },
+     {
+      "headline": {
+       "localizedContent": "Sample highlight 3"
+      },
+      "body": {
+       "localizedContent": "Sample highlight 3 body"
+      }
+     }
+    ],
+    "sharingConfig": {
+     "propertyType": "Entire rental unit"
+    },
+    "personCapacity": 4
+   }
+  },
+  "presentation": {
+   "stayProductDetailPage": {
+    "sections": {
+     "metadata": {
+      "pdpType": "MARKETPLACE",
+      "sharingConfig": {
+       "title": "Rental unit in Lyon \u00b7 \u26054.91 \u00b7 1 bedroom \u00b7 2 beds \u00b7 1 bath",
+       "propertyType": "Entire rental unit",
+       "personCapacity": 4,
+       "reviewCount": 497,
+       "starRating": 4.91
+      },
+      "loggingContext": {
+       "eventDataLogging": {
+        "listingId": "38817969",
+        "listingLat": 45.7714,
+        "listingLng": 4.8345,
+        "roomType": "Entire home/apt",
+        "personCapacity": 4
+       }
+      }
+     },
+     "sections": [
+      {
+       "sectionComponentType": "REVIEWS_DEFAULT",
+       "section": {
+        "__typename": "StayPdpReviewsSection"
+       }
+      },
+      {
+       "sectionComponentType": "LOCATION_PDP",
+       "section": {
+        "__typename": "LocationSection"
+       }
+      },
+      {
+       "sectionComponentType": "MEET_YOUR_HOST",
+       "section": {
+        "__typename": "MeetYourHostSection"
+       }
+      },
+      {
+       "sectionComponentType": "POLICIES_DEFAULT",
+       "section": {
+        "__typename": "PoliciesSection"
+       }
+      },
+      {
+       "sectionComponentType": "SEO_LINKS_DEFAULT",
+       "section": {
+        "__typename": "SeoLinksSection"
+       }
+      },
+      {
+       "sectionComponentType": "BOOK_IT_SIDEBAR",
+       "section": {
+        "__typename": "BookItSection",
+        "maxGuestCapacity": 4,
+        "structuredDisplayPrice": null
+       }
+      },
+      {
+       "sectionComponentType": "REPORT_TO_AIRBNB",
+       "section": {
+        "__typename": "ReportToAirbnbSection"
+       }
+      },
+      {
+       "sectionComponentType": "NAV_DEFAULT",
+       "section": {
+        "__typename": "NavSection"
+       }
+      },
+      {
+       "sectionComponentType": "BOOK_IT_NAV",
+       "section": {
+        "__typename": "BookItSection"
+       }
+      },
+      {
+       "sectionComponentType": "MESSAGE_BANNER",
+       "section": null
+      },
+      {
+       "sectionComponentType": "HIGHLIGHTS_DEFAULT",
+       "section": {
+        "__typename": "PdpHighlightsSection"
+       }
+      },
+      {
+       "sectionComponentType": "UGC_TRANSLATION",
+       "section": {
+        "__typename": "UgcTranslationSection"
+       }
+      },
+      {
+       "sectionComponentType": "DESCRIPTION_DEFAULT",
+       "section": {
+        "__typename": "PdpDescriptionSection"
+       }
+      },
+      {
+       "sectionComponentType": "SLEEPING_ARRANGEMENT_IMAGES",
+       "section": {
+        "__typename": "SleepingArrangementSection"
+       }
+      },
+      {
+       "sectionComponentType": "AMENITIES_DEFAULT",
+       "section": {
+        "__typename": "AmenitiesSection"
+       }
+      },
+      {
+       "sectionComponentType": "STAYS_PDP_AVAILABILITY_CALENDAR_INLINE",
+       "section": {
+        "__typename": "AvailabilityCalendarSection"
+       }
+      },
+      {
+       "sectionComponentType": "TITLE_DEFAULT",
+       "section": {
+        "__typename": "PdpTitleSection"
+       }
+      },
+      {
+       "sectionComponentType": "HERO_DEFAULT",
+       "section": {
+        "__typename": "PdpHeroSection"
+       }
+      },
+      {
+       "sectionComponentType": "BOOK_IT_FLOATING_FOOTER",
+       "section": {
+        "__typename": "BookItSection"
+       }
+      },
+      {
+       "sectionComponentType": "NAV_MOBILE",
+       "section": {
+        "__typename": "NavMobileSection"
+       }
+      },
+      {
+       "sectionComponentType": "PDP_DESCRIPTION_MODAL",
+       "section": {
+        "__typename": "GeneralListContentSection"
+       }
+      },
+      {
+       "sectionComponentType": "PDP_DESCRIPTION_MODAL",
+       "section": {
+        "__typename": "GeneralListContentSection"
+       }
+      },
+      {
+       "sectionComponentType": "CANCELLATION_POLICY_PICKER_MODAL",
+       "section": {
+        "__typename": "CancellationPolicyPickerSection"
+       }
+      },
+      {
+       "sectionComponentType": "WHAT_COUNTS_AS_A_PET",
+       "section": {
+        "__typename": "GeneralContentSection"
+       }
+      },
+      {
+       "sectionComponentType": "AVAILABILITY_CALENDAR_DEFAULT",
+       "section": {
+        "__typename": "AvailabilityCalendarSection"
+       }
+      },
+      {
+       "sectionComponentType": "BOOK_IT_CALENDAR_SHEET",
+       "section": {
+        "__typename": "BookItSection"
+       }
+      },
+      {
+       "sectionComponentType": "PHOTO_TOUR_SCROLLABLE",
+       "section": {
+        "__typename": "PhotoTourModalSection",
+        "mediaItems": [
+         {
+          "baseUrl": "https://example.com/fixture-image/7.jpg"
+         },
+         {
+          "baseUrl": "https://example.com/fixture-image/8.jpg"
+         }
+        ]
+       }
+      }
+     ]
+    }
+   }
+  }
+ }
+}

@@ -1,3 +1,12 @@
+---
+paths:
+  - "src/adapters/**/*.rs"
+  - "src/application/mod.rs"
+  - "tests/scraper_test.rs"
+  - "tests/graphql_test.rs"
+  - "tests/fixtures/**"
+---
+
 # Scraping Conventions (`mcp-airbnb`)
 
 Rules for everything under `src/adapters/scraper/` and
@@ -50,12 +59,19 @@ what the live site does end to end, run the opt-in
 
 ## Upstream drift is an error, not an empty result
 
-When a GraphQL response carries an `errors` array, a persisted query answers
-HTTP 422, or the expected response root is missing, the adapter returns
-`AirbnbError::UpstreamSchema { operation, detail }`. HTML fallbacks do the
-same when a page has no recognisable data. Never map "could not find the
-data" to `Ok(empty)`: that hides a rotated persisted-query hash behind "no
-results".
+When a persisted query answers HTTP 400/422 (unknown or deprecated id), a
+GraphQL response carries an `errors` array and no usable data, or the
+expected response root is missing, the adapter returns
+`AirbnbError::UpstreamSchema { operation, detail }`. An `errors` array next
+to usable data is not fatal: Airbnb sends partial errors with a complete
+listing. HTML fallbacks return the same error when a page has no
+recognisable data. Never map "could not find the data" to `Ok(empty)`: that
+hides a rotated persisted-query hash behind "no results".
+
+`scripts/discover_query_ids.py --listing-id <id>` reads the current ids of
+the search, listing and quote operations from Airbnb's public web bundles.
+A new id often needs new variables or a new parser: check with
+`airbnb status` after changing one.
 
 ## One document, one parser
 
@@ -75,6 +91,15 @@ broken (`composite::should_fall_back`: `Http`, `UpstreamStatus`, `Parse`,
 the scraper is called only when name, location, description, amenities or
 photos are missing; the `detail_merge_*` tests in `composite.rs` pin the
 merge rules.
+
+Each fallback is recorded (`note_fallback`) and reported by
+`AirbnbClient::degradations()` for 15 minutes, or until the primary answers
+again over the network: the GraphQL client counts its network answers in a
+shared `FetchCounter`, so an answer served by its cache clears nothing.
+`airbnb_status` calls `clear_cache()` first, so its checks reach Airbnb. `finish` in the MCP server and the CLI print it as a partial-data
+warning, and `airbnb_status` lists it. The warning names operations only:
+upstream error text is printed only inside the fenced `airbnb_status` output.
+`get_price_quote` has no fallback: the HTML page carries no dated price.
 
 When adding a new field to `ListingDetail`, `Listing`, `HostProfile`, etc.:
 - Add the field to the domain type with `#[serde(default)]` if it's optional

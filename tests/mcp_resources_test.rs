@@ -8,7 +8,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use async_trait::async_trait;
 use rmcp::model::{
-    CallToolRequestParams, CallToolResult, ClientInfo, ReadResourceRequestParams, ResourceContents,
+    CallToolRequestParams, CallToolResult, ClientConfig, ReadResourceRequestParams,
+    ResourceContents,
 };
 use rmcp::service::{MaybeSendFuture, NotificationContext, RunningService};
 use rmcp::{ClientHandler, RoleClient, ServiceExt};
@@ -16,6 +17,7 @@ use rmcp::{ClientHandler, RoleClient, ServiceExt};
 use mcp_airbnb::domain::analytics::{HostProfile, NeighborhoodStats, OccupancyEstimate};
 use mcp_airbnb::domain::calendar::PriceCalendar;
 use mcp_airbnb::domain::listing::{Listing, ListingDetail, SearchResult};
+use mcp_airbnb::domain::quote::{PriceQuote, QuoteRequest};
 use mcp_airbnb::domain::review::{Review, ReviewsPage};
 use mcp_airbnb::domain::search_params::SearchParams;
 use mcp_airbnb::error::{AirbnbError, Result};
@@ -84,6 +86,10 @@ fn detail(id: &str) -> ListingDetail {
         cleaning_fee: None,
         service_fee: None,
         neighborhood: None,
+        is_guest_favorite: None,
+        highlights: vec![],
+        category_ratings: vec![],
+        review_tags: vec![],
     }
 }
 
@@ -129,6 +135,8 @@ impl AirbnbClient for ResourceMock {
                 is_translated: None,
             }],
             next_cursor,
+            total_reviews: None,
+            review_tags: vec![],
         })
     }
 
@@ -147,6 +155,26 @@ impl AirbnbClient for ResourceMock {
     async fn get_occupancy_estimate(&self, _id: &str, _months: u32) -> Result<OccupancyEstimate> {
         unused("occupancy")
     }
+
+    async fn get_price_quote(&self, request: &QuoteRequest) -> Result<PriceQuote> {
+        Ok(PriceQuote {
+            listing_id: request.listing_id.clone(),
+            checkin: request.checkin.clone(),
+            checkout: request.checkout.clone(),
+            nights: 7,
+            adults: request.adults,
+            available: true,
+            unavailability_message: None,
+            instant_book: Some(true),
+            total_display: Some("$700".into()),
+            total: Some(700.0),
+            nightly: Some(100.0),
+            listed_nightly: None,
+            currency: "$".into(),
+            breakdown: vec![],
+            notes: vec![],
+        })
+    }
 }
 
 #[derive(Clone, Default)]
@@ -155,8 +183,8 @@ struct CountingClient {
 }
 
 impl ClientHandler for CountingClient {
-    fn get_info(&self) -> ClientInfo {
-        ClientInfo::default()
+    fn get_info(&self) -> ClientConfig {
+        ClientConfig::default()
     }
 
     fn on_resource_list_changed(
@@ -215,7 +243,7 @@ async fn listed_uris(client: &Client) -> Vec<String> {
         .await
         .expect("resources/list")
         .into_iter()
-        .map(|r| r.raw.uri)
+        .map(|r| r.uri)
         .collect()
 }
 
@@ -224,7 +252,7 @@ fn text_of(contents: &ResourceContents) -> (&str, Option<&str>) {
         ResourceContents::TextResourceContents {
             text, mime_type, ..
         } => (text.as_str(), mime_type.as_deref()),
-        ResourceContents::BlobResourceContents { .. } => panic!("expected text contents"),
+        _ => panic!("expected text contents"),
     }
 }
 
@@ -301,7 +329,7 @@ async fn reviews_resource_uri_carries_the_cursor() {
 }
 
 #[tokio::test]
-async fn eighteen_text_plain_templates_are_advertised() {
+async fn twenty_one_text_plain_templates_are_advertised() {
     let (client, _, handle) = connect().await;
     let templates = client
         .peer()
@@ -309,21 +337,21 @@ async fn eighteen_text_plain_templates_are_advertised() {
         .await
         .expect("resources/templates/list")
         .resource_templates;
-    assert_eq!(templates.len(), 18);
+    assert_eq!(templates.len(), 21);
     for t in &templates {
         assert_eq!(
-            t.raw.mime_type.as_deref(),
+            t.mime_type.as_deref(),
             Some("text/plain"),
             "{}",
-            t.raw.uri_template
+            t.uri_template
         );
     }
-    assert!(templates.iter().any(|t| t.raw.uri_template
-        == "airbnb://search/{location}{?checkin,checkout,adults,children,infants,pets,min_price,max_price,property_type,cursor}"));
+    assert!(templates.iter().any(|t| t.uri_template
+        == "airbnb://search/{location}{?checkin,checkout,adults,children,infants,pets,min_price,max_price,property_type,min_bedrooms,min_beds,min_bathrooms,amenities,guest_favorite,instant_book,cursor}"));
     assert!(
         templates
             .iter()
-            .any(|t| t.raw.uri_template == "airbnb://analysis/price-trends/{id}{?months}")
+            .any(|t| t.uri_template == "airbnb://analysis/price-trends/{id}{?months}")
     );
     disconnect(client, handle).await;
 }

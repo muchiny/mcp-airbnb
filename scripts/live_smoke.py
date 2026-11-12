@@ -2,11 +2,13 @@
 """Opt-in live smoke test for mcp-airbnb. NOT run in CI.
 
 Starts the `mcp-airbnb` binary, speaks MCP JSON-RPC over stdio, calls each
-of the 18 tools once against the REAL Airbnb site and flags output that the
+of the 21 tools once against the REAL Airbnb site and flags output that the
 2026-09 audit found to be wrong: $0 prices, empty reviews for a listing that
 has reviews, "Where you'll be" used as a location, occupancy that counts
 past dates, the hard-coded 65% occupancy, duplicated labels, leaked base64
-relay ids, bad ordinals, mixed currencies and unencoded resource URIs.
+relay ids, bad ordinals, mixed currencies and unencoded resource URIs. It
+also flags a source that is not OK in `airbnb_status` and any result served
+by the HTML fallback (PARTIAL DATA WARNING).
 
 Polite by construction: one call at a time, --pause seconds between calls,
 on top of the server's own rate limiter. Printed excerpts are capped at
@@ -59,6 +61,9 @@ EXPECTED_TOOLS = (
     "airbnb_review_sentiment",
     "airbnb_competitive_positioning",
     "airbnb_optimal_pricing",
+    "airbnb_price_quote",
+    "airbnb_search_rank",
+    "airbnb_status",
 )
 
 
@@ -93,9 +98,12 @@ _ZERO_PRICE = (
     re.compile(r"\b[A-Z]{3}\s?0(?:[.,]0+)?(?![\d.,])"),
     re.compile(r"(?<![\d.,])0(?:[.,]0+)?\s?[$€£¥]"),
 )
+_PAY_NOTHING_TODAY = re.compile(r"[$€£¥]\s?0 today")
+_STATUS_NOT_OK = re.compile(r"^\| [a-z ]+ \| (?:FAILED|DEGRADED|SKIPPED) \|")
 _PLACEHOLDER_LOCATION = re.compile(r"Where you[’']ll be")
 _REVIEW_COUNT = re.compile(r"^Rating: [\d.]+ \((\d[\d,]*) reviews?\)", re.M)
-_CALENDAR_ROW = re.compile(r"^\d{4}-\d{2}-\d{2}\s", re.M)
+# A calendar row is a date range: "<from>  <to>  <nights>  <available> ...".
+_CALENDAR_ROW = re.compile(r"^\d{4}-\d{2}-\d{2}\s+\d{4}-\d{2}-\d{2}\s+(\d+)\s+(.*)$", re.M)
 # "Days: N total" (audit) or "Nights considered: N (…)" (after P2, I7).
 _OCCUPANCY_DAYS = re.compile(r"Days:\s*(\d+)\s+total|Nights considered:\s*(\d+)")
 _DUPLICATED_LABEL = re.compile(r"\b([A-Z][a-z]+(?: [a-z]+)*): \1:")
@@ -111,7 +119,22 @@ def _per_line(text: str, code: str, predicate) -> list[Flag]:
 
 
 def flag_zero_prices(text: str) -> list[Flag]:
-    return _per_line(text, "zero-price", lambda line: any(p.search(line) for p in _ZERO_PRICE))
+    def zero(line: str) -> bool:
+        # "Pay $0 today" is Airbnb's payment-plan note in a price quote, not a price.
+        line = _PAY_NOTHING_TODAY.sub("", line)
+        return any(p.search(line) for p in _ZERO_PRICE)
+
+    return _per_line(text, "zero-price", zero)
+
+
+def flag_fallback_in_use(text: str) -> list[Flag]:
+    """The server says the GraphQL source failed and the HTML fallback answered."""
+    return _per_line(text, "html-fallback", lambda line: line.startswith("PARTIAL DATA WARNING"))
+
+
+def flag_failed_sources(text: str) -> list[Flag]:
+    """A row of the airbnb_status table that is not OK."""
+    return _per_line(text, "source-not-ok", lambda line: bool(_STATUS_NOT_OK.match(line)))
 
 
 def flag_placeholder_location(text: str) -> list[Flag]:
@@ -164,6 +187,8 @@ def generic_flags(text: str) -> list[Flag]:
         flag_relay_ids,
         flag_unknown_host,
         flag_no_reviews_analyzed,
+        flag_fallback_in_use,
+        flag_failed_sources,
     ):
         flags.extend(detector(text))
     return flags
@@ -186,8 +211,9 @@ def flag_empty_reviews(details_text: str, reviews_text: str) -> list[Flag]:
 
 
 def flag_past_dates_in_occupancy(calendar_text: str, occupancy_text: str) -> list[Flag]:
-    rows = len(_CALENDAR_ROW.findall(calendar_text))
-    past = sum(1 for line in calendar_text.splitlines() if "Past date" in line)
+    ranges = _CALENDAR_ROW.findall(calendar_text)
+    rows = sum(int(nights) for nights, _ in ranges)
+    past = sum(int(nights) for nights, rest in ranges if "Past date" in rest)
     match = _OCCUPANCY_DAYS.search(occupancy_text)
     considered = int(match.group(1) or match.group(2)) if match else None
     if past and considered is not None and considered >= rows:
@@ -363,6 +389,23 @@ def plan_calls(location: str, second_location: str, ids: list[str], today: dt.da
         ("airbnb_review_sentiment", {"id": listing, "max_pages": 1}),
         ("airbnb_competitive_positioning", {"id": listing, "location": location}),
         ("airbnb_optimal_pricing", {"id": listing, "location": location}),
+        (
+            "airbnb_price_quote",
+            {"id": listing, "checkin": dates["checkin"], "checkout": dates["checkout"], "adults": 2},
+        ),
+        # Same search as the one that returned the listing: it must be on page 1.
+        (
+            "airbnb_search_rank",
+            {
+                "id": listing,
+                "location": location,
+                "checkin": dates["checkin"],
+                "checkout": dates["checkout"],
+                "adults": 2,
+                "max_pages": 1,
+            },
+        ),
+        ("airbnb_status", {"location": location}),
     ]
 
 

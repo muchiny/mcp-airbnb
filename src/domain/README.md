@@ -31,13 +31,38 @@ The **domain layer** contains pure data types with no I/O, no network calls, and
 
 | Type | Description |
 |------|-------------|
-| `SearchParams` | Validated search input — location, dates, guests, price range, property type, cursor |
+| `SearchParams` | Validated search input — location, dates, guests, price range, property type, panel filters, cursor |
+| `SearchFilters` | Airbnb's panel filters — minimum bedrooms / beds / bathrooms (1-16), amenities by name (`AMENITY_FILTERS`: 14 names with their Airbnb ids), Guest Favorite, Instant Book |
+
+### 💶 Price quote (`quote.rs`)
+
+| Type | Description |
+|------|-------------|
+| `QuoteRequest` | One stay of one listing — id, check-in, check-out, adults (1-16); `validate()` returns the number of nights, `shifted_by_weeks()` the same stay later |
+| `PriceQuote` | The booking panel's answer — availability and why not, Instant Book, total (Airbnb's string and the amount), average per night with fees (`nightly`), nightly rate on the basis search results use (`listed_nightly`, the one to compare with other listings), currency, breakdown lines, notes |
+| `QuoteSeries` | The quotes of consecutive weekly stays, printed as a table with the lowest and highest nightly average |
+
+### 🥇 Search rank (`rank.rs`)
+
+| Type | Description |
+|------|-------------|
+| `RankScan` | What a rank measure scanned — the results in Airbnb's order, pages fetched, whether the search was exhausted |
+| `ListingRank` | Position and page of a listing (or its absence), its price against the median of the scanned results, the results around it; `compute_listing_rank()` builds it |
+
+### 🩺 Source status (`status.rs`)
+
+| Type | Description |
+|------|-------------|
+| `Degradation` | An operation whose GraphQL source failed and that the HTML fallback serves, with the error |
+| `Probe` / `ProbeState` | One check of one upstream operation — `Ok`, `Degraded` (data missing), `Failed`, `Skipped` |
+| `StatusReport` | Every probe, the fallbacks in use, a verdict and the remedy; `fallback_note()` builds the `PARTIAL DATA WARNING` appended to results (operation names only, no upstream text) |
 
 Pure behaviour in the domain layer:
 - ✅ `SearchParams::validate()` / `validate_at(today)` — location required (at most 200 characters, no control characters, at least one letter or digit); dates paired, exactly `YYYY-MM-DD`, check-in from yesterday (UTC) up to 730 days ahead, checkout after checkin, at most 365 nights; at least one adult when dates are given, guest counts within `limits`; `min_price ≤ max_price`; a supported `property_type`; the cursor is at most 1024 characters. Out-of-range input is an error, never clamped.
 - 🔗 `SearchParams::to_query_pairs()` / `cache_key()` — URL query pairs, and a cache key made of every field that changes the response
 - 🆔 `listing_id::validate_listing_id()` — digits, no leading zero, at most 20 digits (`LISTING_ID_PATTERN`)
 - 📏 `limits` — the shared input limits (months 1-12, review pages 1-20, compare 2-10 ids or 2-100 listings, market 2-5 locations, …) used by the MCP schemas and the CLI
+- 🔢 `num` (crate-private) — `count_u32()` / `count_f64()` turn collection sizes into report counts and divisors, saturating at `u32::MAX` instead of an `as` cast
 - 💲 `Listing::known_price()` / `ListingDetail::known_price()` — `Some(p)` only for a finite, positive price
 - 📅 `PriceCalendar::classify_past_days(today)` — marks days before `today` as `UnavailabilityReason::PastDate`, which occupancy and revenue ignore
 - 📊 `analytics::compute_*` — the analytics listed below
@@ -51,7 +76,7 @@ Pure behaviour in the domain layer:
 | `HostProfile` | 👤 Host info — name, superhost status, response rate/time, languages, bio, listing count |
 | `NeighborhoodStats` | 📊 Area stats — average/median price, rating, property type distribution, superhost % |
 | `PropertyTypeCount` | Property type with count and percentage |
-| `OccupancyEstimate` | 📈 Occupancy (future nights, upper bound) — overall rate, weekday/weekend avg prices, monthly breakdown |
+| `OccupancyEstimate` | 📈 Occupancy (future nights, upper bound) — overall rate, closed periods (`ClosedPeriod`: 45+ consecutive unavailable nights, `LONG_CLOSURE_NIGHTS`) and the open-season rate outside them, weekday/weekend avg prices, monthly breakdown |
 | `MonthlyOccupancy` | Per-month occupancy rate, days, and average price |
 
 #### 🧠 Analytical Tool Types
@@ -89,7 +114,7 @@ Analytics provides **pure compute functions** (no I/O, no async) that transform 
 #### 📡 Data Tool Compute
 
 - 📊 `compute_neighborhood_stats(location, listings)` → `NeighborhoodStats`
-- 📈 `compute_occupancy_estimate(listing_id, calendar)` → `OccupancyEstimate` (future nights only: past and host-blocked days excluded)
+- 📈 `compute_occupancy_estimate(listing_id, calendar)` → `OccupancyEstimate` (future nights only: past and host-blocked days excluded; long closures listed, with the rate outside them)
 
 #### 🧠 Analytical Tool Compute
 
@@ -225,6 +250,8 @@ classDiagram
         +Vec~MonthlyOccupancy~ monthly_breakdown
         +u32 past_days_excluded
         +u32 blocked_days_excluded
+        +Vec~ClosedPeriod~ closed_periods
+        +Option~f64~ open_season_rate
         +String currency
     }
 
@@ -270,6 +297,7 @@ classDiagram
 
     class CompetitivePositioning {
         +String listing_id
+        +String currency
         +Vec~CompetitiveAxis~ axes
         +Option~f64~ overall_competitiveness
         +Vec~String~ strengths

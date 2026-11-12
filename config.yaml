@@ -9,10 +9,11 @@ scraper:
   currency: "USD"                # ISO 4217, pinned on every request
   locale: "en"                   # pinned on every request; parsers expect English labels
   graphql_hashes:
-    stays_search: "0afc7d440ee66286e44038530dc8d2af77d795e434e5cc5c8a8034c93cb377cf"
-    stays_pdp_sections: "80c7889b4b0027d99ffea830f6c0d4911a6e863a957cbe1044823f0fc746bf1f"
+    stays_search: "58d7ae3d927963c14176145186ec1f28814c942d7203b5bd179a77b161566263"
+    stays_pdp_sections: "1e38cb0e7e395439a08a7d936f5453c34ed3940939a06eebbfcf57d380dac6e2"
     stays_pdp_reviews: "cfdc3ffbe997a618795fc5a8f9a9b484054ce9be68c8788cd2ffda999934c5ae"
     pdp_availability_calendar: "be60714ead0a30db42ce6471ddad6a8f3855df0ed400b79282dd0bb8cecdf201"
+    stays_pdp_book_it: "b4e68e2374e453d598e4cdf9dad60447bd1b64372e8d6deb80df3cd11d3e84db"
 
 cache:
   max_entries: 500

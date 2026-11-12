@@ -7,13 +7,14 @@ use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
 use clap::Parser;
-use rmcp::model::{CallToolRequestParams, CallToolResult, ClientInfo};
+use rmcp::model::{CallToolRequestParams, CallToolResult, ClientConfig};
 use rmcp::{ClientHandler, ServiceExt};
 
 use mcp_airbnb::cli::{Cli, dispatch};
 use mcp_airbnb::domain::analytics::{HostProfile, NeighborhoodStats, OccupancyEstimate};
 use mcp_airbnb::domain::calendar::{CalendarDay, PriceCalendar};
 use mcp_airbnb::domain::listing::{Listing, ListingDetail, SearchResult};
+use mcp_airbnb::domain::quote::{PriceQuote, QuoteRequest};
 use mcp_airbnb::domain::review::{Review, ReviewsPage};
 use mcp_airbnb::domain::search_params::SearchParams;
 use mcp_airbnb::error::Result;
@@ -95,6 +96,10 @@ fn detail(id: &str) -> ListingDetail {
         cleaning_fee: None,
         service_fee: None,
         neighborhood: None,
+        is_guest_favorite: None,
+        highlights: vec![],
+        category_ratings: vec![],
+        review_tags: vec![],
     }
 }
 
@@ -102,8 +107,8 @@ fn detail(id: &str) -> ListingDetail {
 impl AirbnbClient for RecordingMock {
     async fn search_listings(&self, p: &SearchParams) -> Result<SearchResult> {
         self.record(format!(
-            "search location={} checkin={:?} checkout={:?} adults={:?} property_type={:?} cursor={:?}",
-            p.location, p.checkin, p.checkout, p.adults, p.property_type, p.cursor
+            "search location={} checkin={:?} checkout={:?} adults={:?} children={:?} property_type={:?} filters={:?} cursor={:?}",
+            p.location, p.checkin, p.checkout, p.adults, p.children, p.property_type, p.filters, p.cursor
         ));
         Ok(SearchResult {
             listings: vec![listing("101"), listing("102"), listing("103")],
@@ -138,6 +143,8 @@ impl AirbnbClient for RecordingMock {
                 is_translated: None,
             }],
             next_cursor,
+            total_reviews: None,
+            review_tags: vec![],
         })
     }
 
@@ -179,13 +186,15 @@ impl AirbnbClient for RecordingMock {
             description: None,
             profile_picture_url: None,
             identity_verified: None,
+            rating: None,
+            review_count: None,
         })
     }
 
     async fn get_neighborhood_stats(&self, p: &SearchParams) -> Result<NeighborhoodStats> {
         self.record(format!(
-            "neighborhood location={} checkin={:?} checkout={:?} property_type={:?}",
-            p.location, p.checkin, p.checkout, p.property_type
+            "neighborhood location={} checkin={:?} checkout={:?} adults={:?} property_type={:?} filters={:?}",
+            p.location, p.checkin, p.checkout, p.adults, p.property_type, p.filters
         ));
         Ok(NeighborhoodStats {
             location: p.location.clone(),
@@ -213,11 +222,37 @@ impl AirbnbClient for RecordingMock {
             occupancy_rate: 50.0,
             past_days_excluded: 0,
             blocked_days_excluded: 0,
+            closed_periods: vec![],
+            open_season_rate: None,
             currency: "€".into(),
             average_available_price: None,
             weekend_avg_price: None,
             weekday_avg_price: None,
             monthly_breakdown: vec![],
+        })
+    }
+
+    async fn get_price_quote(&self, request: &QuoteRequest) -> Result<PriceQuote> {
+        self.record(format!(
+            "quote {} {}..{} adults={}",
+            request.listing_id, request.checkin, request.checkout, request.adults
+        ));
+        Ok(PriceQuote {
+            listing_id: request.listing_id.clone(),
+            checkin: request.checkin.clone(),
+            checkout: request.checkout.clone(),
+            nights: 7,
+            adults: request.adults,
+            available: true,
+            unavailability_message: None,
+            instant_book: Some(true),
+            total_display: Some("$700".into()),
+            total: Some(700.0),
+            nightly: Some(100.0),
+            listed_nightly: None,
+            currency: "$".into(),
+            breakdown: vec![],
+            notes: vec![],
         })
     }
 }
@@ -226,8 +261,8 @@ impl AirbnbClient for RecordingMock {
 struct QuietClient;
 
 impl ClientHandler for QuietClient {
-    fn get_info(&self) -> ClientInfo {
-        ClientInfo::default()
+    fn get_info(&self) -> ClientConfig {
+        ClientConfig::default()
     }
 }
 
@@ -391,6 +426,260 @@ async fn invalid_listing_ids_fail_on_both_entry_points_without_fetching() {
             "{tool}: fetched anyway"
         );
     }
+}
+
+/// A stay 60 days ahead, 7 nights: stay dates must not be in the past.
+fn future_stay() -> (String, String) {
+    let checkin = chrono::Utc::now().date_naive() + chrono::Days::new(60);
+    let checkout = checkin + chrono::Days::new(7);
+    (checkin.to_string(), checkout.to_string())
+}
+
+/// The dated and filtered tools: quote, rank, status, filtered search and
+/// the comparable-based analyses with a stay.
+#[tokio::test]
+#[allow(clippy::too_many_lines)] // one table row per CLI/MCP pair
+async fn dated_and_filtered_tools_make_identical_upstream_calls() {
+    let (ci, co) = future_stay();
+    let (ci, co) = (ci.as_str(), co.as_str());
+    let stay = serde_json::json!({
+        "id": "42", "checkin": ci, "checkout": co, "adults": 4,
+        "property_type": "Entire home", "min_bedrooms": 2
+    });
+    let stay_flags = [
+        "--checkin",
+        ci,
+        "--checkout",
+        co,
+        "--adults",
+        "4",
+        "--property-type",
+        "Entire home",
+        "--min-bedrooms",
+        "2",
+    ];
+    let with_stay = |head: &[&'static str]| -> Vec<String> {
+        head.iter()
+            .chain(stay_flags.iter())
+            .map(ToString::to_string)
+            .collect()
+    };
+    let owned = |args: &[&str]| -> Vec<String> { args.iter().map(ToString::to_string).collect() };
+    let cases: Vec<(Vec<String>, &str, serde_json::Value)> = vec![
+        (
+            owned(&[
+                "airbnb",
+                "quote",
+                "42",
+                "--checkin",
+                ci,
+                "--checkout",
+                co,
+                "--adults",
+                "2",
+                "--weeks",
+                "3",
+            ]),
+            "airbnb_price_quote",
+            serde_json::json!({"id":"42","checkin":ci,"checkout":co,"adults":2,"weeks":3}),
+        ),
+        (
+            owned(&["airbnb", "quote", "42", "--checkin", ci, "--checkout", co]),
+            "airbnb_price_quote",
+            serde_json::json!({"id":"42","checkin":ci,"checkout":co}),
+        ),
+        (
+            owned(&["airbnb", "rank", "102", "--location", "Rome, Italy"]),
+            "airbnb_search_rank",
+            serde_json::json!({"id":"102","location":"Rome, Italy"}),
+        ),
+        (
+            // Absent listing, no location: the detail is fetched for it,
+            // then pages are scanned until they repeat.
+            owned(&[
+                "airbnb",
+                "rank",
+                "42",
+                "--checkin",
+                ci,
+                "--checkout",
+                co,
+                "--adults",
+                "4",
+                "--children",
+                "1",
+                "--property-type",
+                "Entire home",
+                "--min-bedrooms",
+                "2",
+                "--amenity",
+                "pool",
+                "--amenity",
+                "wifi",
+                "--max-pages",
+                "3",
+            ]),
+            "airbnb_search_rank",
+            serde_json::json!({
+                "id":"42","checkin":ci,"checkout":co,"adults":4,"children":1,
+                "property_type":"Entire home","min_bedrooms":2,
+                "amenities":["pool","wifi"],"max_pages":3
+            }),
+        ),
+        (
+            owned(&["airbnb", "status"]),
+            "airbnb_status",
+            serde_json::json!({}),
+        ),
+        (
+            owned(&["airbnb", "status", "--location", "Lyon, France"]),
+            "airbnb_status",
+            serde_json::json!({"location":"Lyon, France"}),
+        ),
+        (
+            owned(&[
+                "airbnb",
+                "search",
+                "Rome, Italy",
+                "--min-bedrooms",
+                "2",
+                "--min-beds",
+                "3",
+                "--min-bathrooms",
+                "1",
+                "--amenity",
+                "pool",
+                "--guest-favorite",
+                "--instant-book",
+            ]),
+            "airbnb_search",
+            serde_json::json!({
+                "location":"Rome, Italy","min_bedrooms":2,"min_beds":3,"min_bathrooms":1,
+                "amenities":["pool"],"guest_favorite":true,"instant_book":true
+            }),
+        ),
+        (
+            with_stay(&["airbnb", "optimal-pricing", "42"]),
+            "airbnb_optimal_pricing",
+            stay.clone(),
+        ),
+        (
+            with_stay(&["airbnb", "competitive", "42"]),
+            "airbnb_competitive_positioning",
+            stay.clone(),
+        ),
+        (
+            with_stay(&["airbnb", "amenities", "42"]),
+            "airbnb_amenity_analysis",
+            stay.clone(),
+        ),
+        (
+            with_stay(&["airbnb", "revenue", "42"]),
+            "airbnb_revenue_estimate",
+            stay.clone(),
+        ),
+    ];
+    for (cli_args, tool, json_args) in cases {
+        let cli_args: Vec<&str> = cli_args.iter().map(String::as_str).collect();
+        let (cli_out, cli_calls) = run_cli(&cli_args).await;
+        let (mcp_out, mcp_calls) = run_mcp(tool, json_args.clone()).await;
+        assert!(cli_out.is_ok(), "{tool}: CLI failed: {:?}", cli_out.err());
+        assert_ne!(
+            mcp_out.is_error,
+            Some(true),
+            "{tool}: MCP failed: {mcp_out:?}"
+        );
+        assert!(!cli_calls.is_empty(), "{tool}: no upstream call recorded");
+        assert_eq!(
+            cli_calls, mcp_calls,
+            "{tool}: CLI {cli_args:?} and MCP {json_args} diverged"
+        );
+    }
+}
+
+#[tokio::test]
+async fn the_dated_analyses_quote_the_listing_for_the_stay() {
+    let (ci, co) = future_stay();
+    let (_, calls) = run_mcp(
+        "airbnb_optimal_pricing",
+        serde_json::json!({"id":"42","checkin":ci,"checkout":co,"adults":4,"min_bedrooms":2}),
+    )
+    .await;
+    assert!(
+        calls.contains(&format!("quote 42 {ci}..{co} adults=4")),
+        "{calls:?}"
+    );
+    let search = calls
+        .iter()
+        .find(|call| call.starts_with("neighborhood") || call.starts_with("search"))
+        .expect("the comparables are searched");
+    assert!(
+        search.contains(&ci),
+        "the comparables are searched for the stay: {search}"
+    );
+
+    // Without dates, no quote is asked.
+    let (_, calls) = run_mcp("airbnb_optimal_pricing", serde_json::json!({"id":"42"})).await;
+    assert!(
+        !calls.iter().any(|call| call.starts_with("quote")),
+        "{calls:?}"
+    );
+}
+
+#[tokio::test]
+async fn out_of_range_quotes_and_ranks_are_rejected_by_both_entry_points() {
+    let (ci, co) = future_stay();
+    assert!(
+        Cli::try_parse_from([
+            "airbnb",
+            "quote",
+            "42",
+            "--checkin",
+            &ci,
+            "--checkout",
+            &co,
+            "--weeks",
+            "13"
+        ])
+        .is_err()
+    );
+    let (mcp_out, calls) = run_mcp(
+        "airbnb_price_quote",
+        serde_json::json!({"id":"42","checkin":ci,"checkout":co,"weeks":13}),
+    )
+    .await;
+    assert_eq!(mcp_out.is_error, Some(true));
+    assert_eq!(calls, [] as [std::string::String; 0]);
+
+    assert!(Cli::try_parse_from(["airbnb", "rank", "42", "--max-pages", "16"]).is_err());
+    let (mcp_out, calls) = run_mcp(
+        "airbnb_search_rank",
+        serde_json::json!({"id":"42","max_pages":16}),
+    )
+    .await;
+    assert_eq!(mcp_out.is_error, Some(true));
+    assert_eq!(calls, [] as [std::string::String; 0]);
+
+    // A stay in the past: both reject before any upstream call.
+    let (cli_out, cli_calls) = run_cli(&[
+        "airbnb",
+        "quote",
+        "42",
+        "--checkin",
+        "2020-01-01",
+        "--checkout",
+        "2020-01-08",
+    ])
+    .await;
+    assert!(cli_out.is_err());
+    assert_eq!(cli_calls, [] as [std::string::String; 0]);
+    let (mcp_out, calls) = run_mcp(
+        "airbnb_price_quote",
+        serde_json::json!({"id":"42","checkin":"2020-01-01","checkout":"2020-01-08"}),
+    )
+    .await;
+    assert_eq!(mcp_out.is_error, Some(true));
+    assert_eq!(calls, [] as [std::string::String; 0]);
 }
 
 #[tokio::test]

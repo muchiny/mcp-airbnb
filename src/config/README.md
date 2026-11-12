@@ -38,6 +38,7 @@ classDiagram
         +String stays_pdp_sections
         +String stays_pdp_reviews
         +String pdp_availability_calendar
+        +String stays_pdp_book_it
     }
 
     Config *-- ScraperConfig
@@ -61,10 +62,11 @@ scraper:
   locale: "en"                   # 🌐 Pinned on every request (query + Accept-Language)
   api_key_cache_secs: 86400      # 🔑 Cache API key for 24 hours
   graphql_hashes:                # #️⃣ Persisted query hashes
-    stays_search: "0afc7d440ee6..."
-    stays_pdp_sections: "80c7889b4b..."
+    stays_search: "58d7ae3d9279..."
+    stays_pdp_sections: "1e38cb0e7e39..."
     stays_pdp_reviews: "cfdc3ffbe997..."
     pdp_availability_calendar: "be60714ead0a..."
+    stays_pdp_book_it: "b4e68e2374e4..."
 
 cache:
   max_entries: 500
@@ -99,9 +101,10 @@ cache:
 | `stays_search` | 🔍 Hash for `StaysSearch` operation (search listings) |
 | `stays_pdp_sections` | 📋 Hash for `StaysPdpSections` (detail + host profile) |
 | `stays_pdp_reviews` | ⭐ Hash for `StaysPdpReviewsQuery` (reviews) |
-| `pdp_availability_calendar` | 📅 Hash for `PdpAvailabilityCalendar` (pricing) |
+| `pdp_availability_calendar` | 📅 Hash for `PdpAvailabilityCalendar` (availability) |
+| `stays_pdp_book_it` | 💶 Hash for `StaysPdpBookItQuery` (dated price quote) |
 
-> Hashes reference Airbnb's internal **persisted queries** (defaults refreshed 2026-09). When Airbnb rotates one, the affected call fails with `Airbnb API changed for <operation>: … update scraper.graphql_hashes.<key> in config.yaml` and the server falls back to HTML scraping. See [the GraphQL adapter README](../adapters/graphql/README.md#-detecting-api-drift) for how to capture a new hash.
+> Hashes reference Airbnb's internal **persisted queries** (defaults refreshed 2026-11). When Airbnb rotates one, the affected call fails with `Airbnb API changed for <operation>: … update scraper.graphql_hashes.<key> in config.yaml` and the server falls back to HTML scraping. See [the GraphQL adapter README](../adapters/graphql/README.md#-detecting-api-drift) for how to capture a new hash.
 
 ### 💾 Cache
 

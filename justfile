@@ -56,9 +56,9 @@ install-hooks:
 # Run all checks: format, lint, docs, test, coverage, audit, workflow hygiene
 all: fmt lint doc test coverage audit workflows
 
-# Offline tests of the live smoke harness (no network)
+# Offline tests of the Python scripts: live smoke harness and query-id discovery (no network)
 smoke-selftest:
-    python3 -m unittest discover -s scripts -p 'test_live_smoke.py' -v
+    python3 -m unittest discover -s scripts -p 'test_*.py' -v
 
 # Opt-in live smoke test against real Airbnb (rate-limited; never in CI)
 smoke *args:

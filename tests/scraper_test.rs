@@ -180,6 +180,7 @@ async fn scraper_search_parses_html_response() {
         max_price: None,
         property_type: None,
         cursor: None,
+        ..SearchParams::default()
     };
 
     let result = scraper.search_listings(&params).await.unwrap();

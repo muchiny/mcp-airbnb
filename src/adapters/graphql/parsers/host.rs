@@ -1,11 +1,15 @@
 use serde_json::Value;
 
 use super::pdp::{self, str_field};
+use super::pdp_node;
 use crate::adapters::text;
 use crate::domain::analytics::HostProfile;
 use crate::error::{AirbnbError, Result};
 
 /// Parse the GraphQL `StaysPdpSections` response into a `HostProfile`.
+///
+/// Documents captured since 2026-11 name the host in the listing entity
+/// (`pdp_node::node_host`), business hosts included; it is read first.
 ///
 /// Returns [`AirbnbError::HostProfileUnavailable`] for listings offered by a
 /// business (`pdpType` `HOTEL`), which have no host section, and
@@ -19,6 +23,10 @@ pub fn parse_host_response(json: &Value) -> Result<HostProfile> {
         .or_else(|| json.pointer("/data/user"))
     {
         return Ok(parse_profile_object(profile));
+    }
+
+    if let Some(profile) = pdp_node::node_host(json) {
+        return Ok(profile);
     }
 
     let sections = json
@@ -211,6 +219,12 @@ pub(crate) fn host_profile_from_section(
         identity_verified: pick(card, section, "isIdentityVerified")
             .or_else(|| pick(card, section, "isVerified"))
             .and_then(Value::as_bool),
+        rating: pick(card, section, "ratingAverage")
+            .and_then(Value::as_f64)
+            .filter(|rating| rating.is_finite() && *rating > 0.0),
+        review_count: pick(card, section, "ratingCount")
+            .and_then(Value::as_u64)
+            .and_then(|n| u32::try_from(n).ok()),
     })
 }
 
@@ -264,6 +278,8 @@ fn parse_profile_object(profile: &Value) -> HostProfile {
             .get("isIdentityVerified")
             .or_else(|| profile.get("identityVerified"))
             .and_then(Value::as_bool),
+        rating: None,
+        review_count: None,
     }
 }
 
@@ -419,5 +435,15 @@ mod tests {
         let err = parse_host_response(&json).unwrap_err();
         assert!(matches!(err, AirbnbError::UpstreamSchema { .. }), "{err}");
         assert!(err.to_string().contains("host"), "{err}");
+    }
+
+    #[test]
+    fn entity_documents_of_2026_11_name_the_host_business_hosts_included() {
+        let villa = crate::test_helpers::fixture_2026_11("StaysPdpSections.villa.response.json");
+        let host = parse_host_response(&villa).unwrap();
+        assert_eq!(host.name, "Host A");
+        assert_eq!(host.rating, Some(4.95));
+        let hotel = crate::test_helpers::fixture_2026_11("StaysPdpSections.hotel.response.json");
+        assert_eq!(parse_host_response(&hotel).unwrap().name, "Business Host B");
     }
 }
