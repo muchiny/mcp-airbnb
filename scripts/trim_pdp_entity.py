@@ -10,17 +10,28 @@ URLs, Airbnb-generated highlights, which may quote host names) is replaced by
 a placeholder. Public listing data is kept as captured: ids, coordinates,
 place names, amenity labels, ratings, counts, review topic labels.
 
-Usage:
-    python3 scripts/trim_pdp_entity.py --kind villa \
-        --src /var/tmp/mcp-airbnb-2026-11/pdp_dated_45490342_2027-06-12.json \
-        --dst tests/fixtures/airbnb/2026-11/StaysPdpSections.villa.response.json
+Usage (the raw capture is read from standard input and stays outside the
+repository):
+    python3 scripts/trim_pdp_entity.py --kind villa --month 2026-11 \
+        < /var/tmp/mcp-airbnb-2026-11/pdp_dated_45490342_2027-06-12.json
+
+It writes `tests/fixtures/airbnb/<month>/StaysPdpSections.<kind>.response.json`
+and nothing else. No file path is taken from the command line: the shell opens
+the capture, and the output path is built from the month and the kind, then
+checked to lie inside the fixtures directory.
 """
 
 import argparse
 import base64
 import json
+import os
+import re
 import sys
-from pathlib import Path
+
+REPO = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+# The only directory this script writes to.
+FIXTURES = os.path.join(REPO, "tests", "fixtures", "airbnb")
+MONTH = re.compile(r"[0-9]{4}-(0[1-9]|1[0-2])")
 
 # kind -> (listing name, host name, numeric host id, synthetic host highlight)
 KINDS = {
@@ -29,6 +40,27 @@ KINDS = {
     "hotel": ("Sample hotel, classic room", "Business Host B", "1000002", None),
 }
 IMAGE = "https://example.com/fixture-image/{}.jpg"
+
+
+def fixture_path(month, kind):
+    """Path of the `kind` fixture of `month`, refused unless it lies inside
+    `tests/fixtures/airbnb/`.
+
+    `month` is the only free text that enters the path. It must be a YYYY-MM
+    month, and the canonical path (symlinks resolved) must stay under the
+    fixtures directory, prefix followed by a separator so that a sibling such
+    as `airbnb-evil/` does not pass.
+    """
+    if not isinstance(month, str) or not MONTH.fullmatch(month):
+        raise ValueError(f"--month {month!r} is not a YYYY-MM month")
+    if kind not in KINDS:
+        raise ValueError(f"--kind {kind!r} is not one of {', '.join(sorted(KINDS))}")
+    base_dir = os.path.realpath(FIXTURES)
+    resolved = os.path.realpath(os.path.join(base_dir, month, f"StaysPdpSections.{kind}.response.json"))
+    prefix = base_dir if base_dir.endswith(os.sep) else base_dir + os.sep
+    if not resolved.startswith(prefix):
+        raise ValueError(f"the fixture path {resolved} is outside {base_dir}")
+    return resolved
 
 
 def get(node, *path):
@@ -232,19 +264,30 @@ def build(raw, kind):
     }
 
 
-def main():
+def main(argv=None, stdin=None):
+    stdin = sys.stdin.buffer if stdin is None else stdin
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--kind", required=True, choices=sorted(KINDS))
-    parser.add_argument("--src", required=True, type=Path)
-    parser.add_argument("--dst", required=True, type=Path)
-    args = parser.parse_args()
-    fixture = build(json.loads(args.src.read_text()), args.kind)
+    parser.add_argument(
+        "--month", required=True, help="fixture directory under tests/fixtures/airbnb/, as YYYY-MM (2026-11)"
+    )
+    args = parser.parse_args(argv)
+    try:
+        target = fixture_path(args.month, args.kind)
+    except ValueError as error:
+        parser.error(str(error))
+    try:
+        raw = json.loads(stdin.read())
+    except ValueError as error:
+        sys.exit(f"standard input is not a JSON capture: {error}")
+    fixture = build(raw, args.kind)
     text = json.dumps(fixture, indent=1, ensure_ascii=True) + "\n"
     if "muscache" in text:
         sys.exit("an Airbnb image URL survived")
-    args.dst.parent.mkdir(parents=True, exist_ok=True)
-    args.dst.write_text(text)
-    print(f"{args.dst}: {len(text)} bytes")
+    os.makedirs(os.path.dirname(target), exist_ok=True)
+    with open(target, "w", encoding="ascii", newline="\n") as out:
+        out.write(text)
+    print(f"{os.path.relpath(target, REPO)}: {len(text)} bytes")
 
 
 if __name__ == "__main__":

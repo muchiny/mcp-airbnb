@@ -152,6 +152,6 @@ Airbnb no longer publishes per-day calendar prices (`price.localPriceFormatted: 
 - `deny.toml` — `cargo deny check` policy (advisories, licenses, bans, sources), run by `just audit` and CI
 - `supply-chain/` — `cargo-vet` baseline (exemptions, audits); `cargo vet --locked` runs only in the informational `hardening` CI job, not in `just all`
 - `sonar-project.properties` — SonarQube Cloud scope for the `sonar` CI job (consumes the tarpaulin `cobertura.xml`)
-- `scripts/` — `check_workflows.py`, `live_smoke.py` (+ `test_live_smoke.py`), `anonymize_fixtures.py`, `trim_pdp_entity.py` (builds the 2026-11 listing fixtures), `discover_query_ids.py` (+ `test_discover_query_ids.py`; reads the current persisted-query ids from Airbnb's web bundles)
+- `scripts/` — `check_workflows.py`, `live_smoke.py` (+ `test_live_smoke.py`), `anonymize_fixtures.py`, `trim_pdp_entity.py` (+ `test_trim_pdp_entity.py`; builds the 2026-11 listing fixtures from a raw capture on standard input), `discover_query_ids.py` (+ `test_discover_query_ids.py`; reads the current persisted-query ids from Airbnb's web bundles)
 - `.specify/`, `specs/001-airbnb-mcp-server/` — spec-kit files of the first, scraping-only version (February 2026), kept as history and out of date: the code and this file are the source of truth
 - `claude-resources/` — the Claude Code rules, skills and agents of this repo; linked into the git-ignored `.claude/` as described in `claude-resources/README.md`

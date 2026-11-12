@@ -19,6 +19,14 @@ empty placeholders. These files pin that shape for
 the repository. It works by allow-list: only the fields the parsers read are
 copied.
 
+```bash
+python3 scripts/trim_pdp_entity.py --kind villa --month 2026-11 < /var/tmp/<raw capture>.json
+```
+
+The capture is piped in and the script takes no file path: it writes
+`tests/fixtures/airbnb/<month>/StaysPdpSections.<kind>.response.json` and
+nothing else.
+
 - Listing titles, descriptions, host names, host bios, host highlights,
   free-text rules, Airbnb-generated highlights and every photo URL are
   placeholders. The villa's host highlight `Speaks English and French` is
