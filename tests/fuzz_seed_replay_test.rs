@@ -112,8 +112,7 @@ fn load_seeds(target: &str) -> Vec<(String, Vec<u8>)> {
                 .unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
             let name = path
                 .file_name()
-                .map(|name| name.to_string_lossy().into_owned())
-                .unwrap_or_default();
+                .map_or_default(|name| name.to_string_lossy().into_owned());
             (name, bytes)
         })
         .collect();

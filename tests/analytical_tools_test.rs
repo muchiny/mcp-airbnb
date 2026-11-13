@@ -868,8 +868,7 @@ fn extract_text(result: &CallToolResult) -> String {
         .content
         .first()
         .and_then(|c| c.as_text())
-        .map(|t| t.text.clone())
-        .unwrap_or_default()
+        .map_or_default(|t| t.text.clone())
 }
 
 #[allow(clippy::needless_pass_by_value)]

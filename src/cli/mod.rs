@@ -435,8 +435,7 @@ pub async fn dispatch(cli: Cli, client: Arc<dyn AirbnbClient>) -> Result<String>
     // JSON output stays the bare document; `airbnb status --json` reports it.
     let note = crate::domain::status::fallback_note(&client.degradations())
         .filter(|_| !json)
-        .map(|note| format!("\n{note}\n"))
-        .unwrap_or_default();
+        .map_or_default(|note| format!("\n{note}\n"));
     Ok(out + &note)
 }
 

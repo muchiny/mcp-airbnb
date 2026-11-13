@@ -233,14 +233,12 @@ pub fn parse_detail_response(json: &Value, id: &str, base_url: &str) -> Result<L
         .or_else(|| str_field(logging, "roomType"));
 
     let overview_items = item_titles(overview.and_then(|o| o.get("overviewItems")));
-    let sharing_parts: Vec<String> = str_field(sharing, "title")
-        .map(|title| {
-            title
-                .split('\u{b7}')
-                .map(|part| part.trim().to_string())
-                .collect()
-        })
-        .unwrap_or_default();
+    let sharing_parts: Vec<String> = str_field(sharing, "title").map_or_default(|title| {
+        title
+            .split('\u{b7}')
+            .map(|part| part.trim().to_string())
+            .collect()
+    });
     let rooms = node
         .rooms
         .or_fill(text::parse_room_counts(
@@ -386,7 +384,7 @@ pub fn parse_detail_response(json: &Value, id: &str, base_url: &str) -> Result<L
         host_response_time: host_ref.and_then(|h| h.response_time.clone()),
         host_joined: host_ref.and_then(|h| h.member_since.clone()),
         host_total_listings: host_ref.and_then(|h| h.total_listings),
-        host_languages: host_ref.map(|h| h.languages.clone()).unwrap_or_default(),
+        host_languages: host_ref.map_or_default(|h| h.languages.clone()),
         cancellation_policy,
         instant_book,
         cleaning_fee,

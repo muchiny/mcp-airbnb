@@ -128,8 +128,7 @@ pub fn compute_listing_rank(scan: &RankScan<'_>) -> ListingRank {
         .map(|own_price| count_u32(prices.iter().filter(|price| **price < own_price).count()));
     let currency = own
         .or_else(|| scan.listings.first())
-        .map(|listing| listing.currency.clone())
-        .unwrap_or_default();
+        .map_or_default(|listing| listing.currency.clone());
 
     let window = match index {
         Some(i) => {

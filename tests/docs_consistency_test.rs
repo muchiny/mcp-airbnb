@@ -235,8 +235,7 @@ fn config_keys() -> (BTreeSet<String>, BTreeSet<String>) {
     let hash_keys = value
         .pointer("/scraper/graphql_hashes")
         .and_then(serde_json::Value::as_object)
-        .map(|hashes| hashes.keys().cloned().collect())
-        .unwrap_or_default();
+        .map_or_default(|hashes| hashes.keys().cloned().collect());
     (keys, hash_keys)
 }
 

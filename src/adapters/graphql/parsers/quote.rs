@@ -133,8 +133,7 @@ pub fn parse_quote_response(
         .get("structuredDisplayPrice")
         .filter(|node| node.is_object());
     let display = display_block
-        .map(|block| price::parse_structured_display_price(block, Some(nights)))
-        .unwrap_or_default();
+        .map_or_default(|block| price::parse_structured_display_price(block, Some(nights)));
     let total = display
         .total
         .or_else(|| display.nightly.map(|nightly| nightly * f64::from(nights)));

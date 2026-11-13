@@ -152,8 +152,7 @@ fn extract_detail_from_json(
     let currency = listing
         .get("priceCurrency")
         .and_then(|v| v.as_str())
-        .map(normalize_currency)
-        .unwrap_or_default();
+        .map_or_default(normalize_currency);
 
     let rating = listing
         .get("avgRating")
@@ -183,7 +182,7 @@ fn extract_detail_from_json(
     let amenities = listing
         .get("amenities")
         .and_then(|v| v.as_array())
-        .map(|arr| {
+        .map_or_default(|arr| {
             arr.iter()
                 .filter_map(|item| {
                     item.get("name")
@@ -193,18 +192,16 @@ fn extract_detail_from_json(
                         .or_else(|| item.as_str().map(String::from))
                 })
                 .collect()
-        })
-        .unwrap_or_default();
+        });
 
     let house_rules = listing
         .get("houseRules")
         .and_then(|v| v.as_array())
-        .map(|arr| {
+        .map_or_default(|arr| {
             arr.iter()
                 .filter_map(|item| item.as_str().map(String::from))
                 .collect()
-        })
-        .unwrap_or_default();
+        });
 
     let latitude = listing
         .get("lat")
@@ -219,7 +216,7 @@ fn extract_detail_from_json(
     let photos = listing
         .get("photos")
         .and_then(|v| v.as_array())
-        .map(|arr| {
+        .map_or_default(|arr| {
             arr.iter()
                 .filter_map(|item| {
                     item.get("pictureUrl")
@@ -230,8 +227,7 @@ fn extract_detail_from_json(
                         .or_else(|| item.as_str().map(String::from))
                 })
                 .collect()
-        })
-        .unwrap_or_default();
+        });
 
     let bedrooms = listing
         .get("bedrooms")
