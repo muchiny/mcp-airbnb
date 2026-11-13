@@ -254,8 +254,7 @@ fn parse_legacy_result(result: &Value, base_url: &str) -> Option<Listing> {
         .filter(|id| !id.is_empty())?;
     let display = result
         .pointer("/pricingQuote/structuredStayDisplayPrice")
-        .map(|sdp| price::parse_structured_display_price(sdp, None))
-        .unwrap_or_default();
+        .map_or_default(|sdp| price::parse_structured_display_price(sdp, None));
     let price_per_night = display
         .nightly
         .or_else(|| {
@@ -512,15 +511,12 @@ mod tests {
             .iter()
             .map(|param| {
                 let name = param["filterName"].as_str().unwrap_or_default().to_string();
-                let values = param["filterValues"]
-                    .as_array()
-                    .map(|values| {
-                        values
-                            .iter()
-                            .filter_map(|v| v.as_str().map(String::from))
-                            .collect()
-                    })
-                    .unwrap_or_default();
+                let values = param["filterValues"].as_array().map_or_default(|values| {
+                    values
+                        .iter()
+                        .filter_map(|v| v.as_str().map(String::from))
+                        .collect()
+                });
                 (name, values)
             })
             .collect()

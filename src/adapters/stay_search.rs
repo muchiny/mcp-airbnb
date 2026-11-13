@@ -38,8 +38,7 @@ pub fn listing_from_stay_search_result(item: &Value, base_url: &str) -> Option<L
     };
     let display = item
         .get("structuredDisplayPrice")
-        .map(|sdp| price::parse_structured_display_price(sdp, stay_nights(item)))
-        .unwrap_or_default();
+        .map_or_default(|sdp| price::parse_structured_display_price(sdp, stay_nights(item)));
     let (rating, review_count) = rating_and_count(item);
     let photos: Vec<String> = item
         .get("contextualPictures")

@@ -84,8 +84,7 @@ fn extract_calendar_from_json(data: &Value, listing_id: &str) -> Option<PriceCal
         .get("currency")
         .or_else(|| calendar_data.get("priceCurrency"))
         .and_then(Value::as_str)
-        .map(normalize_currency)
-        .unwrap_or_default();
+        .map_or_default(normalize_currency);
 
     let mut cal = PriceCalendar {
         listing_id: listing_id.to_string(),

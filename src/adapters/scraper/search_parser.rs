@@ -200,8 +200,7 @@ fn extract_listing_legacy_format(section: &serde_json::Value, base_url: &str) ->
                 .or_else(|| listing_data.get("priceCurrency"))
         })
         .and_then(|v| v.as_str())
-        .map(normalize_currency)
-        .unwrap_or_default();
+        .map_or_default(normalize_currency);
 
     let rating = listing_data
         .get("avgRating")
