@@ -32,10 +32,12 @@ why the request was made at all.
 Unit and integration tests **never hit live Airbnb**. They use:
 
 1. `tests/fixtures/airbnb/<yyyy-mm>/` — real JSON responses captured once and
-   **anonymized before commit** with `scripts/anonymize_fixtures.py`:
-   reviewer and host names, review text, host bios and user photo URLs are
-   replaced by placeholders. Unit tests load them with
-   `test_helpers::fixture_json("<file>")`; integration tests use
+   **anonymized before commit** with `scripts/anonymize_fixtures.py`
+   (2026-09) or `scripts/trim_pdp_entity.py` (2026-11 listing entities, by
+   allow-list): reviewer and host names, review text, host bios and user
+   photo URLs are replaced by placeholders. Unit tests load them with
+   `test_helpers::fixture_json("<file>")` or
+   `test_helpers::fixture_2026_11("<file>")`; integration tests use
    `include_str!`.
 2. `wiremock` mocks — for full-stack HTTP tests of the reqwest client paths
    (see `tests/scraper_test.rs` and `tests/graphql_test.rs`).
@@ -141,6 +143,7 @@ string.
 | Reviews      | 1 hour      | `cache.reviews_ttl_secs` (3600)       |
 | Calendar     | 30 min      | `cache.calendar_ttl_secs` (1800)      |
 | Host profile | 1 hour      | `cache.host_profile_ttl_secs` (3600)  |
+| Price quote  | 30 min      | `cache.calendar_ttl_secs` (no own key) |
 
 The cache is an in-memory LRU (`src/adapters/cache/memory_cache.rs`),
 bounded by `cache.max_entries` (default 500). Errors, including

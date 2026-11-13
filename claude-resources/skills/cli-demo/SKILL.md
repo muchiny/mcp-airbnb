@@ -42,9 +42,10 @@ commands. It covers:
    ```
 
    Expected: human-readable output starting with `Found N listings` and
-   listing at least one property. If it fails with a Cloudflare-style
-   error, the scraper or API key cache is stale — see
-   `claude-resources/rules/scraping-conventions.md` § API key.
+   listing at least one property. If it fails, or ends with a
+   `PARTIAL DATA WARNING`, run `./target/debug/airbnb status`: it checks
+   every Airbnb source and names the failing operation and the config key
+   to update (see `claude-resources/rules/scraping-conventions.md`).
 
 4. **JSON mode on a listing detail**:
 

@@ -28,6 +28,7 @@ flowchart LR
 - 💾 On `set()`: inserts/overwrites with `expires_at = now + ttl`, computed with `Instant::checked_add` (30 days on overflow), so a huge TTL cannot abort the process
 - 🗑️ LRU eviction occurs automatically when capacity is reached
 - 🔒 Thread-safe: `RwLock` allows concurrent reads, exclusive writes
+- 🧹 `clear()` drops every entry; the status check calls it through `AirbnbClient::clear_cache`, so it probes Airbnb and not the cache
 
 ### ⚙️ Configuration
 
@@ -49,3 +50,4 @@ flowchart LR
 - ✅ Key overwrite works correctly
 - ✅ Zero capacity fallback (defaults to 100)
 - ✅ Concurrent access from multiple threads
+- ✅ `clear()` drops every entry

@@ -20,6 +20,7 @@ pub trait AirbnbClient: Send + Sync {
     async fn get_occupancy_estimate(&self, id: &str, months: u32) -> Result<OccupancyEstimate>;
     async fn get_price_quote(&self, request: &QuoteRequest) -> Result<PriceQuote>;
     fn degradations(&self) -> Vec<Degradation> { Vec::new() }
+    fn clear_cache(&self) {}
 }
 ```
 
@@ -83,7 +84,7 @@ flowchart LR
 
 ## 🎨 Design Principles
 
-- ✅ **Domain types only** — Ports use `SearchResult`, `ListingDetail`, `ReviewsPage`, `PriceCalendar`, `HostProfile`, `NeighborhoodStats`, `OccupancyEstimate` from the domain layer. No adapter-specific types leak through.
+- ✅ **Domain types only** — Ports use `SearchResult`, `ListingDetail`, `ReviewsPage`, `PriceCalendar`, `HostProfile`, `NeighborhoodStats`, `OccupancyEstimate`, `PriceQuote` from the domain layer. No adapter-specific types leak through.
 - ⚡ **`AirbnbClient` is async** — Uses `async_trait` because fetching data involves network I/O.
 - 🔒 **`ListingCache` is synchronous** — Cache operations are fast (in-memory LRU behind `RwLock`), no async overhead needed.
 - 🧵 **`Send + Sync` bounds** — Both traits require thread safety for sharing across tokio tasks via `Arc<dyn T>`.

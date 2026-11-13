@@ -26,7 +26,7 @@ The main client struct owns:
 
 ### 💾 Cache-Aside Pattern
 
-Every `AirbnbClient` method follows the same flow:
+Every `AirbnbClient` method that fetches a page follows the same flow (`get_price_quote` fetches nothing: the HTML page has no dated price, so it returns `UpstreamSchema`):
 
 1. 🔑 Build cache key (e.g., `detail:{id}`)
 2. 🔍 Check cache — if hit, deserialize and return

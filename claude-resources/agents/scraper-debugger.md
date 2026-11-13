@@ -13,14 +13,20 @@ You are a specialist agent for diagnosing scraper/parser failures in the
   - `src/adapters/scraper/detail_parser.rs` — HTML listing detail parsing
   - `src/adapters/scraper/review_parser.rs` — HTML review parsing
   - `src/adapters/scraper/calendar_parser.rs` — HTML/JSON calendar parsing
-  - `src/adapters/scraper/deferred_state.rs` and `page_markers.rs` — locate
-    the `__NEXT_DATA__` / `data-deferred-state` JSON islands in a page
-  - `src/adapters/graphql/parsers/{search,detail,review,host,pdp}.rs` —
-    GraphQL response parsing. The HTML scraper reuses `detail` and `host` on
+  - `src/adapters/scraper/deferred_state.rs` — locates the `__NEXT_DATA__` /
+    `data-deferred-state` JSON islands in a page; `page_markers.rs` tells a
+    genuine listing page from a bot challenge, consent wall or error page
+  - `src/adapters/graphql/parsers/{search,detail,review,host,pdp,pdp_node,quote}.rs` —
+    GraphQL response parsing. Since 2026-11 the listing content sits in the
+    `data.node.pdpPresentation` entity (`pdp_node.rs`), read before the older
+    `sections` layout; `quote.rs` parses the booking panel
+    (`StaysPdpBookItQuery`). The HTML scraper reuses `detail` and `host` on
     the embedded `StaysPdpSections` payload, and search cards of both sources
     go through `src/adapters/stay_search.rs`
-- The fixture layout under `tests/fixtures/airbnb/2026-09/` and how parser
-  tests consume it: `test_helpers::fixture_json("<dir>/<file>.json")` and
+- The fixture layout under `tests/fixtures/airbnb/2026-09/` and `2026-11/`
+  and how parser tests consume it:
+  `test_helpers::fixture_json("<dir>/<file>.json")` (2026-09),
+  `test_helpers::fixture_2026_11("<file>.json")` and
   `test_helpers::niobe_page(...)` in unit tests, `include_str!` in
   integration tests
 - The composite client merge rules in `src/adapters/composite.rs`
@@ -64,11 +70,16 @@ You are a specialist agent for diagnosing scraper/parser failures in the
 
    c. **Rotated GraphQL hash** — Airbnb rotated a persisted-query hash.
       The adapter reports `AirbnbError::UpstreamSchema { operation, detail }`
-      (never an empty result). Update `scraper.graphql_hashes.*` in the
+      (never an empty result), and `airbnb status` names the failing
+      operation and its config key. Update `scraper.graphql_hashes.*` in the
       user's `config.yaml` (keys: `stays_search`, `stays_pdp_sections`,
-      `stays_pdp_reviews`, `pdp_availability_calendar`) and, if the built-in
-      default is stale, in `src/config/types.rs`. The new hash comes from
-      Chrome DevTools → Network → the operation name.
+      `stays_pdp_reviews`, `pdp_availability_calendar`, `stays_pdp_book_it`)
+      and, if the built-in default is stale, in `src/config/types.rs`.
+      `python3 scripts/discover_query_ids.py --listing-id <id>` reads the
+      search, listing and quote ids from Airbnb's web bundles; the reviews
+      and calendar ids come from Chrome DevTools → Network → the operation
+      name. A new id can come with new variables or a new response shape:
+      the id alone is then not enough (see a).
 
    d. **Composite merge bug** — GraphQL returns partial data, the
       scraper returns complete data, but the merge clobbers the scraper

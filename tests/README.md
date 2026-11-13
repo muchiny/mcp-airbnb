@@ -11,20 +11,21 @@ Unit tests live next to the code (`#[cfg(test)] mod tests`). Integration tests l
 | `functional_verification_test.rs` | 🔄 End to end | Tools called through the MCP protocol against a realistic mock, including the dated ones (quote, rank, status) |
 | `parity_test.rs` | ⚖️ Parity | The same recording mock through CLI and MCP must make identical upstream calls (ARCH-1) |
 | `cancellation_test.rs` | 🛑 MCP cancellation | A cancelled tool call drops its in-flight upstream work (MCP-8) |
-| `analytical_tools_test.rs` | 🧠 Analytics | The 11 analytical tools with mock data |
+| `analytical_tools_test.rs` | 🧠 Analytics | 11 of the 12 analytical tools with mock data (`airbnb_search_rank` is covered by `functional_verification_test.rs` and `parity_test.rs`) |
 | `analytics_fixture_test.rs` | 📊 Analytics | Analytics over an anonymized live calendar (2026-09-28): past days, occupancy, gaps, trends, revenue |
 | `scraper_test.rs` | 🕷️ Scraper | HTML scraper client against `wiremock` |
-| `graphql_test.rs` | 🔗 GraphQL | GraphQL client against wiremock: request contract (hashes, variables, headers), 2026-09 captures, drift errors (`UpstreamSchema`), cache keys |
+| `graphql_test.rs` | 🔗 GraphQL | GraphQL client against wiremock: request contract (hashes, variables, headers), 2026-09 and 2026-11 captures, drift errors (`UpstreamSchema`), cache keys |
 | `cli_test.rs` | 🖥️ CLI | `cli::dispatch` with an inline mock, plus the real `airbnb` binary for exit codes and JSON errors |
 | `proptest_tests.rs` | 🎲 Property | Invariants over generated inputs |
 | `fuzz_seed_replay_test.rs` | 🎲 Fuzz seeds | Replays `fuzz/seeds/<target>/*` through `mcp_airbnb::fuzz_support` on stable, and checks that every fuzz target is wired in `fuzz/Cargo.toml` and CI |
 | `docs_consistency_test.rs` | 📚 Docs | Tool, template and fuzz-target counts, documented commands, config keys and links in the Markdown docs |
 | `common/mod.rs` | 🧰 Helpers | `connect()` (duplex MCP client), `tool_call()`, `text_of()` |
 | `fixtures/airbnb/2026-09/` | 📁 Test data | Anonymized airbnb.com GraphQL captures (see its README; regenerate with `scripts/anonymize_fixtures.py`); also the source of the fuzz seeds |
+| `fixtures/airbnb/2026-11/` | 📁 Test data | Anonymized `StaysPdpSections` listing entities (villa, apartment, hotel) and a synthetic `StaysPdpBookItQuery` booking panel (see its README; built with `scripts/trim_pdp_entity.py`) |
 
 ## 🎭 Mock Infrastructure
 
-- Unit tests use `MockAirbnbClient` from `src/test_helpers.rs` (`#[cfg(test)]`, so it is visible only to unit tests). It is configured with closures (`.with_search(…)`, `.with_detail(…)`, `.with_reviews(…)`, `.with_calendar(…)`, `.with_host_profile(…)`, `.with_neighborhood(…)`, `.with_occupancy(…)`) and loads fixtures with `test_helpers::fixture_json("<file>")`.
+- Unit tests use `MockAirbnbClient` from `src/test_helpers.rs` (`#[cfg(test)]`, so it is visible only to unit tests). It is configured with closures (`.with_search(…)`, `.with_detail(…)`, `.with_reviews(…)`, `.with_calendar(…)`, `.with_host_profile(…)`, `.with_neighborhood(…)`, `.with_occupancy(…)`, `.with_quote(…)`, `.with_degradation(…)`) and loads fixtures with `test_helpers::fixture_json("<file>")`.
 - Integration tests define their own `AirbnbClient` mocks (`IntegrationMock` / `ErrorMock` in `mcp_server_test.rs`, `FunctionalMock` in `functional_verification_test.rs`, …), share transport helpers through `tests/common/`, and read fixtures with `include_str!`.
 
 ## 🎲 Fuzzing

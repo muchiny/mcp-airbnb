@@ -1,6 +1,6 @@
 # 📡 MCP Protocol Layer
 
-The **MCP layer** exposes domain capabilities as [Model Context Protocol](https://modelcontextprotocol.io/) tools over stdio using the `rmcp` 1.4 SDK. It is a thin interface layer: handlers check their input (`check_input!`, limits from `src/domain/limits.rs`), call `AirbnbClient` (data tools) or `application::analytical_handlers` (analytical tools, the same functions as the CLI), and end with `finish`, which fences scraped text, stores the resource and announces new URIs.
+The **MCP layer** exposes domain capabilities as [Model Context Protocol](https://modelcontextprotocol.io/) tools over stdio using the `rmcp` 3.9 SDK. It is a thin interface layer: handlers check their input (`check_input!`, limits from `src/domain/limits.rs`), call `AirbnbClient` (data tools) or `application::analytical_handlers` (analytical tools, the same functions as the CLI), and end with `finish`, which fences scraped text, stores the resource and announces new URIs.
 
 ## 🛠️ Server
 
@@ -190,6 +190,8 @@ Each tool formats its output as human-readable markdown-like text:
 | 👤 **Host** | Profile card with name, superhost badge, response rate, languages, bio |
 | 📊 **Neighborhood** | Area stats with average/median prices, rating, property type distribution |
 | 📈 **Occupancy** | Occupancy rate (an upper bound; past days excluded), weekday vs weekend prices when Airbnb publishes them, monthly breakdown table |
+| 💶 **Quote** | Availability (and why not), total, price detail lines and notes; with `weeks`, a table of consecutive weekly stays |
+| 🩺 **Status** | Table with one row per check (status and detail), the operations served by the HTML fallback, a verdict |
 
 ### 🧠 Analytical Tools
 
@@ -206,3 +208,4 @@ Each tool formats its output as human-readable markdown-like text:
 | 💬 **Sentiment** | Positive/negative/neutral breakdown, themes, top keywords |
 | 🎯 **Positioning** | Percentile ranks per axis (price, rating, amenities, reviews; occupancy shown but not ranked), overall score over the ranked axes, strengths/weaknesses |
 | 💲 **Pricing** | Recommended price, range, weekday/weekend split, reasoning factors |
+| 🥇 **Rank** | The search scanned, position and page of the listing (or its absence), its price against the scanned results, the results around it |

@@ -336,7 +336,7 @@ classDiagram
 
 - ✅ All types derive `Debug`, `Clone`, `Serialize`, `Deserialize`
 - 📝 `Display` implementations produce human-readable markdown output
-- 🔍 `SearchParams` is the only type with validation behavior
+- 🔍 Input types validate themselves: `SearchParams`, `SearchFilters` and `QuoteRequest` have `validate()`, listing ids go through `validate_listing_id()`
 - 🧮 `analytics.rs` contains 13 pure compute functions — no async, no I/O
 - 🚫 **No `async`**, no I/O, no network calls — guaranteed by design
 - 🔗 Types are shared across all layers via `crate::domain::*`

@@ -11,6 +11,8 @@ Parsers that transform raw GraphQL JSON responses into domain types.
 | `review.rs` | ⭐ `StaysPdpReviewsQuery` | `ReviewsPage` |
 | `host.rs` | 👤 `StaysPdpSections` | `HostProfile` |
 | `pdp.rs` | 🧩 shared `StaysPdpSections` helpers | — |
+| `pdp_node.rs` | 🧬 `StaysPdpSections` listing entity (`data.node.pdpPresentation`, since 2026-11) | — (read first by `detail.rs` and `host.rs`) |
+| `quote.rs` | 💶 `StaysPdpBookItQuery` | `PriceQuote` |
 
 ## 🏛️ Design
 
@@ -30,8 +32,10 @@ Each parser module exposes pure functions:
 - ⭐ `review::parse_reviews_page(json, id, request_offset)` → `ReviewsPage` (next offset = requested offset + items returned, strictly below `reviewsCount`)
 - ⭐ `review::parse_reviews_response(json, id)` → first-page wrapper (`request_offset = 0`), kept for the fuzz target
 - 👤 `host::parse_host_response(json)` → `HostProfile`
+- 💶 `quote::build_quote_variables(request)` → `Value` (`StaysPdpBookItQuery` variables for one stay)
+- 💶 `quote::parse_quote_response(json, request, nights, default_currency)` → `Result<PriceQuote>` (a stay that cannot be booked is a result, not an error)
 
-A missing response root returns `AirbnbError::UpstreamSchema`, never an empty success. Parsers are tested against the anonymized captures in `tests/fixtures/airbnb/2026-09/` (`crate::test_helpers::fixture_json`).
+A missing response root returns `AirbnbError::UpstreamSchema`, never an empty success. Parsers are tested against the anonymized captures in `tests/fixtures/airbnb/2026-09/` (`crate::test_helpers::fixture_json`) and `2026-11/` (`fixture_2026_11`).
 
 ## 🎯 Principles
 

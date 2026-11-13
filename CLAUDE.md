@@ -14,7 +14,7 @@ Hexagonal. Dependencies point inward: `mcp/` and `cli/` → `application/` → `
 - **Ports** (`src/ports/`): `AirbnbClient` (8 async methods, all required, plus `degradations()`, which defaults to none, and `clear_cache()`, which defaults to a no-op and is called by the status check) and `ListingCache` (`get`, `set`, `clear`).
 - **Adapters** (`src/adapters/`): `graphql/` (primary: persisted-query client + JSON parsers), `scraper/` (fallback: HTML and deferred-state JSON parsers), `composite.rs` (GraphQL first; scraper fallback only when the GraphQL source is broken), `rate_limiter.rs` (one process-wide limiter), `http.rs` (retry and redirect policy, body cap), `cache/` (LRU + TTL), `shared.rs` (`ApiKeyManager`, `extract_api_key`).
 - **Application** (`src/application/`): `load_app_config()` (config lookup), `build_client()` (builds the one shared `RateLimiter`, the cache and the `ApiKeyManager`), `analytical_handlers` (the multi-fetch use cases shared by MCP and CLI).
-- **MCP** (`src/mcp/`): rmcp 3.x with `#[tool_router]` / `#[tool]` / `#[tool_handler]` in `server.rs`. Every handler ends in `finish`, which fences scraped text as untrusted, stores it in the bounded `ResourceStore` and sends `resources/list_changed` for a new URI. URIs and the 18 RFC 6570 templates come from `resource_uri.rs`.
+- **MCP** (`src/mcp/`): rmcp 3.x with `#[tool_router]` / `#[tool]` / `#[tool_handler]` in `server.rs`. Every handler ends in `finish`, which fences scraped text as untrusted, stores it in the bounded `ResourceStore` and sends `resources/list_changed` for a new URI. URIs and the 21 RFC 6570 templates come from `resource_uri.rs`.
 - **CLI** (`src/cli/`, `src/bin/cli.rs`): clap derive; `cli::dispatch()` runs against any `AirbnbClient`.
 - **Fuzzing** (`fuzz/`, `src/fuzz_support.rs`): 13 fuzz targets whose harness bodies live in the library, so they compile on stable.
 
@@ -153,5 +153,4 @@ Airbnb no longer publishes per-day calendar prices (`price.localPriceFormatted: 
 - `supply-chain/` — `cargo-vet` baseline (exemptions, audits); `cargo vet --locked` runs only in the informational `hardening` CI job, not in `just all`
 - `sonar-project.properties` — SonarQube Cloud scope for the `sonar` CI job (consumes the tarpaulin `cobertura.xml`)
 - `scripts/` — `check_workflows.py`, `live_smoke.py` (+ `test_live_smoke.py`), `anonymize_fixtures.py`, `trim_pdp_entity.py` (+ `test_trim_pdp_entity.py`; builds the 2026-11 listing fixtures from a raw capture on standard input), `discover_query_ids.py` (+ `test_discover_query_ids.py`; reads the current persisted-query ids from Airbnb's web bundles)
-- `.specify/`, `specs/001-airbnb-mcp-server/` — spec-kit files of the first, scraping-only version (February 2026), kept as history and out of date: the code and this file are the source of truth
 - `claude-resources/` — the Claude Code rules, skills and agents of this repo; linked into the git-ignored `.claude/` as described in `claude-resources/README.md`

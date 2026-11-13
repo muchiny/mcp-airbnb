@@ -30,7 +30,7 @@ graph LR
 | Module | Layer | Role | README |
 |--------|-------|------|--------|
 | [`domain/`](domain/) | 💎 Core | Pure types (`Listing`, `Review`, `PriceCalendar`, `SearchParams`), input limits (`limits`) and `analytics::compute_*` | [💎 Domain](domain/README.md) |
-| [`ports/`](ports/) | 🔌 Core | `AirbnbClient` (7 required methods), `ListingCache` | [🔌 Ports](ports/README.md) |
+| [`ports/`](ports/) | 🔌 Core | `AirbnbClient` (8 required methods), `ListingCache` | [🔌 Ports](ports/README.md) |
 | [`adapters/`](adapters/) | ⚡ Infrastructure | GraphQL (primary), HTML scraper (fallback), composite client, LRU cache, API key manager, process-wide `RateLimiter`, HTTP retry/redirect policy | [⚡ Adapters](adapters/README.md) |
 | [`application/`](application/) | 🎼 Orchestration | `load_app_config` (config lookup), `build_client` (one shared `RateLimiter`, cache, `ApiKeyManager`), `analytical_handlers` (used by MCP and CLI) | — |
 | [`mcp/`](mcp/) | 📡 Interface | MCP server: 21 tools (9 data + 12 analytical), 21 resource templates (`resource_uri.rs`) | [📡 MCP](mcp/README.md) |

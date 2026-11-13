@@ -8,10 +8,10 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 You are a specialist agent for adding new MCP tools to the `mcp-airbnb`
 project. You have deep knowledge of:
 
-- `rmcp` 1.x tool macros (`#[tool_router]`, `#[tool]`, `#[tool_handler]`)
+- `rmcp` 3.x tool macros (`#[tool_router]`, `#[tool]`, `#[tool_handler]`)
 - The project's hexagonal layering: `domain/` → `ports/` → `adapters/`
   → `application/` → `mcp/`
-- The `AirbnbClient` trait in `src/ports/airbnb_client.rs` (7 methods)
+- The `AirbnbClient` trait in `src/ports/airbnb_client.rs` (8 required methods)
 - The resource URIs: one builder per tool in `src/mcp/resource_uri.rs`,
   every value percent-encoded, and one RFC 6570 template per tool in
   `TEMPLATES` (21 today)
@@ -36,9 +36,10 @@ shape. Read it before planning, and follow it where this file is shorter.
 
 2. **Produce a plan** that lists:
    - Any new limit constant in `src/domain/limits.rs`
-   - New domain type (if any) to add in `src/domain/analytics.rs` with
-     `Display` + `Serialize` impls
-   - New `compute_*` function (if analytical) in `src/domain/analytics.rs`
+   - New domain type (if any) with `Display` + `Serialize` impls, in
+     `src/domain/analytics.rs` or in a module of its own (as `quote.rs`,
+     `rank.rs` and `status.rs` do)
+   - New `compute_*` function (if analytical) next to that type
    - New `run_*` function (if analytical) in
      `src/application/analytical_handlers.rs`: it validates every input
      (listing id, ranges, optional location) before the first fetch, then
@@ -86,7 +87,7 @@ shape. Read it before planning, and follow it where this file is shorter.
 ## Hard constraints
 
 - **Never** put business logic or orchestration in a tool handler.
-  Computations go in `domain::analytics::compute_*`, and the fetches that
+  Computations go in a `compute_*` function of `src/domain/`, and the fetches that
   feed them go in `application::analytical_handlers::run_*`. A handler
   checks its inputs, makes one call and renders. Nothing in `src/mcp/`
   may name `compute_*` (`tests/parity_test.rs` checks this).
