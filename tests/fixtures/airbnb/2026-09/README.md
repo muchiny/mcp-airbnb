@@ -11,7 +11,7 @@ test suite detect drift the next time Airbnb changes its internal API.
 | `graphql/StaysSearch.validation_error.json` | `StaysSearch` response | mcp-airbnb 0.2.0 with the stale hash `d4d95036…` | HTTP 200, `data: null`, `errors[0].extensions.classification = ValidationError` |
 | `graphql/StaysPdpReviewsQuery.response.json` | `StaysPdpReviewsQuery` response | airbnb.com web client | hash `cfdc3ffb…`, listing 38817969, offset 0, 24 reviews, `metadata.reviewsCount = 490`, offset not echoed |
 | `graphql/PdpAvailabilityCalendar.response.json` | `PdpAvailabilityCalendar` response | airbnb.com web client | hash `be60714e…`, 12 months from 2026-09 (365 days), every `price.localPriceFormatted` is `null`; `conditionRanges` removed |
-| `graphql/StaysPdpSections.request.json` | `StaysPdpSections` request body (POST) | airbnb.com web client | hash `c47b106f…`; recorded only, mcp-airbnb still uses GET `80c7889b…` |
+| `graphql/StaysPdpSections.request.json` | `StaysPdpSections` request body (POST) | airbnb.com web client | hash `c47b106f…`; recorded only; mcp-airbnb used GET `80c7889b…` at the time (`1e38cb0e…` since 2026-11) |
 | `graphql/StaysPdpSections.apartment.response.json` | `StaysPdpSections` response | mcp-airbnb 0.2.0, hash `80c7889b…` | listing 38817969 (entire rental unit) |
 | `graphql/StaysPdpSections.hotel.response.json` | `StaysPdpSections` response | mcp-airbnb 0.2.0, hash `80c7889b…` | listing 1257736932578886647 (hotel room) |
 

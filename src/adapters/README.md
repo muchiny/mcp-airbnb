@@ -98,11 +98,12 @@ flowchart TD
 
 | Tool | Cache Key Pattern | Default TTL |
 |------|-------------------|-------------|
-| 🔍 Search | `search:{SearchParams::cache_key()}`, i.e. `{location}:ci=…:co=…:a=…:ch=…:inf=…:p=…:min=…:max=…:pt=…:cur=…` (only the fields that are set) | 15 min (900s) |
+| 🔍 Search | `search:{SearchParams::cache_key()}`, i.e. `{location}:ci=…:co=…:a=…:ch=…:inf=…:p=…:min=…:max=…:pt=…:br=…:beds=…:ba=…:am=…:gf:ib:cur=…` (only the fields that are set) | 15 min (900s) |
 | 📋 Detail | `detail:{id}` | 1 hour (3600s) |
 | ⭐ Reviews | scraper `reviews:{id}:{cursor\|"first"}`, GraphQL `gql:reviews:{id}:o={offset}` | 1 hour (3600s) |
 | 📅 Calendar | scraper `calendar:{id}:{YYYY-MM}:m={months}`, GraphQL `gql:calendar:{id}:{YYYY-MM}:m={months}` (`YYYY-MM` = month the window starts) | 30 min (1800s) |
 | 👤 Host profile | scraper `host:{listing_id}`, GraphQL `gql:host:{listing_id}` | 1 hour (3600s) |
+| 💶 Price quote | GraphQL only: `gql:quote:{id}:{checkin}:{checkout}:a={adults}` | 30 min (`calendar_ttl_secs`) |
 
 GraphQL adapter prefixes keys with `gql:` (e.g., `gql:detail:{id}`, `gql:search:{SearchParams::cache_key()}`), while the scraper uses unprefixed keys. Errors, including `UpstreamSchema`, are never cached.
 

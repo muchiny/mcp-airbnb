@@ -1,7 +1,7 @@
 # 🏠 mcp-airbnb
 
 [![Rust](https://img.shields.io/badge/Rust-1.99%2B-orange?logo=rust)](https://www.rust-lang.org/)
-[![MCP](https://img.shields.io/badge/MCP-rmcp%201.4-blue)](https://modelcontextprotocol.io/)
+[![MCP](https://img.shields.io/badge/MCP-rmcp%203.9-blue)](https://modelcontextprotocol.io/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 > **Model Context Protocol server** that enables AI assistants to search and browse Airbnb listings via a dual data source: **GraphQL API** (primary) with **HTML scraping** fallback.
@@ -323,7 +323,7 @@ RUST_LOG=debug cargo run --bin mcp-airbnb
 
 ### Integration with Claude Desktop
 
-Add to your Claude Desktop config (`~/.config/claude/claude_desktop_config.json`), pointing at the built server binary:
+Add to your Claude Desktop config, pointing at the built server binary. The file is `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS, `%APPDATA%\Claude\claude_desktop_config.json` on Windows and `~/.config/Claude/claude_desktop_config.json` on Linux:
 
 ```json
 {
@@ -497,15 +497,15 @@ mcp-airbnb/
 │   ├── error.rs             # ❌ AirbnbError (thiserror)
 │   ├── lib.rs               # Module declarations + production lint policy
 │   └── main.rs              # 🚀 `mcp-airbnb` binary entrypoint (default-run)
-├── tests/                   # 🧪 Integration tests + fixtures/airbnb/2026-09/ (anonymized)
+├── tests/                   # 🧪 Integration tests + fixtures/airbnb/2026-09/ and 2026-11/ (anonymized)
 ├── fuzz/                    # 🎲 cargo-fuzz crate: 13 fuzz targets, seeds/, airbnb.dict, make_seeds.py
-├── scripts/                 # 🔎 live_smoke.py (opt-in, never in CI), discover_query_ids.py, check_workflows.py, anonymize_fixtures.py
+├── scripts/                 # 🔎 live_smoke.py (opt-in, never in CI), discover_query_ids.py, check_workflows.py, anonymize_fixtures.py, trim_pdp_entity.py
 ├── claude-resources/        # 📚 Shareable Claude Code rules/skills/agents (committed,
 │   │                        #     link each sub-folder into .claude/, see its README)
 │   ├── rules/               #    mcp-conventions, scraping-conventions, cli-conventions
 │   ├── skills/              #    /mcp-smoke, /cli-demo, /fixtures
 │   └── agents/              #    mcp-tool-builder, scraper-debugger
-├── .github/workflows/       # 🔄 CI (check, fmt, clippy, doc, test, coverage, SonarCloud, security, workflow hygiene, nightly fuzz) + release
+├── .github/workflows/       # 🔄 CI (check, fmt, clippy, clippy-latest, doc, test, coverage, SonarCloud, security, hardening, workflow hygiene, nightly fuzz) + release
 ├── .github/dependabot.yml   # 🔄 Weekly Cargo + GitHub Actions update PRs
 ├── config.yaml              # Example configuration (pass it with AIRBNB_CONFIG or airbnb --config)
 ├── justfile                 # Recipes: check, lint, test, fuzz, fuzz-seeds, smoke, …
@@ -533,22 +533,25 @@ sequenceDiagram
 
     AI->>MCP: tool call (e.g. airbnb_search)
     MCP->>Composite: AirbnbClient method
-    Composite->>Cache: Check cache
+    Composite->>GQL: Try GraphQL first
+    GQL->>Cache: Check cache
     alt Cache hit
-        Cache-->>Composite: Cached result
+        Cache-->>GQL: Cached result
     else Cache miss
-        Composite->>GQL: Try GraphQL first
         GQL->>AB: GraphQL API request
-        alt GraphQL OK
-            AB-->>GQL: JSON response
-            GQL-->>Composite: Parsed result
-        else GraphQL fails
-            Composite->>Scraper: Fallback to HTML
-            Scraper->>AB: HTTP GET
-            AB-->>Scraper: HTML response
-            Scraper-->>Composite: Parsed result
-        end
-        Composite->>Cache: Store with TTL
+        AB-->>GQL: JSON response
+        GQL->>Cache: Store with TTL
+    end
+    alt GraphQL OK
+        GQL-->>Composite: Parsed result
+    else GraphQL source broken
+        GQL-->>Composite: Error
+        Composite->>Scraper: Fallback to HTML
+        Scraper->>Cache: Check cache
+        Scraper->>AB: HTTP GET on a cache miss
+        AB-->>Scraper: HTML response
+        Scraper->>Cache: Store with TTL
+        Scraper-->>Composite: Parsed result
     end
     Composite-->>MCP: Domain result
     MCP-->>AI: CallToolResult (formatted text)

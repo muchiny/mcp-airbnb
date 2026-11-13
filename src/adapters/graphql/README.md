@@ -90,8 +90,9 @@ Callers paginate through `application::analytical_handlers::{collect_search_page
 ### 💾 Caching
 
 All methods follow the cache-aside pattern with `gql:` prefixed keys (errors are never cached):
-- `gql:search:{SearchParams::cache_key()}`: location, dates, guests, prices, property type, cursor
+- `gql:search:{SearchParams::cache_key()}`: location, dates, guests, prices, property type, panel filters, cursor
 - `gql:detail:{id}`
 - `gql:reviews:{id}:o={offset}`
 - `gql:calendar:{id}:{YYYY-MM}:m={months}` (`YYYY-MM` = month the window starts)
 - `gql:host:{id}`
+- `gql:quote:{id}:{checkin}:{checkout}:a={adults}` (kept for `calendar_ttl_secs`)

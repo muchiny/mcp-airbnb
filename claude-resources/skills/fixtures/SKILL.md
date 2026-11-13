@@ -27,11 +27,13 @@ a `README.md` describing its captures and how they were anonymized.
 ## Step 2 — Map fixtures to parser tests
 
 Unit tests load a fixture with `crate::test_helpers::fixture_json("<dir>/<file>.json")`
-(relative to `tests/fixtures/airbnb/2026-09/`); HTML-scraper tests rebuild a
+(relative to `tests/fixtures/airbnb/2026-09/`) or
+`crate::test_helpers::fixture_2026_11("<file>.json")` (relative to
+`tests/fixtures/airbnb/2026-11/`); HTML-scraper tests rebuild a
 page around a JSON payload with `crate::test_helpers::niobe_page(...)`.
-Integration tests use `include_str!("fixtures/airbnb/2026-09/<dir>/<file>.json")`.
+Integration tests use `include_str!("fixtures/airbnb/<yyyy-mm>/…/<file>.json")`.
 
-Run `rg 'fixture_json|fixtures/airbnb' src/ tests/` to see the full mapping,
+Run `rg 'fixture_json|fixture_2026_11|fixtures/airbnb' src/ tests/` to see the full mapping,
 or grep for the fixture filename to find its consumer(s).
 
 ## Step 3 — Capture a new fixture
@@ -66,6 +68,11 @@ current fixture doesn't cover, capture a fresh one:
    not read.
 
 4. **Anonymize it**, still under `/var/tmp/`:
+   - a `StaysPdpSections` listing entity (the 2026-11 shape,
+     `data.node.pdpPresentation`): pipe the raw capture into
+     `scripts/trim_pdp_entity.py --kind <villa|apartment|hotel> --month <yyyy-mm>`.
+     It works by allow-list, copies only the fields the parsers read and
+     writes the fixture itself (see `tests/fixtures/airbnb/2026-11/README.md`);
    - with `scripts/anonymize_fixtures.py`: add the capture to its `FILES`
      map (and to `trim()` if it needs trimming), then run it as described in
      `tests/fixtures/airbnb/2026-09/README.md`. The script only processes
