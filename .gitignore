@@ -17,6 +17,10 @@ tarpaulin-report.json
 lcov.info
 cobertura.xml
 
+# Reports the CI `sonar` and `hardening` jobs write when reproduced locally
+clippy-report.json
+hardening.txt
+
 # Proptest regressions
 proptest-regressions/
 
@@ -26,6 +30,18 @@ mutants.out.old/
 
 # Editor / code-intelligence caches (Serena pickles are machine-local)
 .serena/
+.vscode/
+.idea/
+
+# Planning-tool output (spec-kit, superpowers): never committed, the code
+# and the docs are the source of truth
+.specify/
+specs/
+.superpowers/
+docs/superpowers/
+
+# Local lefthook overrides
+lefthook-local.yml
 
 # Python bytecode (scripts/ self-tests)
 __pycache__/
